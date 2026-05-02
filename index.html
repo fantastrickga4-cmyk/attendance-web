@@ -33,9 +33,10 @@
       </form>
 
       <p id="auth-msg" class="msg"></p>
+      <p class="hint">💡 첫 실행 시 관리자 계정이 자동 생성됩니다 — 아이디 <code>admin</code> / 비밀번호 <code>admin1234</code></p>
     </section>
 
-    <!-- 로그인 후 화면 -->
+    <!-- 직원용 화면 -->
     <section id="app-section" class="card hidden">
       <div class="user-bar">
         <div>
@@ -67,9 +68,135 @@
       <p id="empty-msg" class="empty hidden">아직 출퇴근 기록이 없어요.</p>
     </section>
 
+    <!-- 관리자용 화면 -->
+    <section id="admin-section" class="card hidden">
+      <div class="user-bar">
+        <div>
+          <span class="badge">관리자</span>
+          <strong id="admin-name"></strong> 님
+          <div class="now" id="admin-now-display"></div>
+        </div>
+        <button id="admin-logout-btn" class="ghost">로그아웃</button>
+      </div>
+
+      <div class="tabs admin-tabs">
+        <button class="tab active" data-admin-tab="employees">👥 직원 관리</button>
+        <button class="tab" data-admin-tab="records">📋 전체 기록</button>
+        <button class="tab" data-admin-tab="stats">📊 통계</button>
+      </div>
+
+      <!-- 직원 관리 탭 -->
+      <div id="admin-tab-employees" class="admin-pane">
+        <div class="toolbar">
+          <input type="text" id="employee-search" placeholder="아이디 또는 이름으로 검색" />
+          <span id="employee-count" class="count"></span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>아이디</th>
+              <th>이름</th>
+              <th>권한</th>
+              <th>가입일</th>
+              <th>총 근무시간</th>
+              <th>관리</th>
+            </tr>
+          </thead>
+          <tbody id="employees-body"></tbody>
+        </table>
+        <p id="employees-empty" class="empty hidden">등록된 직원이 없어요.</p>
+      </div>
+
+      <!-- 전체 기록 탭 -->
+      <div id="admin-tab-records" class="admin-pane hidden">
+        <div class="toolbar wrap">
+          <label>직원
+            <select id="filter-user">
+              <option value="">전체</option>
+            </select>
+          </label>
+          <label>시작일 <input type="date" id="filter-from" /></label>
+          <label>종료일 <input type="date" id="filter-to" /></label>
+          <button id="filter-reset" class="ghost">초기화</button>
+          <button id="add-record-btn" class="primary small">+ 기록 추가</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>날짜</th>
+              <th>아이디</th>
+              <th>이름</th>
+              <th>출근</th>
+              <th>퇴근</th>
+              <th>근무시간</th>
+              <th>관리</th>
+            </tr>
+          </thead>
+          <tbody id="all-records-body"></tbody>
+        </table>
+        <p id="all-records-empty" class="empty hidden">표시할 기록이 없어요.</p>
+      </div>
+
+      <!-- 통계 탭 -->
+      <div id="admin-tab-stats" class="admin-pane hidden">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">전체 직원</div>
+            <div class="stat-value" id="stat-total-employees">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">오늘 출근</div>
+            <div class="stat-value" id="stat-today-checkin">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">오늘 퇴근</div>
+            <div class="stat-value" id="stat-today-checkout">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">이번 달 총 근무</div>
+            <div class="stat-value" id="stat-month-hours">0시간</div>
+          </div>
+        </div>
+
+        <h3>이번 달 직원별 근무시간</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>직원</th>
+              <th>출근일수</th>
+              <th>총 근무시간</th>
+              <th>평균</th>
+            </tr>
+          </thead>
+          <tbody id="stat-by-user-body"></tbody>
+        </table>
+      </div>
+    </section>
+
     <footer>
       <small>💾 데이터는 이 브라우저에만 저장돼요 (localStorage)</small>
     </footer>
+  </div>
+
+  <!-- 기록 편집/추가 모달 -->
+  <div id="record-modal" class="modal hidden">
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-card">
+      <h3 id="record-modal-title">기록 편집</h3>
+      <form id="record-form" class="form">
+        <label>직원
+          <select id="record-user" required></select>
+        </label>
+        <label>날짜 <input type="date" id="record-date" required /></label>
+        <label>출근 시간 <input type="time" id="record-checkin" step="1" /></label>
+        <label>퇴근 시간 <input type="time" id="record-checkout" step="1" /></label>
+        <p id="record-modal-msg" class="msg"></p>
+        <div class="modal-actions">
+          <button type="button" class="ghost" data-close>취소</button>
+          <button type="submit" class="primary">저장</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <script src="app.js"></script>
