@@ -1,53 +1,36 @@
-// 직원 출퇴근 관리 (웹 버전)
-// 데이터는 브라우저 localStorage에 저장돼요.
+// 직원 출퇴근 관리 (웹 버전 - 서버 백엔드)
+// 데이터는 Neon Postgres에 저장되고, /api/* 엔드포인트로 통신해요.
 
-const USERS_KEY = "attendance.users";
-const RECORDS_KEY = "attendance.records";
-const SESSION_KEY = "attendance.session";
+let currentUser = null;
 
-const DEFAULT_ADMIN = {
-  id: "admin",
-  name: "관리자",
-  password: "admin1234",
-};
-
-// ====== localStorage 도우미 ======
-function load(key) {
-  try {
-    return JSON.parse(localStorage.getItem(key)) || [];
-  } catch {
-    return [];
+// ====== fetch 헬퍼 ======
+async function api(path, opts = {}) {
+  const res = await fetch(path, {
+    method: opts.method || "GET",
+    headers: opts.body ? { "Content-Type": "application/json" } : {},
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+    credentials: "same-origin",
+  });
+  let data = null;
+  try { data = await res.json(); } catch {}
+  if (!res.ok) {
+    const err = new Error((data && data.error) || `오류 (${res.status})`);
+    err.status = res.status;
+    err.data = data;
+    throw err;
   }
-}
-function save(key, value) {
-  localStorage.setItem(key, JSON.stringify(value));
+  return data || {};
 }
 
-// ====== 비밀번호 해시 (Web Crypto API) ======
-async function hashPassword(password) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(hashBuffer))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-// ====== 날짜/시간 도우미 ======
-function pad(n) {
-  return String(n).padStart(2, "0");
-}
-function formatDate(d) {
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
-function formatTime(d) {
-  return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-}
+// ====== 날짜/시간 ======
+function pad(n) { return String(n).padStart(2, "0"); }
+function formatDate(d) { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
+function formatTime(d) { return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; }
 function diffSeconds(start, end) {
   if (!start || !end) return 0;
-  const [h1, m1, s1] = start.split(":").map(Number);
-  const [h2, m2, s2] = end.split(":").map(Number);
-  const sec = h2 * 3600 + m2 * 60 + (s2 || 0) - (h1 * 3600 + m1 * 60 + (s1 || 0));
+  const [h1, m1, s1 = 0] = start.split(":").map(Number);
+  const [h2, m2, s2 = 0] = end.split(":").map(Number);
+  const sec = h2 * 3600 + m2 * 60 + s2 - (h1 * 3600 + m1 * 60 + s1);
   return sec > 0 ? sec : 0;
 }
 function formatDuration(sec) {
@@ -74,84 +57,48 @@ function showMsg(elementId, text, type = "") {
   }
 }
 
-// ====== 사용자 헬퍼 ======
-function getUsers() {
-  return load(USERS_KEY).map((u) => ({ role: "employee", ...u }));
-}
-function getUser(id) {
-  return getUsers().find((u) => u.id === id);
-}
-function isAdmin(user) {
-  return user && user.role === "admin";
-}
-
-// ====== 기본 관리자 시드 ======
-async function ensureDefaultAdmin() {
-  const users = load(USERS_KEY);
-  const hasAdmin = users.some((u) => u.role === "admin");
-  if (hasAdmin) return;
-
-  users.push({
-    id: DEFAULT_ADMIN.id,
-    name: DEFAULT_ADMIN.name,
-    passwordHash: await hashPassword(DEFAULT_ADMIN.password),
-    role: "admin",
-    createdAt: new Date().toISOString(),
-  });
-  save(USERS_KEY, users);
-}
+function isAdmin(user) { return user && user.role === "admin"; }
 
 // ====== 회원가입 ======
 async function handleSignup(event) {
   event.preventDefault();
   const id = document.getElementById("signup-id").value.trim();
   const name = document.getElementById("signup-name").value.trim();
-  const pw = document.getElementById("signup-pw").value;
+  const password = document.getElementById("signup-pw").value;
 
-  if (!id || !name || pw.length < 4) {
+  if (!id || !name || password.length < 4) {
     showMsg("auth-msg", "모든 칸을 채워주세요. 비밀번호는 4자 이상이에요.", "error");
     return;
   }
-
-  const users = load(USERS_KEY);
-  if (users.find((u) => u.id === id)) {
-    showMsg("auth-msg", "이미 사용 중인 아이디예요.", "error");
-    return;
+  try {
+    await api("/api/auth/signup", { method: "POST", body: { id, name, password } });
+    showMsg("auth-msg", `${name}님, 회원가입 완료! 이제 로그인해주세요.`, "success");
+    document.getElementById("signup-form").reset();
+    switchTab("login");
+  } catch (err) {
+    showMsg("auth-msg", err.message, "error");
   }
-
-  users.push({
-    id,
-    name,
-    passwordHash: await hashPassword(pw),
-    role: "employee",
-    createdAt: new Date().toISOString(),
-  });
-  save(USERS_KEY, users);
-  showMsg("auth-msg", `${name}님, 회원가입 완료! 이제 로그인해주세요.`, "success");
-  document.getElementById("signup-form").reset();
-  switchTab("login");
 }
 
 // ====== 로그인 ======
 async function handleLogin(event) {
   event.preventDefault();
   const id = document.getElementById("login-id").value.trim();
-  const pw = document.getElementById("login-pw").value;
-
-  const user = getUser(id);
-  if (!user || user.passwordHash !== (await hashPassword(pw))) {
-    showMsg("auth-msg", "아이디 또는 비밀번호가 틀렸어요.", "error");
-    return;
+  const password = document.getElementById("login-pw").value;
+  try {
+    const { user } = await api("/api/auth/login", { method: "POST", body: { id, password } });
+    currentUser = user;
+    document.getElementById("login-form").reset();
+    enterApp(user);
+  } catch (err) {
+    showMsg("auth-msg", err.message, "error");
   }
-
-  save(SESSION_KEY, { id: user.id, name: user.name, role: user.role });
-  document.getElementById("login-form").reset();
-  enterApp(user);
 }
 
 // ====== 로그아웃 ======
-function handleLogout() {
-  localStorage.removeItem(SESSION_KEY);
+async function handleLogout() {
+  try { await api("/api/auth/logout", { method: "POST" }); } catch {}
+  currentUser = null;
   document.getElementById("app-section").classList.add("hidden");
   document.getElementById("admin-section").classList.add("hidden");
   document.getElementById("auth-section").classList.remove("hidden");
@@ -159,67 +106,41 @@ function handleLogout() {
 }
 
 // ====== 출근 ======
-function handleCheckIn() {
-  const session = JSON.parse(localStorage.getItem(SESSION_KEY) || "null");
-  if (!session) return;
-
-  const records = load(RECORDS_KEY);
-  const today = formatDate(new Date());
-  const existing = records.find((r) => r.userId === session.id && r.date === today);
-
-  if (existing && existing.checkIn) {
-    showMsg("action-msg", `이미 ${existing.checkIn}에 출근을 찍었어요.`, "error");
-    return;
+async function handleCheckIn() {
+  if (!currentUser) return;
+  try {
+    const { time } = await api("/api/auth/checkin", { method: "POST" });
+    showMsg("action-msg", `🟢 출근 완료! (${time})`, "success");
+    await renderMyRecords();
+  } catch (err) {
+    showMsg("action-msg", err.message, "error");
   }
-
-  const time = formatTime(new Date());
-  if (existing) {
-    existing.checkIn = time;
-  } else {
-    records.push({
-      userId: session.id,
-      name: session.name,
-      date: today,
-      checkIn: time,
-      checkOut: null,
-    });
-  }
-  save(RECORDS_KEY, records);
-  showMsg("action-msg", `🟢 출근 완료! (${time})`, "success");
-  renderRecords(session);
 }
 
 // ====== 퇴근 ======
-function handleCheckOut() {
-  const session = JSON.parse(localStorage.getItem(SESSION_KEY) || "null");
-  if (!session) return;
-
-  const records = load(RECORDS_KEY);
-  const today = formatDate(new Date());
-  const existing = records.find((r) => r.userId === session.id && r.date === today);
-
-  if (!existing || !existing.checkIn) {
-    showMsg("action-msg", "오늘 출근 기록이 없어요. 먼저 출근을 찍어주세요.", "error");
-    return;
+async function handleCheckOut() {
+  if (!currentUser) return;
+  try {
+    const { time } = await api("/api/auth/checkout", { method: "POST" });
+    showMsg("action-msg", `🔴 퇴근 완료! 오늘도 수고하셨어요. (${time})`, "success");
+    await renderMyRecords();
+  } catch (err) {
+    showMsg("action-msg", err.message, "error");
   }
-  if (existing.checkOut) {
-    showMsg("action-msg", `이미 ${existing.checkOut}에 퇴근을 찍었어요.`, "error");
-    return;
-  }
-
-  existing.checkOut = formatTime(new Date());
-  save(RECORDS_KEY, records);
-  showMsg("action-msg", `🔴 퇴근 완료! 오늘도 수고하셨어요. (${existing.checkOut})`, "success");
-  renderRecords(session);
 }
 
 // ====== 직원 본인 기록 표시 ======
-function renderRecords(session) {
+async function renderMyRecords() {
   const tbody = document.getElementById("records-body");
   const empty = document.getElementById("empty-msg");
-  const records = load(RECORDS_KEY)
-    .filter((r) => r.userId === session.id)
-    .sort((a, b) => (a.date < b.date ? 1 : -1));
+  let records = [];
+  try {
+    const data = await api("/api/records");
+    records = data.records || [];
+  } catch (err) {
+    showMsg("action-msg", err.message, "error");
+    return;
+  }
 
   tbody.innerHTML = "";
   if (records.length === 0) {
@@ -268,12 +189,11 @@ function enterApp(user) {
     document.getElementById("admin-section").classList.remove("hidden");
     document.getElementById("admin-name").textContent = user.name;
     switchAdminTab("employees");
-    refreshUserFilter();
   } else {
     document.getElementById("admin-section").classList.add("hidden");
     document.getElementById("app-section").classList.remove("hidden");
     document.getElementById("user-name").textContent = user.name;
-    renderRecords(user);
+    renderMyRecords();
   }
 }
 
@@ -291,35 +211,43 @@ function updateNow() {
 // 관리자 모드
 // ============================================================
 
-function switchAdminTab(name) {
+async function switchAdminTab(name) {
   const tabs = document.querySelectorAll(".admin-tabs .tab");
   tabs.forEach((t) => t.classList.toggle("active", t.dataset.adminTab === name));
   ["employees", "records", "stats"].forEach((n) => {
     const pane = document.getElementById(`admin-tab-${n}`);
     if (pane) pane.classList.toggle("hidden", n !== name);
   });
-  if (name === "employees") renderEmployees();
+  if (name === "employees") await renderEmployees();
   else if (name === "records") {
-    refreshUserFilter();
-    renderAllRecords();
-  } else if (name === "stats") renderStats();
+    await refreshUserFilter();
+    await renderAllRecords();
+  } else if (name === "stats") await renderStats();
 }
 
-function renderAdmin() {
-  refreshUserFilter();
-  renderEmployees();
-  renderAllRecords();
-  renderStats();
+async function renderAdmin() {
+  await refreshUserFilter();
+  await renderEmployees();
+  await renderAllRecords();
+  await renderStats();
 }
 
 // ---- 직원 관리 ----
-function renderEmployees() {
+let cachedEmployees = [];
+
+async function renderEmployees() {
+  let users = [];
+  try {
+    const data = await api("/api/users");
+    users = data.users || [];
+  } catch (err) {
+    return;
+  }
+  cachedEmployees = users;
+
   const search = (document.getElementById("employee-search")?.value || "")
     .trim()
     .toLowerCase();
-  const users = getUsers();
-  const records = load(RECORDS_KEY);
-
   const filtered = users.filter(
     (u) =>
       !search ||
@@ -340,14 +268,10 @@ function renderEmployees() {
   empty.classList.add("hidden");
 
   const adminCount = users.filter((u) => u.role === "admin").length;
-  const session = JSON.parse(localStorage.getItem(SESSION_KEY) || "null");
 
   for (const u of filtered) {
-    const totalSec = records
-      .filter((r) => r.userId === u.id)
-      .reduce((sum, r) => sum + diffSeconds(r.checkIn, r.checkOut), 0);
-    const created = u.createdAt ? u.createdAt.slice(0, 10) : "-";
-    const isSelf = session && session.id === u.id;
+    const created = u.created_at ? u.created_at.slice(0, 10) : "-";
+    const isSelf = currentUser && currentUser.id === u.id;
     const isLastAdmin = u.role === "admin" && adminCount <= 1;
     const cannotDelete = isSelf || isLastAdmin;
     const deleteTitle = isSelf
@@ -362,7 +286,7 @@ function renderEmployees() {
       <td>${escapeHtml(u.name || "")}</td>
       <td>${u.role === "admin" ? '<span class="badge">관리자</span>' : "직원"}</td>
       <td>${created}</td>
-      <td>${formatDuration(totalSec)}</td>
+      <td>${formatDuration(Number(u.total_seconds) || 0)}</td>
       <td class="row-actions">
         <button class="ghost small" data-action="toggle-role" data-id="${escapeAttr(u.id)}"
           ${isLastAdmin ? `disabled title="마지막 관리자는 강등할 수 없어요"` : ""}>
@@ -378,80 +302,87 @@ function renderEmployees() {
   }
 }
 
-function handleEmployeesClick(e) {
+async function handleEmployeesClick(e) {
   const btn = e.target.closest("button[data-action]");
   if (!btn) return;
   const id = btn.dataset.id;
-  if (btn.dataset.action === "delete-user") deleteUser(id);
-  else if (btn.dataset.action === "toggle-role") toggleRole(id);
+  if (btn.dataset.action === "delete-user") await deleteUser(id);
+  else if (btn.dataset.action === "toggle-role") await toggleRole(id);
 }
 
-function deleteUser(id) {
-  const users = load(USERS_KEY);
-  const target = users.find((u) => u.id === id);
+async function deleteUser(id) {
+  const target = cachedEmployees.find((u) => u.id === id);
   if (!target) return;
   if (!confirm(`'${target.name}'(${id}) 직원을 삭제할까요?\n출퇴근 기록도 함께 삭제돼요.`)) return;
-
-  const newUsers = users.filter((u) => u.id !== id);
-  const newRecords = load(RECORDS_KEY).filter((r) => r.userId !== id);
-  save(USERS_KEY, newUsers);
-  save(RECORDS_KEY, newRecords);
-  renderAdmin();
+  try {
+    await api(`/api/users/${encodeURIComponent(id)}`, { method: "DELETE" });
+    await renderAdmin();
+  } catch (err) {
+    alert(err.message);
+  }
 }
 
-function toggleRole(id) {
-  const users = load(USERS_KEY);
-  const target = users.find((u) => u.id === id);
+async function toggleRole(id) {
+  const target = cachedEmployees.find((u) => u.id === id);
   if (!target) return;
-
-  const adminCount = users.filter((u) => u.role === "admin").length;
-  if (target.role === "admin" && adminCount <= 1) {
-    alert("마지막 관리자는 강등할 수 없어요.");
-    return;
+  const newRole = target.role === "admin" ? "employee" : "admin";
+  try {
+    const result = await api(`/api/users/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      body: { role: newRole },
+    });
+    if (result.demotedSelf) {
+      alert("자신을 직원으로 강등했어요. 다시 로그인해주세요.");
+      await handleLogout();
+      return;
+    }
+    await renderAdmin();
+  } catch (err) {
+    alert(err.message);
   }
-
-  const session = JSON.parse(localStorage.getItem(SESSION_KEY) || "null");
-  const demotingSelf = session && session.id === id && target.role === "admin";
-
-  target.role = target.role === "admin" ? "employee" : "admin";
-  save(USERS_KEY, users);
-
-  if (demotingSelf) {
-    alert("자신을 직원으로 강등했어요. 다시 로그인해주세요.");
-    handleLogout();
-    return;
-  }
-  renderAdmin();
 }
 
 // ---- 전체 기록 ----
-function refreshUserFilter() {
+async function refreshUserFilter() {
   const select = document.getElementById("filter-user");
   if (!select) return;
   const current = select.value;
-  const users = getUsers().filter((u) => u.role !== "admin");
+  let users = cachedEmployees.length ? cachedEmployees : [];
+  if (users.length === 0) {
+    try {
+      const data = await api("/api/users");
+      users = data.users || [];
+      cachedEmployees = users;
+    } catch {}
+  }
+  const employees = users.filter((u) => u.role !== "admin");
   select.innerHTML =
     '<option value="">전체</option>' +
-    users
+    employees
       .map(
         (u) => `<option value="${escapeAttr(u.id)}">${escapeHtml(u.name)} (${escapeHtml(u.id)})</option>`
       )
       .join("");
-  if (current && users.some((u) => u.id === current)) select.value = current;
+  if (current && employees.some((u) => u.id === current)) select.value = current;
 }
 
-function renderAllRecords() {
+async function renderAllRecords() {
   const userId = document.getElementById("filter-user")?.value || "";
   const from = document.getElementById("filter-from")?.value || "";
   const to = document.getElementById("filter-to")?.value || "";
 
-  const records = load(RECORDS_KEY)
-    .filter((r) => !userId || r.userId === userId)
-    .filter((r) => !from || r.date >= from)
-    .filter((r) => !to || r.date <= to)
-    .sort((a, b) =>
-      a.date < b.date ? 1 : a.date > b.date ? -1 : a.userId.localeCompare(b.userId)
-    );
+  const params = new URLSearchParams();
+  if (userId) params.set("userId", userId);
+  if (from) params.set("from", from);
+  if (to) params.set("to", to);
+
+  let records = [];
+  try {
+    const data = await api(`/api/records?${params.toString()}`);
+    records = data.records || [];
+  } catch (err) {
+    return;
+  }
 
   const tbody = document.getElementById("all-records-body");
   const empty = document.getElementById("all-records-empty");
@@ -480,24 +411,31 @@ function renderAllRecords() {
   }
 }
 
-function handleAllRecordsClick(e) {
+let lastRecords = [];
+
+async function handleAllRecordsClick(e) {
   const btn = e.target.closest("button[data-action]");
   if (!btn) return;
   const userId = btn.dataset.user;
   const date = btn.dataset.date;
-  if (btn.dataset.action === "edit-record") openRecordModal({ mode: "edit", userId, date });
-  else if (btn.dataset.action === "delete-record") deleteRecord(userId, date);
+  if (btn.dataset.action === "edit-record") await openRecordModal({ mode: "edit", userId, date });
+  else if (btn.dataset.action === "delete-record") await deleteRecord(userId, date);
 }
 
-function deleteRecord(userId, date) {
+async function deleteRecord(userId, date) {
   if (!confirm(`${date}의 ${userId} 기록을 삭제할까요?`)) return;
-  const newRecords = load(RECORDS_KEY).filter((r) => !(r.userId === userId && r.date === date));
-  save(RECORDS_KEY, newRecords);
-  renderAdmin();
+  try {
+    await api(`/api/records?userId=${encodeURIComponent(userId)}&date=${encodeURIComponent(date)}`, {
+      method: "DELETE",
+    });
+    await renderAdmin();
+  } catch (err) {
+    alert(err.message);
+  }
 }
 
 // ---- 기록 추가/수정 모달 ----
-function openRecordModal(opts) {
+async function openRecordModal(opts) {
   const modal = document.getElementById("record-modal");
   const title = document.getElementById("record-modal-title");
   const userSel = document.getElementById("record-user");
@@ -505,7 +443,13 @@ function openRecordModal(opts) {
   const inInput = document.getElementById("record-checkin");
   const outInput = document.getElementById("record-checkout");
 
-  const employees = getUsers().filter((u) => u.role !== "admin");
+  if (cachedEmployees.length === 0) {
+    try {
+      const data = await api("/api/users");
+      cachedEmployees = data.users || [];
+    } catch {}
+  }
+  const employees = cachedEmployees.filter((u) => u.role !== "admin");
   if (employees.length === 0) {
     alert("등록된 직원이 없어요. 먼저 직원이 회원가입해야 해요.");
     return;
@@ -517,7 +461,15 @@ function openRecordModal(opts) {
     .join("");
 
   if (opts.mode === "edit") {
-    const r = load(RECORDS_KEY).find((x) => x.userId === opts.userId && x.date === opts.date);
+    const params = new URLSearchParams({ userId: opts.userId, from: opts.date, to: opts.date });
+    let r = null;
+    try {
+      const data = await api(`/api/records?${params.toString()}`);
+      r = (data.records || []).find((x) => x.userId === opts.userId && x.date === opts.date);
+    } catch (err) {
+      alert(err.message);
+      return;
+    }
     if (!r) return;
     title.textContent = "기록 수정";
     userSel.value = r.userId;
@@ -548,7 +500,7 @@ function closeRecordModal() {
   document.getElementById("record-modal").classList.add("hidden");
 }
 
-function handleRecordSubmit(e) {
+async function handleRecordSubmit(e) {
   e.preventDefault();
   const modal = document.getElementById("record-modal");
   const mode = modal.dataset.mode;
@@ -568,32 +520,27 @@ function handleRecordSubmit(e) {
     return;
   }
 
-  const records = load(RECORDS_KEY);
-  const user = getUser(userId);
-  const name = user ? user.name : "";
-
-  if (mode === "add") {
-    const dup = records.find((r) => r.userId === userId && r.date === date);
-    if (dup) {
-      showMsg("record-modal-msg", "같은 직원의 같은 날짜 기록이 이미 있어요. 수정 버튼을 사용하세요.", "error");
-      return;
+  try {
+    if (mode === "add") {
+      await api("/api/records", {
+        method: "POST",
+        body: { userId, date, checkIn, checkOut },
+      });
+    } else {
+      const params = new URLSearchParams({
+        userId: modal.dataset.originalUser,
+        date: modal.dataset.originalDate,
+      });
+      await api(`/api/records?${params.toString()}`, {
+        method: "PATCH",
+        body: { checkIn, checkOut },
+      });
     }
-    records.push({ userId, name, date, checkIn, checkOut });
-  } else {
-    const r = records.find(
-      (x) => x.userId === modal.dataset.originalUser && x.date === modal.dataset.originalDate
-    );
-    if (!r) {
-      showMsg("record-modal-msg", "기록을 찾을 수 없어요.", "error");
-      return;
-    }
-    r.checkIn = checkIn;
-    r.checkOut = checkOut;
+    closeRecordModal();
+    await renderAdmin();
+  } catch (err) {
+    showMsg("record-modal-msg", err.message, "error");
   }
-
-  save(RECORDS_KEY, records);
-  closeRecordModal();
-  renderAdmin();
 }
 
 function normalizeTime(value) {
@@ -604,30 +551,23 @@ function normalizeTime(value) {
 }
 
 // ---- 통계 ----
-function renderStats() {
-  const users = getUsers().filter((u) => u.role !== "admin");
-  const records = load(RECORDS_KEY);
-  const today = formatDate(new Date());
-  const monthPrefix = today.slice(0, 7);
-
-  document.getElementById("stat-total-employees").textContent = users.length;
-  document.getElementById("stat-today-checkin").textContent = records.filter(
-    (r) => r.date === today && r.checkIn
-  ).length;
-  document.getElementById("stat-today-checkout").textContent = records.filter(
-    (r) => r.date === today && r.checkOut
-  ).length;
-
-  const monthRecords = records.filter((r) => r.date.startsWith(monthPrefix));
-  const monthSec = monthRecords.reduce((sum, r) => sum + diffSeconds(r.checkIn, r.checkOut), 0);
-  document.getElementById("stat-month-hours").textContent = formatDuration(monthSec);
+async function renderStats() {
+  let s;
+  try {
+    s = await api("/api/stats");
+  } catch (err) {
+    return;
+  }
+  document.getElementById("stat-total-employees").textContent = s.totalEmployees;
+  document.getElementById("stat-today-checkin").textContent = s.todayCheckin;
+  document.getElementById("stat-today-checkout").textContent = s.todayCheckout;
+  document.getElementById("stat-month-hours").textContent = formatDuration(s.monthSeconds || 0);
 
   const tbody = document.getElementById("stat-by-user-body");
   tbody.innerHTML = "";
-  for (const u of users) {
-    const userMonth = monthRecords.filter((r) => r.userId === u.id);
-    const days = userMonth.filter((r) => r.checkIn).length;
-    const totalSec = userMonth.reduce((sum, r) => sum + diffSeconds(r.checkIn, r.checkOut), 0);
+  for (const u of s.byUser || []) {
+    const totalSec = Number(u.total_seconds) || 0;
+    const days = Number(u.days) || 0;
     const avgSec = days > 0 ? Math.floor(totalSec / days) : 0;
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -655,8 +595,6 @@ function escapeAttr(str) {
 
 // ====== 시작 ======
 async function init() {
-  await ensureDefaultAdmin();
-
   // 인증 화면
   document.getElementById("tab-login").addEventListener("click", () => switchTab("login"));
   document.getElementById("tab-signup").addEventListener("click", () => switchTab("signup"));
@@ -696,11 +634,15 @@ async function init() {
     if (e.key === "Escape") closeRecordModal();
   });
 
-  // 자동 로그인
-  const session = JSON.parse(localStorage.getItem(SESSION_KEY) || "null");
-  if (session) {
-    const user = getUser(session.id);
-    if (user) enterApp(user);
+  // 자동 로그인 시도
+  try {
+    const { user } = await api("/api/auth/me");
+    if (user) {
+      currentUser = user;
+      enterApp(user);
+    }
+  } catch {
+    // 비로그인 상태면 그냥 로그인 화면 유지
   }
 
   setInterval(updateNow, 1000);
