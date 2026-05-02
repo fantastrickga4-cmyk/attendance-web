@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>직원 출퇴근 관리</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>🏢 직원 출퇴근 관리</h1>
+
+    <!-- 로그인/회원가입 화면 -->
+    <section id="auth-section" class="card">
+      <div class="tabs">
+        <button id="tab-login" class="tab active">로그인</button>
+        <button id="tab-signup" class="tab">회원가입</button>
+      </div>
+
+      <!-- 로그인 폼 -->
+      <form id="login-form" class="form">
+        <label>아이디 <input type="text" id="login-id" autocomplete="username" required /></label>
+        <label>비밀번호 <input type="password" id="login-pw" autocomplete="current-password" required /></label>
+        <button type="submit" class="primary">로그인</button>
+      </form>
+
+      <!-- 회원가입 폼 -->
+      <form id="signup-form" class="form hidden">
+        <label>아이디 <input type="text" id="signup-id" required /></label>
+        <label>이름 <input type="text" id="signup-name" required /></label>
+        <label>비밀번호 (4자 이상) <input type="password" id="signup-pw" minlength="4" required /></label>
+        <button type="submit" class="primary">회원가입</button>
+      </form>
+
+      <p id="auth-msg" class="msg"></p>
+    </section>
+
+    <!-- 로그인 후 화면 -->
+    <section id="app-section" class="card hidden">
+      <div class="user-bar">
+        <div>
+          <strong id="user-name"></strong> 님 환영합니다!
+          <div class="now" id="now-display"></div>
+        </div>
+        <button id="logout-btn" class="ghost">로그아웃</button>
+      </div>
+
+      <div class="actions">
+        <button id="checkin-btn" class="big primary">🟢 출근 찍기</button>
+        <button id="checkout-btn" class="big danger">🔴 퇴근 찍기</button>
+      </div>
+
+      <p id="action-msg" class="msg"></p>
+
+      <h2>📋 내 출퇴근 기록</h2>
+      <table id="records-table">
+        <thead>
+          <tr>
+            <th>날짜</th>
+            <th>출근</th>
+            <th>퇴근</th>
+            <th>근무 시간</th>
+          </tr>
+        </thead>
+        <tbody id="records-body"></tbody>
+      </table>
+      <p id="empty-msg" class="empty hidden">아직 출퇴근 기록이 없어요.</p>
+    </section>
+
+    <footer>
+      <small>💾 데이터는 이 브라우저에만 저장돼요 (localStorage)</small>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
