@@ -1,5 +1,5 @@
-import { sql, ensureReady } from "../../lib/db.js";
-import { requireAdmin } from "../../lib/auth.js";
+import { sql, ensureReady } from "../lib/db.js";
+import { requireAdmin } from "../lib/auth.js";
 
 export default async function handler(req, res) {
   try {

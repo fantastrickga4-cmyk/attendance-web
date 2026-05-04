@@ -3,13 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>직원 출퇴근 관리</title>
+  <title>FANTASTRICK 직원 출퇴근 관리</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#4f46e5" />
 </head>
 <body>
-  <div class="container">
-    <h1>🏢 직원 출퇴근 관리</h1>
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-mark">출</div>
+      <div>
+        <span class="brand-name">FANTASTRICK 직원 출퇴근 관리</span>
+        <span class="brand-version">v1.0</span>
+      </div>
+    </div>
+  </header>
 
+  <div class="container">
     <!-- 로그인/회원가입 화면 -->
     <section id="auth-section" class="card">
       <div class="tabs">
@@ -17,14 +27,12 @@
         <button id="tab-signup" class="tab">회원가입</button>
       </div>
 
-      <!-- 로그인 폼 -->
       <form id="login-form" class="form">
         <label>아이디 <input type="text" id="login-id" autocomplete="username" required /></label>
         <label>비밀번호 <input type="password" id="login-pw" autocomplete="current-password" required /></label>
         <button type="submit" class="primary">로그인</button>
       </form>
 
-      <!-- 회원가입 폼 -->
       <form id="signup-form" class="form hidden">
         <label>아이디 <input type="text" id="signup-id" required /></label>
         <label>이름 <input type="text" id="signup-name" required /></label>
@@ -33,39 +41,77 @@
       </form>
 
       <p id="auth-msg" class="msg"></p>
-      <p class="hint">💡 첫 배포 시 관리자 계정이 자동 생성됩니다 — 아이디 <code>admin</code> / 비밀번호 <code>admin1234</code></p>
+      <p id="mobile-notice" class="hint hidden">모바일에서는 <strong>관리자만</strong> 로그인할 수 있습니다. 직원은 PC에서 접속해주세요.</p>
+      <p class="hint">최초 배포 시 관리자 계정이 자동 생성됩니다 — 아이디 <code>admin</code> / 비밀번호 <code>admin1234</code></p>
     </section>
 
     <!-- 직원용 화면 -->
     <section id="app-section" class="card hidden">
       <div class="user-bar">
         <div>
-          <strong id="user-name"></strong> 님 환영합니다!
-          <div class="now" id="now-display"></div>
+          <strong id="user-name"></strong>
+          <span class="now" id="now-display"></span>
         </div>
-        <button id="logout-btn" class="ghost">로그아웃</button>
+        <div class="user-bar-actions">
+          <button class="ghost open-profile-btn">내 정보</button>
+          <button id="logout-btn" class="ghost">로그아웃</button>
+        </div>
       </div>
 
       <div class="actions">
-        <button id="checkin-btn" class="big primary">🟢 출근 찍기</button>
-        <button id="checkout-btn" class="big danger">🔴 퇴근 찍기</button>
+        <button id="checkin-btn" class="big primary">출근 찍기</button>
+        <button id="checkout-btn" class="big danger">퇴근 찍기</button>
       </div>
 
       <p id="action-msg" class="msg"></p>
 
-      <h2>📋 내 출퇴근 기록</h2>
-      <table id="records-table">
+      <div class="section-head">
+        <h2>내 출퇴근 기록</h2>
+        <div class="view-toggle">
+          <button class="ghost small" data-view-target="emp" data-view="table">표</button>
+          <button class="ghost small active" data-view-target="emp" data-view="calendar">캘린더</button>
+        </div>
+      </div>
+
+      <div id="emp-table-view" class="hidden">
+        <table id="records-table">
+          <thead>
+            <tr>
+              <th>날짜</th>
+              <th>출근</th>
+              <th>퇴근</th>
+              <th>근무 시간</th>
+              <th id="emp-round-th" class="hidden">회차</th>
+            </tr>
+          </thead>
+          <tbody id="records-body"></tbody>
+        </table>
+        <p id="empty-msg" class="empty hidden">아직 출퇴근 기록이 없습니다.</p>
+      </div>
+
+      <div id="emp-calendar-view">
+        <div class="calendar" data-cal="emp"></div>
+      </div>
+
+      <div class="section-head">
+        <h2>내 수정 신청</h2>
+        <button id="open-request-btn" class="primary small">+ 수정 신청</button>
+      </div>
+      <table id="my-requests-table">
         <thead>
           <tr>
-            <th>날짜</th>
-            <th>출근</th>
-            <th>퇴근</th>
-            <th>근무 시간</th>
+            <th>신청일</th>
+            <th>대상 날짜</th>
+            <th>신청 내용</th>
+            <th>사유</th>
+            <th>상태</th>
+            <th>처리자</th>
+            <th>관리</th>
           </tr>
         </thead>
-        <tbody id="records-body"></tbody>
+        <tbody id="my-requests-body"></tbody>
       </table>
-      <p id="empty-msg" class="empty hidden">아직 출퇴근 기록이 없어요.</p>
+      <p id="my-requests-empty" class="empty hidden">신청한 내역이 없습니다.</p>
     </section>
 
     <!-- 관리자용 화면 -->
@@ -73,16 +119,24 @@
       <div class="user-bar">
         <div>
           <span class="badge">관리자</span>
-          <strong id="admin-name"></strong> 님
-          <div class="now" id="admin-now-display"></div>
+          <strong id="admin-name"></strong>
+          <span class="now" id="admin-now-display"></span>
         </div>
-        <button id="admin-logout-btn" class="ghost">로그아웃</button>
+        <div class="user-bar-actions">
+          <button id="push-toggle-btn" class="ghost" hidden>알림 켜기</button>
+          <button class="ghost open-profile-btn">내 정보</button>
+          <button id="admin-logout-btn" class="ghost">로그아웃</button>
+        </div>
       </div>
+      <p id="push-msg" class="msg"></p>
 
       <div class="tabs admin-tabs">
-        <button class="tab active" data-admin-tab="employees">👥 직원 관리</button>
-        <button class="tab" data-admin-tab="records">📋 전체 기록</button>
-        <button class="tab" data-admin-tab="stats">📊 통계</button>
+        <button class="tab active" data-admin-tab="employees">직원 관리</button>
+        <button class="tab" data-admin-tab="records">전체 기록</button>
+        <button class="tab" data-admin-tab="requests">신청 <span id="pending-badge" class="pending-badge hidden">0</span></button>
+        <button class="tab" data-admin-tab="stats">통계</button>
+        <button class="tab" data-admin-tab="sessions">세션</button>
+        <button class="tab" data-admin-tab="audit">이력</button>
       </div>
 
       <!-- 직원 관리 탭 -->
@@ -98,13 +152,14 @@
               <th>이름</th>
               <th>권한</th>
               <th>가입일</th>
+              <th>최초 근무일</th>
               <th>총 근무시간</th>
               <th>관리</th>
             </tr>
           </thead>
           <tbody id="employees-body"></tbody>
         </table>
-        <p id="employees-empty" class="empty hidden">등록된 직원이 없어요.</p>
+        <p id="employees-empty" class="empty hidden">등록된 직원이 없습니다.</p>
       </div>
 
       <!-- 전체 기록 탭 -->
@@ -119,6 +174,7 @@
           <label>종료일 <input type="date" id="filter-to" /></label>
           <button id="filter-reset" class="ghost">초기화</button>
           <button id="add-record-btn" class="primary small">+ 기록 추가</button>
+          <button id="csv-export-btn" class="ghost small">CSV 다운로드</button>
         </div>
         <table>
           <thead>
@@ -129,12 +185,13 @@
               <th>출근</th>
               <th>퇴근</th>
               <th>근무시간</th>
+              <th>회차</th>
               <th>관리</th>
             </tr>
           </thead>
           <tbody id="all-records-body"></tbody>
         </table>
-        <p id="all-records-empty" class="empty hidden">표시할 기록이 없어요.</p>
+        <p id="all-records-empty" class="empty hidden">표시할 기록이 없습니다.</p>
       </div>
 
       <!-- 통계 탭 -->
@@ -170,11 +227,95 @@
           </thead>
           <tbody id="stat-by-user-body"></tbody>
         </table>
+
+        <div class="section-head" style="margin-top:24px;">
+          <h3 style="margin:0; text-transform:none; letter-spacing:0; font-size:14px;">월별 캘린더</h3>
+          <div class="toolbar" style="margin:0;">
+            <select id="admin-cal-user"></select>
+          </div>
+        </div>
+        <div class="calendar" data-cal="admin"></div>
+      </div>
+
+      <!-- 신청 탭 -->
+      <div id="admin-tab-requests" class="admin-pane hidden">
+        <div class="toolbar wrap">
+          <label>상태
+            <select id="req-status-filter">
+              <option value="pending">대기 중</option>
+              <option value="">전체</option>
+              <option value="approved">승인</option>
+              <option value="rejected">반려</option>
+              <option value="cancelled">취소</option>
+            </select>
+          </label>
+          <button id="req-refresh" class="ghost small">새로고침</button>
+          <span id="req-count" class="count"></span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>신청일</th>
+              <th>신청자</th>
+              <th>대상 날짜</th>
+              <th>현재 기록</th>
+              <th>신청 내용</th>
+              <th>사유</th>
+              <th>상태</th>
+              <th>처리</th>
+            </tr>
+          </thead>
+          <tbody id="all-requests-body"></tbody>
+        </table>
+        <p id="all-requests-empty" class="empty hidden">조건에 맞는 신청이 없습니다.</p>
+      </div>
+
+      <!-- 세션 탭 -->
+      <div id="admin-tab-sessions" class="admin-pane hidden">
+        <div class="toolbar">
+          <button id="sessions-refresh" class="ghost small">새로고침</button>
+          <span id="sessions-count" class="count"></span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>사용자</th>
+              <th>디바이스</th>
+              <th>IP</th>
+              <th>로그인 시각</th>
+              <th>최근 활동</th>
+              <th>처리</th>
+            </tr>
+          </thead>
+          <tbody id="sessions-body"></tbody>
+        </table>
+        <p id="sessions-empty" class="empty hidden">활성 세션이 없습니다.</p>
+      </div>
+
+      <!-- 이력 탭 -->
+      <div id="admin-tab-audit" class="admin-pane hidden">
+        <div class="toolbar">
+          <button id="audit-refresh" class="ghost small">새로고침</button>
+          <span id="audit-count" class="count"></span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>시각</th>
+              <th>작업자</th>
+              <th>작업</th>
+              <th>대상</th>
+              <th>변경 내용</th>
+            </tr>
+          </thead>
+          <tbody id="audit-body"></tbody>
+        </table>
+        <p id="audit-empty" class="empty hidden">기록된 이력이 없습니다.</p>
       </div>
     </section>
 
     <footer>
-      <small>💾 데이터는 Neon Postgres DB에 저장돼요 — 모든 직원이 같은 데이터를 공유해요</small>
+      <small>모든 데이터는 클라우드 데이터베이스(Neon Postgres)에 안전하게 저장됩니다.</small>
     </footer>
   </div>
 
@@ -190,12 +331,102 @@
         <label>날짜 <input type="date" id="record-date" required /></label>
         <label>출근 시간 <input type="time" id="record-checkin" step="1" /></label>
         <label>퇴근 시간 <input type="time" id="record-checkout" step="1" /></label>
+        <label>오늘 담당한 회차 <input type="number" id="record-round-count" min="0" step="1" inputmode="numeric" placeholder="해당 없으면 비워두세요" /></label>
         <p id="record-modal-msg" class="msg"></p>
         <div class="modal-actions">
           <button type="button" class="ghost" data-close>취소</button>
           <button type="submit" class="primary">저장</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- 내 정보 (비밀번호 변경) 모달 -->
+  <div id="profile-modal" class="modal hidden">
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-card">
+      <h3>비밀번호 변경</h3>
+      <form id="profile-form" class="form">
+        <label>현재 비밀번호 <input type="password" id="profile-current" autocomplete="current-password" required /></label>
+        <label>새 비밀번호 (4자 이상) <input type="password" id="profile-new" minlength="4" autocomplete="new-password" required /></label>
+        <label>새 비밀번호 확인 <input type="password" id="profile-confirm" minlength="4" autocomplete="new-password" required /></label>
+        <p id="profile-msg" class="msg"></p>
+        <div class="modal-actions">
+          <button type="button" class="ghost" data-close>닫기</button>
+          <button type="submit" class="primary">변경</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 수정 신청 모달 -->
+  <div id="request-modal" class="modal hidden">
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-card">
+      <h3>기록 수정 신청</h3>
+      <form id="request-form" class="form">
+        <label>대상 날짜 <input type="date" id="request-date" required /></label>
+        <p id="request-current" class="hint" style="margin:0;"></p>
+        <label>출근 시간 <input type="time" id="request-checkin" step="1" /></label>
+        <label>퇴근 시간 <input type="time" id="request-checkout" step="1" /></label>
+        <label>사유 <textarea id="request-reason" rows="3" required minlength="2" placeholder="예: 출근 찍는 걸 깜빡했습니다."></textarea></label>
+        <p id="request-msg" class="msg"></p>
+        <div class="modal-actions">
+          <button type="button" class="ghost" data-close>취소</button>
+          <button type="submit" class="primary">신청</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 신청 반려 사유 모달 -->
+  <div id="reject-modal" class="modal hidden">
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-card">
+      <h3>신청 반려</h3>
+      <form id="reject-form" class="form">
+        <label>반려 사유 <textarea id="reject-comment" rows="3" required minlength="2" placeholder="반려 사유를 직원에게 안내합니다."></textarea></label>
+        <p id="reject-msg" class="msg"></p>
+        <div class="modal-actions">
+          <button type="button" class="ghost" data-close>취소</button>
+          <button type="submit" class="danger">반려</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 오늘 담당한 회차 입력 모달 (아이디 끝자리 3 전용) -->
+  <div id="round-count-modal" class="modal hidden">
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-card">
+      <h3>오늘 담당한 회차</h3>
+      <p style="color:var(--text-secondary); font-size:13px; margin:0 0 12px;">
+        퇴근이 정상 처리되었습니다. 오늘 담당한 회차 수를 입력해주세요.
+      </p>
+      <form id="round-count-form" class="form">
+        <label>회차 수
+          <input type="number" id="round-count-input" min="0" step="1" inputmode="numeric" required />
+        </label>
+        <p id="round-count-msg" class="msg"></p>
+        <div class="modal-actions">
+          <button type="button" id="round-count-skip" class="ghost">건너뛰기</button>
+          <button type="submit" class="primary">저장하고 로그아웃</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 임시 비밀번호 표시 모달 -->
+  <div id="temp-password-modal" class="modal hidden">
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-card">
+      <h3>임시 비밀번호 발급됨</h3>
+      <p style="color:var(--text-secondary); font-size:13px; margin:0 0 12px;">아래 비밀번호를 직원에게 직접 전달해주세요. 이 화면을 닫으면 다시 확인할 수 없습니다.</p>
+      <div id="temp-password-box" class="temp-password"></div>
+      <div class="modal-actions">
+        <button type="button" id="temp-password-copy" class="ghost">복사</button>
+        <button type="button" class="primary" data-close>확인</button>
+      </div>
     </div>
   </div>
 

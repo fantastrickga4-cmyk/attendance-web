@@ -1,0 +1,10 @@
+{
+  "name": "FANTASTRICK 직원 출퇴근 관리",
+  "short_name": "FT 출퇴근",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "lang": "ko"
+}

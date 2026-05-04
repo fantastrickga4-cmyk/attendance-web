@@ -7,6 +7,8 @@ import {
   readSession,
   readBody,
 } from "../../lib/auth.js";
+import { sendToAdmins } from "../../lib/push.js";
+import { isMobileUA } from "../../lib/device.js";
 
 export default async function handler(req, res) {
   const action = req.query.action;
@@ -19,6 +21,7 @@ export default async function handler(req, res) {
     if (action === "signup") return await signup(req, res);
     if (action === "checkin") return await checkAction(req, res, "in");
     if (action === "checkout") return await checkAction(req, res, "out");
+    if (action === "round-count") return await saveRoundCount(req, res);
 
     res.status(404).json({ error: "Unknown action" });
   } catch (err) {
@@ -40,6 +43,9 @@ async function signup(req, res) {
   const { id, name, password } = await readBody(req);
   if (!id || !name || !password || password.length < 4) {
     return res.status(400).json({ error: "모든 칸을 채워주세요. 비밀번호는 4자 이상이에요." });
+  }
+  if (id === "me") {
+    return res.status(400).json({ error: "사용할 수 없는 아이디예요." });
   }
   const existing = await sql`SELECT id FROM users WHERE id = ${id}`;
   if (existing.length > 0) {
@@ -64,13 +70,18 @@ async function login(req, res) {
   if (!user || !(await verifyPassword(password, user.password_hash))) {
     return res.status(401).json({ error: "아이디 또는 비밀번호가 틀렸어요." });
   }
-  await issueSession(res, user);
+  if (user.role !== "admin" && isMobileUA(req)) {
+    return res.status(403).json({
+      error: "직원은 모바일에서 로그인할 수 없습니다. PC에서 접속해주세요.",
+    });
+  }
+  await issueSession(req, res, user);
   res.status(200).json({ user: { id: user.id, name: user.name, role: user.role } });
 }
 
 async function logout(req, res) {
   if (req.method !== "POST") return res.status(405).end();
-  clearSession(res);
+  await clearSession(req, res);
   res.status(200).json({ ok: true });
 }
 
@@ -78,6 +89,12 @@ async function checkAction(req, res, kind) {
   if (req.method !== "POST") return res.status(405).end();
   const session = await readSession(req);
   if (!session) return res.status(401).json({ error: "로그인이 필요해요." });
+
+  if (session.role !== "admin" && isMobileUA(req)) {
+    return res.status(403).json({
+      error: "직원은 모바일에서 출/퇴근을 찍을 수 없습니다. PC에서 진행해주세요.",
+    });
+  }
 
   const today = todayInTZ();
   const now = nowTimeInTZ();
@@ -94,6 +111,12 @@ async function checkAction(req, res, kind) {
       VALUES (${session.id}, ${today}, ${now})
       ON CONFLICT (user_id, date) DO UPDATE SET check_in = EXCLUDED.check_in
     `;
+    await sql`
+      UPDATE users
+      SET first_check_in_date = LEAST(COALESCE(first_check_in_date, ${today}::date), ${today}::date)
+      WHERE id = ${session.id}
+    `;
+    notifyAdmins(session, today, now, "in");
     return res.status(200).json({ ok: true, time: now });
   }
 
@@ -112,7 +135,52 @@ async function checkAction(req, res, kind) {
     UPDATE records SET check_out = ${now}
     WHERE user_id = ${session.id} AND date = ${today}
   `;
+  notifyAdmins(session, today, now, "out");
   res.status(200).json({ ok: true, time: now });
+}
+
+async function saveRoundCount(req, res) {
+  if (req.method !== "POST") return res.status(405).end();
+  const session = await readSession(req);
+  if (!session) return res.status(401).json({ error: "로그인이 필요해요." });
+
+  const { count } = await readBody(req);
+  let normalized;
+  if (count === null || count === undefined || count === "") {
+    normalized = null;
+  } else {
+    const n = Number(count);
+    if (!Number.isFinite(n) || !Number.isInteger(n) || n < 0) {
+      return res.status(400).json({ error: "회차는 0 이상의 정수만 입력할 수 있어요." });
+    }
+    normalized = n;
+  }
+
+  const today = todayInTZ();
+  const existing = await sql`
+    SELECT 1 FROM records WHERE user_id = ${session.id} AND date = ${today}
+  `;
+  if (existing.length === 0) {
+    return res.status(404).json({ error: "오늘 출퇴근 기록이 없어요." });
+  }
+  await sql`
+    UPDATE records SET round_count = ${normalized}
+    WHERE user_id = ${session.id} AND date = ${today}
+  `;
+  res.status(200).json({ ok: true });
+}
+
+function notifyAdmins(session, date, time, kind) {
+  const isIn = kind === "in";
+  const payload = {
+    title: isIn ? "🟢 출근" : "🔴 퇴근",
+    body: `${session.name}(${session.id}) — ${time}`,
+    tag: `att-${session.id}-${date}-${kind}`,
+    url: "/",
+  };
+  Promise.resolve(sendToAdmins(payload)).catch((err) =>
+    console.error("[push] notify failed:", err)
+  );
 }
 
 function todayInTZ() {
