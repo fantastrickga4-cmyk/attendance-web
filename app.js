@@ -126,6 +126,7 @@ async function handleLogin(event) {
 // ====== 로그아웃 (UI 즉시 전환, API는 백그라운드) ======
 function showAuthScreen(message) {
   currentUser = null;
+  stopIdleTracking();
   document.getElementById("app-section").classList.add("hidden");
   document.getElementById("admin-section").classList.add("hidden");
   document.getElementById("auth-section").classList.remove("hidden");
@@ -139,6 +140,70 @@ async function handleLogout() {
 
 function fireLogoutInBackground() {
   api("/api/auth/logout", { method: "POST" }).catch(() => {});
+}
+
+// ====== 자동 로그아웃 (5분 idle) ======
+const IDLE_TIMEOUT_MS  = 5 * 60 * 1000;     // 5분 무활동 → 로그아웃
+const IDLE_WARNING_MS  = 30 * 1000;         // 마지막 30초는 카운트다운 배너
+const ACTIVITY_EVENTS  = ["mousedown", "keydown", "touchstart", "scroll", "click"];
+let idleLogoutTimer = null;
+let idleWarningTimer = null;
+let idleCountdownInterval = null;
+let idleActivityThrottle = 0;
+
+function startIdleTracking() {
+  if (!currentUser) return;
+  scheduleIdleLogout();
+  ACTIVITY_EVENTS.forEach((ev) => document.addEventListener(ev, onIdleActivity, { passive: true }));
+}
+
+function stopIdleTracking() {
+  clearTimeout(idleLogoutTimer); idleLogoutTimer = null;
+  clearTimeout(idleWarningTimer); idleWarningTimer = null;
+  clearInterval(idleCountdownInterval); idleCountdownInterval = null;
+  hideIdleWarning();
+  ACTIVITY_EVENTS.forEach((ev) => document.removeEventListener(ev, onIdleActivity));
+}
+
+function onIdleActivity() {
+  const now = Date.now();
+  if (now - idleActivityThrottle < 500) return;
+  idleActivityThrottle = now;
+  scheduleIdleLogout();
+  hideIdleWarning();
+}
+
+function scheduleIdleLogout() {
+  clearTimeout(idleLogoutTimer);
+  clearTimeout(idleWarningTimer);
+  idleWarningTimer = setTimeout(showIdleWarning, IDLE_TIMEOUT_MS - IDLE_WARNING_MS);
+  idleLogoutTimer  = setTimeout(handleIdleLogout, IDLE_TIMEOUT_MS);
+}
+
+function showIdleWarning() {
+  const banner = document.getElementById("idle-warning");
+  if (!banner) return;
+  banner.classList.remove("hidden");
+  let secs = Math.floor(IDLE_WARNING_MS / 1000);
+  document.getElementById("idle-countdown").textContent = secs;
+  clearInterval(idleCountdownInterval);
+  idleCountdownInterval = setInterval(() => {
+    secs--;
+    if (secs <= 0) { clearInterval(idleCountdownInterval); idleCountdownInterval = null; return; }
+    const el = document.getElementById("idle-countdown");
+    if (el) el.textContent = secs;
+  }, 1000);
+}
+
+function hideIdleWarning() {
+  const banner = document.getElementById("idle-warning");
+  if (banner) banner.classList.add("hidden");
+  if (idleCountdownInterval) { clearInterval(idleCountdownInterval); idleCountdownInterval = null; }
+}
+
+function handleIdleLogout() {
+  showAuthScreen("5분 동안 활동이 없어 자동 로그아웃되었습니다.");
+  fireLogoutInBackground();
 }
 
 // ====== 출근 ======
@@ -673,6 +738,7 @@ function enterApp(user) {
     renderEmpCalendar();
     renderMyRequests();
   }
+  startIdleTracking();
 }
 
 // ====== 현재 시각 표시 ======
@@ -1582,6 +1648,12 @@ async function init() {
   document.getElementById("logout-btn").addEventListener("click", handleLogout);
   document.getElementById("checkin-btn").addEventListener("click", handleCheckIn);
   document.getElementById("checkout-btn").addEventListener("click", handleCheckOut);
+
+  // 자동 로그아웃 — "계속 사용" 버튼 (배너의 카운트다운 중 클릭 시 idle 타이머 리셋)
+  document.getElementById("idle-stay-btn").addEventListener("click", () => {
+    scheduleIdleLogout();
+    hideIdleWarning();
+  });
 
   // 관리자 화면
   document.getElementById("admin-logout-btn").addEventListener("click", handleLogout);

@@ -687,6 +687,28 @@ footer {
   word-break: break-word;
 }
 
+/* 자동 로그아웃 경고 배너 */
+.idle-warning {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-left: 4px solid var(--danger);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.18);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text);
+  max-width: calc(100vw - 32px);
+}
+.idle-warning-text strong { color: var(--danger); font-variant-numeric: tabular-nums; }
+
 @media (max-width: 600px) {
   .container { padding: 0 16px 24px; }
   .app-header { padding: 16px 16px; margin-bottom: 16px; }
