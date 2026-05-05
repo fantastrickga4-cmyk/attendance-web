@@ -48,12 +48,28 @@ export default async function handler(req, res) {
       ORDER BY u.name ASC
     `;
 
+    // 현재 근무중인 직원 (오늘 출근 ✓, 퇴근 ✗) — 출근 시각 빠른 순
+    const workingNow = await sql`
+      SELECT
+        u.id,
+        u.name,
+        r.check_in::text AS check_in
+      FROM records r
+      JOIN users u ON u.id = r.user_id
+      WHERE r.date = ${today}
+        AND r.check_in IS NOT NULL
+        AND r.check_out IS NULL
+      ORDER BY r.check_in ASC, u.name ASC
+    `;
+
     res.status(200).json({
       totalEmployees,
       todayCheckin,
       todayCheckout,
       monthSeconds,
       byUser,
+      workingNow,
+      today,
     });
   } catch (err) {
     console.error("stats error:", err);
@@ -61,8 +77,9 @@ export default async function handler(req, res) {
   }
 }
 
+// KST(Asia/Seoul, UTC+9) 기준 — Vercel 함수가 UTC라 직접 변환
 function todayStr() {
-  const d = new Date();
+  const k = new Date(Date.now() + 9 * 60 * 60 * 1000);
   const p = (n) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  return `${k.getUTCFullYear()}-${p(k.getUTCMonth() + 1)}-${p(k.getUTCDate())}`;
 }

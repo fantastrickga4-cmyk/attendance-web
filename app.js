@@ -727,9 +727,10 @@ function enterApp(user) {
     document.getElementById("app-section").classList.add("hidden");
     document.getElementById("admin-section").classList.remove("hidden");
     document.getElementById("admin-name").textContent = user.name;
-    switchAdminTab("employees");
+    switchAdminTab("working");
     refreshPushButton();
     refreshPendingBadge();
+    refreshWorkingBadge();
   } else {
     document.getElementById("admin-section").classList.add("hidden");
     document.getElementById("app-section").classList.remove("hidden");
@@ -758,11 +759,12 @@ function updateNow() {
 async function switchAdminTab(name) {
   const tabs = document.querySelectorAll(".admin-tabs .tab");
   tabs.forEach((t) => t.classList.toggle("active", t.dataset.adminTab === name));
-  ["employees", "records", "requests", "stats", "sessions", "audit"].forEach((n) => {
+  ["working", "employees", "records", "requests", "stats", "sessions", "audit"].forEach((n) => {
     const pane = document.getElementById(`admin-tab-${n}`);
     if (pane) pane.classList.toggle("hidden", n !== name);
   });
-  if (name === "employees") await renderEmployees();
+  if (name === "working") await renderWorkingNow();
+  else if (name === "employees") await renderEmployees();
   else if (name === "records") {
     await refreshUserFilter();
     await renderAllRecords();
@@ -1157,6 +1159,63 @@ function normalizeTime(value) {
   const parts = value.split(":");
   while (parts.length < 3) parts.push("00");
   return parts.map((p) => p.padStart(2, "0")).join(":");
+}
+
+// ---- 근무중 ----
+async function renderWorkingNow() {
+  const tbody = document.getElementById("working-now-body");
+  const empty = document.getElementById("working-now-empty");
+  const meta  = document.getElementById("working-now-meta");
+  let data;
+  try { data = await api("/api/stats"); } catch { return; }
+  const list = data.workingNow || [];
+  meta.textContent = `${data.today || ""} 기준 · ${list.length}명 근무중`;
+  refreshWorkingBadge(list.length);
+
+  tbody.innerHTML = "";
+  if (list.length === 0) {
+    empty.classList.remove("hidden");
+    return;
+  }
+  empty.classList.add("hidden");
+  for (const r of list) {
+    const inT = (r.check_in || "").slice(0, 5);
+    const elapsed = r.check_in ? formatElapsedKST(r.check_in) : "-";
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><strong>${escapeHtml(r.name)}</strong></td>
+      <td>${escapeHtml(r.id)}</td>
+      <td>${inT}</td>
+      <td>${elapsed}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+// 입력: "HH:MM:SS" (KST 기준 출근 시각). 출력: "X시간 Y분"
+function formatElapsedKST(checkInStr) {
+  const [h, m, s = 0] = checkInStr.split(":").map(Number);
+  const checkInSec = h * 3600 + m * 60 + Number(s);
+  const k = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  const nowSec = k.getUTCHours() * 3600 + k.getUTCMinutes() * 60 + k.getUTCSeconds();
+  let diff = nowSec - checkInSec;
+  if (diff < 0) diff += 24 * 3600;  // 자정 넘김
+  const hh = Math.floor(diff / 3600);
+  const mm = Math.floor((diff % 3600) / 60);
+  return `${hh}시간 ${mm}분`;
+}
+
+async function refreshWorkingBadge(countOverride) {
+  const badge = document.getElementById("working-badge");
+  if (!badge) return;
+  if (!isAdmin(currentUser)) { badge.classList.add("hidden"); return; }
+  let n = countOverride;
+  if (n == null) {
+    try { const data = await api("/api/stats"); n = (data.workingNow || []).length; }
+    catch { return; }
+  }
+  if (n > 0) { badge.textContent = String(n); badge.classList.remove("hidden"); }
+  else badge.classList.add("hidden");
 }
 
 // ---- 통계 ----
@@ -1679,6 +1738,7 @@ async function init() {
   // CSV 내보내기 + 이력 탭
   document.getElementById("csv-export-btn").addEventListener("click", exportRecordsCsv);
   document.getElementById("audit-refresh").addEventListener("click", renderAuditLog);
+  document.getElementById("working-refresh").addEventListener("click", renderWorkingNow);
 
   // 직원 수정 신청
   document.getElementById("open-request-btn").addEventListener("click", () => openRequestModal());

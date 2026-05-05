@@ -131,7 +131,8 @@
       <p id="push-msg" class="msg"></p>
 
       <div class="tabs admin-tabs">
-        <button class="tab active" data-admin-tab="employees">직원 관리</button>
+        <button class="tab active" data-admin-tab="working">근무중 <span id="working-badge" class="working-badge hidden">0</span></button>
+        <button class="tab" data-admin-tab="employees">직원 관리</button>
         <button class="tab" data-admin-tab="records">전체 기록</button>
         <button class="tab" data-admin-tab="requests">신청 <span id="pending-badge" class="pending-badge hidden">0</span></button>
         <button class="tab" data-admin-tab="stats">통계</button>
@@ -139,8 +140,28 @@
         <button class="tab" data-admin-tab="audit">이력</button>
       </div>
 
+      <!-- 근무중 탭 -->
+      <div id="admin-tab-working" class="admin-pane">
+        <div class="toolbar">
+          <span id="working-now-meta" class="muted" style="font-size:12px;"></span>
+          <button id="working-refresh" class="ghost small" style="margin-left:auto;">새로고침</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>이름</th>
+              <th>아이디</th>
+              <th>출근 시각</th>
+              <th>현재까지</th>
+            </tr>
+          </thead>
+          <tbody id="working-now-body"></tbody>
+        </table>
+        <p id="working-now-empty" class="empty hidden">현재 근무중인 직원이 없습니다.</p>
+      </div>
+
       <!-- 직원 관리 탭 -->
-      <div id="admin-tab-employees" class="admin-pane">
+      <div id="admin-tab-employees" class="admin-pane hidden">
         <div class="toolbar">
           <input type="text" id="employee-search" placeholder="아이디 또는 이름으로 검색" />
           <span id="employee-count" class="count"></span>
