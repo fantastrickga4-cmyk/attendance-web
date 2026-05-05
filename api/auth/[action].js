@@ -183,12 +183,16 @@ function notifyAdmins(session, date, time, kind) {
   );
 }
 
+// KST(Asia/Seoul, UTC+9) 기준 — Vercel 함수는 UTC로 동작하므로 직접 변환.
+function nowKST() {
+  return new Date(Date.now() + 9 * 60 * 60 * 1000);
+}
 function todayInTZ() {
-  const d = new Date();
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const k = nowKST();
+  return `${k.getUTCFullYear()}-${pad(k.getUTCMonth() + 1)}-${pad(k.getUTCDate())}`;
 }
 function nowTimeInTZ() {
-  const d = new Date();
-  return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  const k = nowKST();
+  return `${pad(k.getUTCHours())}:${pad(k.getUTCMinutes())}:${pad(k.getUTCSeconds())}`;
 }
 function pad(n) { return String(n).padStart(2, "0"); }
