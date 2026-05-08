@@ -74,19 +74,21 @@
       </div>
 
       <div id="emp-table-view" class="hidden">
-        <table id="records-table">
-          <thead>
-            <tr>
-              <th>날짜</th>
-              <th>출근</th>
-              <th>퇴근</th>
-              <th>근무 시간</th>
-              <th>근무 유형</th>
-              <th id="emp-round-th" class="hidden">회차</th>
-            </tr>
-          </thead>
-          <tbody id="records-body"></tbody>
-        </table>
+        <div class="table-wrap">
+          <table id="records-table">
+            <thead>
+              <tr>
+                <th>날짜</th>
+                <th>출근</th>
+                <th>퇴근</th>
+                <th>근무 시간</th>
+                <th>근무 유형</th>
+                <th id="emp-round-th" class="hidden">회차</th>
+              </tr>
+            </thead>
+            <tbody id="records-body"></tbody>
+          </table>
+        </div>
         <p id="empty-msg" class="empty hidden">아직 출퇴근 기록이 없습니다.</p>
       </div>
 
@@ -98,20 +100,22 @@
         <h2>내 수정 신청</h2>
         <button id="open-request-btn" class="primary small">+ 수정 신청</button>
       </div>
-      <table id="my-requests-table">
-        <thead>
-          <tr>
-            <th>신청일</th>
-            <th>대상 날짜</th>
-            <th>신청 내용</th>
-            <th>사유</th>
-            <th>상태</th>
-            <th>처리자</th>
-            <th>관리</th>
-          </tr>
-        </thead>
-        <tbody id="my-requests-body"></tbody>
-      </table>
+      <div class="table-wrap">
+        <table id="my-requests-table">
+          <thead>
+            <tr>
+              <th>신청일</th>
+              <th>대상 날짜</th>
+              <th>신청 내용</th>
+              <th>사유</th>
+              <th>상태</th>
+              <th>처리자</th>
+              <th>관리</th>
+            </tr>
+          </thead>
+          <tbody id="my-requests-body"></tbody>
+        </table>
+      </div>
       <p id="my-requests-empty" class="empty hidden">신청한 내역이 없습니다.</p>
     </section>
 
@@ -147,17 +151,19 @@
           <span id="working-now-meta" class="muted" style="font-size:12px;"></span>
           <button id="working-refresh" class="ghost small" style="margin-left:auto;">새로고침</button>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th>이름</th>
-              <th>아이디</th>
-              <th>출근 시각</th>
-              <th>현재까지</th>
-            </tr>
-          </thead>
-          <tbody id="working-now-body"></tbody>
-        </table>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>이름</th>
+                <th>아이디</th>
+                <th>출근 시각</th>
+                <th>현재까지</th>
+              </tr>
+            </thead>
+            <tbody id="working-now-body"></tbody>
+          </table>
+        </div>
         <p id="working-now-empty" class="empty hidden">현재 근무중인 직원이 없습니다.</p>
       </div>
 
@@ -167,20 +173,22 @@
           <input type="text" id="employee-search" placeholder="아이디 또는 이름으로 검색" />
           <span id="employee-count" class="count"></span>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th>아이디</th>
-              <th>이름</th>
-              <th>권한</th>
-              <th>가입일</th>
-              <th>최초 근무일</th>
-              <th>총 근무시간</th>
-              <th>관리</th>
-            </tr>
-          </thead>
-          <tbody id="employees-body"></tbody>
-        </table>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>아이디</th>
+                <th>이름</th>
+                <th>권한</th>
+                <th>가입일</th>
+                <th>최초 근무일</th>
+                <th>총 근무시간</th>
+                <th>관리</th>
+              </tr>
+            </thead>
+            <tbody id="employees-body"></tbody>
+          </table>
+        </div>
         <p id="employees-empty" class="empty hidden">등록된 직원이 없습니다.</p>
       </div>
 
@@ -198,22 +206,24 @@
           <button id="add-record-btn" class="primary small">+ 기록 추가</button>
           <button id="csv-export-btn" class="ghost small">CSV 다운로드</button>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th>날짜</th>
-              <th>아이디</th>
-              <th>이름</th>
-              <th>출근</th>
-              <th>퇴근</th>
-              <th>근무시간</th>
-              <th>근무 유형</th>
-              <th>회차</th>
-              <th>관리</th>
-            </tr>
-          </thead>
-          <tbody id="all-records-body"></tbody>
-        </table>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>날짜</th>
+                <th>아이디</th>
+                <th>이름</th>
+                <th>출근</th>
+                <th>퇴근</th>
+                <th>근무시간</th>
+                <th>근무 유형</th>
+                <th>회차</th>
+                <th>관리</th>
+              </tr>
+            </thead>
+            <tbody id="all-records-body"></tbody>
+          </table>
+        </div>
         <p id="all-records-empty" class="empty hidden">표시할 기록이 없습니다.</p>
       </div>
 
@@ -239,32 +249,36 @@
         </div>
 
         <h3>이번 달 직원별 근무시간</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>직원</th>
-              <th>출근일수</th>
-              <th>정상</th>
-              <th>교육</th>
-              <th>대타</th>
-              <th>총 근무시간</th>
-              <th>평균</th>
-            </tr>
-          </thead>
-          <tbody id="stat-by-user-body"></tbody>
-        </table>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>직원</th>
+                <th>출근일수</th>
+                <th>정상</th>
+                <th>교육</th>
+                <th>대타</th>
+                <th>총 근무시간</th>
+                <th>평균</th>
+              </tr>
+            </thead>
+            <tbody id="stat-by-user-body"></tbody>
+          </table>
+        </div>
 
         <h3>이번 달 대타 현황</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>대타 친 사람</th>
-              <th>대타 받은 사람</th>
-              <th>일수</th>
-            </tr>
-          </thead>
-          <tbody id="stat-cover-pairs-body"></tbody>
-        </table>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>대타 친 사람</th>
+                <th>대타 받은 사람</th>
+                <th>일수</th>
+              </tr>
+            </thead>
+            <tbody id="stat-cover-pairs-body"></tbody>
+          </table>
+        </div>
         <p id="stat-cover-pairs-empty" class="empty hidden">이번 달 대타 기록이 없습니다.</p>
 
         <div class="section-head" style="margin-top:24px;">
@@ -291,21 +305,23 @@
           <button id="req-refresh" class="ghost small">새로고침</button>
           <span id="req-count" class="count"></span>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th>신청일</th>
-              <th>신청자</th>
-              <th>대상 날짜</th>
-              <th>현재 기록</th>
-              <th>신청 내용</th>
-              <th>사유</th>
-              <th>상태</th>
-              <th>처리</th>
-            </tr>
-          </thead>
-          <tbody id="all-requests-body"></tbody>
-        </table>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>신청일</th>
+                <th>신청자</th>
+                <th>대상 날짜</th>
+                <th>현재 기록</th>
+                <th>신청 내용</th>
+                <th>사유</th>
+                <th>상태</th>
+                <th>처리</th>
+              </tr>
+            </thead>
+            <tbody id="all-requests-body"></tbody>
+          </table>
+        </div>
         <p id="all-requests-empty" class="empty hidden">조건에 맞는 신청이 없습니다.</p>
       </div>
 
@@ -315,19 +331,21 @@
           <button id="sessions-refresh" class="ghost small">새로고침</button>
           <span id="sessions-count" class="count"></span>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th>사용자</th>
-              <th>디바이스</th>
-              <th>IP</th>
-              <th>로그인 시각</th>
-              <th>최근 활동</th>
-              <th>처리</th>
-            </tr>
-          </thead>
-          <tbody id="sessions-body"></tbody>
-        </table>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>사용자</th>
+                <th>디바이스</th>
+                <th>IP</th>
+                <th>로그인 시각</th>
+                <th>최근 활동</th>
+                <th>처리</th>
+              </tr>
+            </thead>
+            <tbody id="sessions-body"></tbody>
+          </table>
+        </div>
         <p id="sessions-empty" class="empty hidden">활성 세션이 없습니다.</p>
       </div>
 
@@ -337,18 +355,20 @@
           <button id="audit-refresh" class="ghost small">새로고침</button>
           <span id="audit-count" class="count"></span>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th>시각</th>
-              <th>작업자</th>
-              <th>작업</th>
-              <th>대상</th>
-              <th>변경 내용</th>
-            </tr>
-          </thead>
-          <tbody id="audit-body"></tbody>
-        </table>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>시각</th>
+                <th>작업자</th>
+                <th>작업</th>
+                <th>대상</th>
+                <th>변경 내용</th>
+              </tr>
+            </thead>
+            <tbody id="audit-body"></tbody>
+          </table>
+        </div>
         <p id="audit-empty" class="empty hidden">기록된 이력이 없습니다.</p>
       </div>
     </section>

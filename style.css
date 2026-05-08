@@ -280,6 +280,12 @@ button:disabled {
 }
 
 /* 표 */
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.table-wrap table { margin-top: 0; }
 table {
   width: 100%;
   border-collapse: collapse;
@@ -782,17 +788,79 @@ button.work-type-chip:focus-visible { outline: 2px solid var(--accent); outline-
 .cal-tag-chip.training { background: var(--accent-subtle); color: var(--accent-text);    border-color: #c7d2fe; }
 .cal-tag-chip.cover    { background: #fff7ed;              color: #9a3412;               border-color: #fed7aa; }
 
+/* 태블릿 (~900px): 가로 스크롤 + 셀 줄바꿈 방지 */
+@media (max-width: 900px) {
+  .container { padding: 0 16px 24px; max-width: 100%; }
+  .card { padding: 16px; }
+  .admin-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .admin-tabs::-webkit-scrollbar { display: none; }
+  .admin-tabs .tab {
+    flex: 0 0 auto;
+    padding: 10px 12px;
+    white-space: nowrap;
+  }
+  th, td {
+    padding: 8px 10px;
+    white-space: nowrap;
+  }
+  /* 긴 본문 컬럼은 줄바꿈 허용 */
+  td.req-reason, td.audit-diff,
+  #audit-body td.audit-diff {
+    white-space: normal;
+    min-width: 180px;
+  }
+  .req-reason { max-width: 220px; }
+  #audit-body td.audit-diff { max-width: 280px; }
+  .row-actions { flex-wrap: nowrap; }
+  .stats-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+  .stat-card { padding: 12px 14px; }
+  .stat-value { font-size: 20px; }
+  .toolbar.wrap { gap: 6px 8px; }
+  .toolbar label { font-size: 11.5px; }
+}
+
+/* 모바일 (~600px): 세로 스택 + 폰트 축소 */
 @media (max-width: 600px) {
-  .container { padding: 0 16px 24px; }
-  .app-header { padding: 16px 16px; margin-bottom: 16px; }
+  .container { padding: 0 12px 24px; }
+  .app-header { padding: 14px 12px; margin-bottom: 16px; }
+  .card { padding: 14px; }
   .actions { grid-template-columns: 1fr; }
-  .toolbar { flex-direction: column; align-items: stretch; }
+  .user-bar { gap: 8px; }
+  .user-bar > div:first-child { font-size: 13px; }
+  .now {
+    padding-left: 0;
+    border-left: none;
+    margin-left: 0;
+    width: 100%;
+  }
+  .toolbar { flex-direction: column; align-items: stretch; gap: 8px; }
+  .toolbar.wrap { flex-direction: row; }
   .toolbar input[type="text"] { width: 100%; }
-  .now { padding-left: 0; border-left: none; margin-left: 0; }
+  .toolbar label {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+  .toolbar input[type="date"], .toolbar select { width: 100%; }
   table { font-size: 12px; }
-  th, td { padding: 8px 8px; }
+  th, td { padding: 7px 8px; }
   th { font-size: 10.5px; }
+  .row-actions button.small { padding: 4px 8px; font-size: 11.5px; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .stat-card { padding: 10px 12px; }
+  .stat-label { font-size: 10.5px; }
+  .stat-value { font-size: 18px; }
+  .admin-tabs .tab { font-size: 13px; padding: 8px 10px; }
   .cal-cell { min-height: 56px; padding: 4px 5px; }
   .cal-times { font-size: 9.5px; }
   .cal-day { font-size: 11px; }
+  .modal-card { padding: 18px; }
+  h1 { font-size: 18px; }
+  h2 { font-size: 14px; margin: 18px 0 10px; }
 }
