@@ -753,16 +753,28 @@ button.work-type-chip:focus-visible { outline: 2px solid var(--accent); outline-
 /* 캘린더 셀: 본인 기록은 클릭해서 근무 유형 변경 */
 .cal-cell.clickable { cursor: pointer; }
 .cal-cell.clickable:hover { background: var(--row-hover); }
-.cal-tag-dot {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  margin-left: 4px;
-  vertical-align: middle;
+.cal-tag-row {
+  margin-top: auto;
+  padding-top: 4px;
+  display: flex;
 }
-.cal-tag-dot.training { background: var(--accent); }
-.cal-tag-dot.cover    { background: #f97316; }
+.cal-tag-chip {
+  display: inline-block;
+  max-width: 100%;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cal-tag-chip.normal   { background: var(--bg);            color: var(--text-secondary); border-color: var(--border); }
+.cal-tag-chip.training { background: var(--accent-subtle); color: var(--accent-text);    border-color: #c7d2fe; }
+.cal-tag-chip.cover    { background: #fff7ed;              color: #9a3412;               border-color: #fed7aa; }
 
 @media (max-width: 600px) {
   .container { padding: 0 16px 24px; }

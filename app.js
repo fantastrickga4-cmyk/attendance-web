@@ -1771,16 +1771,22 @@ function buildCalendarFrame(year, month, todayStr, recordsByDate, opts = {}) {
     // 본인 캘린더에서 기록 있는 셀은 클릭으로 근무 유형 변경 가능
     const tagAttr = isEmp && !noData ? ` data-emp-tag-date="${dateStr}"` : "";
     const clickableCls = isEmp && !noData ? "clickable" : "";
-    // 정상이 아닌 경우만 dot 표시 (기본은 정상)
-    const tagDot = r && r.workType && r.workType !== "normal"
-      ? `<span class="cal-tag-dot ${r.workType}" title="${WORK_TYPE_LABELS[r.workType] || r.workType}"></span>`
-      : "";
+    // 셀 하단에 표와 동일한 톤의 mini 칩 (정상/교육/대타 · 대상자)
+    let tagChip = "";
+    if (r) {
+      const wt = r.workType || "normal";
+      const baseLabel = WORK_TYPE_LABELS[wt] || wt;
+      const coverSuffix = wt === "cover" && r.coverForUserName ? ` · ${r.coverForUserName}` : "";
+      const fullText = `${baseLabel}${coverSuffix}`;
+      tagChip = `<span class="cal-tag-chip ${wt}" title="${escapeHtml(fullText)}">${baseLabel}${coverSuffix ? ` · ${escapeHtml(r.coverForUserName)}` : ""}</span>`;
+    }
     cells.push(`
       <div class="cal-cell ${dowCls} ${isToday ? "today" : ""} ${noData ? "no-data" : ""} ${clickableCls}"${tagAttr}>
-        <div class="cal-day">${d}${tagDot}</div>
+        <div class="cal-day">${d}</div>
         <div class="cal-times">
           ${noData ? "-" : `↓ ${inT}<br/>↑ ${outT}${work ? `<span class="work">${work}</span>` : ""}`}
         </div>
+        ${tagChip ? `<div class="cal-tag-row">${tagChip}</div>` : ""}
       </div>
     `);
   }
