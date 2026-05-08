@@ -1754,6 +1754,7 @@ function buildCalendarFrame(year, month, todayStr, recordsByDate, opts = {}) {
   const start = firstOfMonth(year, month).getDay();
   const days = daysInMonth(year, month);
   const cells = [];
+  const isEmp = opts.target === "emp";
   for (let i = 0; i < start; i++) cells.push(`<div class="cal-cell empty"></div>`);
   for (let d = 1; d <= days; d++) {
     const dateStr = `${year}-${pad(month + 1)}-${pad(d)}`;
@@ -1767,9 +1768,16 @@ function buildCalendarFrame(year, month, todayStr, recordsByDate, opts = {}) {
     const work = r && r.checkIn && r.checkOut
       ? formatDuration(diffSeconds(r.checkIn, r.checkOut))
       : "";
+    // 본인 캘린더에서 기록 있는 셀은 클릭으로 근무 유형 변경 가능
+    const tagAttr = isEmp && !noData ? ` data-emp-tag-date="${dateStr}"` : "";
+    const clickableCls = isEmp && !noData ? "clickable" : "";
+    // 정상이 아닌 경우만 dot 표시 (기본은 정상)
+    const tagDot = r && r.workType && r.workType !== "normal"
+      ? `<span class="cal-tag-dot ${r.workType}" title="${WORK_TYPE_LABELS[r.workType] || r.workType}"></span>`
+      : "";
     cells.push(`
-      <div class="cal-cell ${dowCls} ${isToday ? "today" : ""} ${noData ? "no-data" : ""}">
-        <div class="cal-day">${d}</div>
+      <div class="cal-cell ${dowCls} ${isToday ? "today" : ""} ${noData ? "no-data" : ""} ${clickableCls}"${tagAttr}>
+        <div class="cal-day">${d}${tagDot}</div>
         <div class="cal-times">
           ${noData ? "-" : `↓ ${inT}<br/>↑ ${outT}${work ? `<span class="work">${work}</span>` : ""}`}
         </div>
@@ -1868,10 +1876,23 @@ function navCalendar(target, dir) {
   else renderAdminCalendar();
 }
 
-function handleCalendarClick(e) {
-  const btn = e.target.closest("button[data-cal-nav]");
-  if (!btn) return;
-  navCalendar(btn.dataset.calNav, btn.dataset.dir);
+async function handleCalendarClick(e) {
+  const navBtn = e.target.closest("button[data-cal-nav]");
+  if (navBtn) {
+    navCalendar(navBtn.dataset.calNav, navBtn.dataset.dir);
+    return;
+  }
+  // 본인 캘린더의 기록 있는 셀 클릭 → 근무 유형 변경
+  const cell = e.target.closest("[data-emp-tag-date]");
+  if (!cell) return;
+  const date = cell.dataset.empTagDate;
+  if (isThisMonthKST(date)) {
+    await openWorkTypeModal(date);
+  } else {
+    if (confirm(`${date}는 이번 달 이전 기록이라 직접 변경할 수 없어요.\n수정 신청 양식을 열까요?`)) {
+      openRequestModal({ date });
+    }
+  }
 }
 
 // ====== 보기 토글 (표/캘린더) ======
