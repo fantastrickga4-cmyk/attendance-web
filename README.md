@@ -24,6 +24,10 @@
 - 🔐 회원가입 / 로그인 (bcrypt + 7일 JWT 쿠키, stateful 세션)
 - 🟢 출근 / 🔴 퇴근 (찍으면 바로 로그아웃됨)
 - 📋 내 출퇴근 기록 — **표 / 캘린더 토글** (월별 그리드, 이전/다음/오늘 이동)
+- 🏷️ **근무 유형 본인 체크** — 표의 칩(정상/교육/대타) 클릭으로 변경
+  - 기본값 `정상` (출근 찍으면 자동), 예외(교육·대타)만 본인이 표시
+  - 대타는 누구 대신인지 직원 드롭다운에서 선택
+  - **이번 달**은 즉시 반영, **이전 달**은 기존 "수정 신청"으로 안내
 - 📝 **기록 수정 신청** — 누락·오기 신청 → 관리자 승인 시 자동 반영
   - 본인 신청 상태 조회 (대기/승인/반려/취소)
   - 대기 중 신청은 본인이 취소 가능
@@ -33,8 +37,11 @@
 ### 관리자
 - 👥 **직원 관리** — 검색, 권한 토글, 삭제, 비밀번호 초기화(8자 임시 비번 1회 표시)
 - 📋 **전체 기록** — 직원/날짜 필터, 추가/수정/삭제, **CSV 다운로드**
+  - "근무 유형" 칼럼 표시, 추가/수정 모달에서 정상/교육/대타 + 대타 대상 직접 지정 가능
 - 📝 **신청** — 대기 건 빨간 배지, 상태 필터, 승인/반려(사유 입력)
 - 📊 **통계** — 오늘 출근/퇴근/이번달 근무시간 카드 + 직원별 + **월별 캘린더**(직원 선택)
+  - 직원별 행에 **정상/교육/대타 일수** 분리 표시
+  - **이번 달 대타 현황** — 누가 누구의 대타를 며칠 했는지 집계
 - 🖥️ **세션** — 활성 세션 목록(IP·디바이스·시간), **강제 로그아웃**, 본인 세션 표시
 - 🧾 **이력** — 모든 변경 작업 audit log (시각·작업자·작업·대상·diff)
 
@@ -99,7 +106,7 @@ attendance-web/
 | 테이블 | 핵심 컬럼 |
 |---|---|
 | `users` | id, name, password_hash, role(employee\|admin), created_at |
-| `records` | user_id, date, check_in, check_out, round_count (PK: user_id+date) |
+| `records` | user_id, date, check_in, check_out, round_count, **work_type**(`normal`\|`training`\|`cover`), **cover_for_user_id** (PK: user_id+date) |
 | `push_subscriptions` | id, user_id, endpoint, p256dh, auth |
 | `audit_log` | id, actor_id, action, target_user_id, target_date, before, after, created_at |
 | `record_requests` | id, user_id, target_date, requested_check_in/out, reason, status, reviewer_*, created_at |
@@ -108,7 +115,7 @@ attendance-web/
 전체 DDL은 `schema.sql`. `lib/db.js`가 첫 호출 시 자동 부트스트랩.
 
 ### Audit log 액션 종류
-`record.create/update/delete`, `user.role_change/delete/password_reset/password_change`, `request.create/approve/reject/cancel`, `session.revoke`
+`record.create/update/delete/tag_change`, `user.role_change/delete/password_reset/password_change`, `request.create/approve/reject/cancel`, `session.revoke`
 
 ---
 
@@ -205,3 +212,5 @@ vercel env ls
 - `audit_log` 테이블이 모든 변경 추적 — 디버깅·검증 시 신뢰할 수 있는 출처
 - 새 audit action 추가 시 `lib/audit.js` 의 `ACTIONS`와 `app.js`의 `AUDIT_ACTION_LABELS` 양쪽 수정 필요
 - 새 admin 탭 추가 시 `index.html`(탭+pane), `app.js`의 `switchAdminTab` 의 배열 모두 수정
+- `records.work_type` 자기 변경(`PATCH /api/records?action=self-tag`)은 KST 기준 **이번 달만 허용**. 이전 달 변경은 의도적으로 막아 `record_requests` 흐름으로 우회시킴
+- 새 `work_type` 값 추가 시: 백엔드 `WORK_TYPES` 배열(`api/records/index.js`), 프론트 `WORK_TYPE_LABELS`/CSS `.work-type-chip.<value>`, stats `byUser` FILTER 모두 수정

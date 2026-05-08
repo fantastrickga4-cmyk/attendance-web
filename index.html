@@ -81,6 +81,7 @@
               <th>출근</th>
               <th>퇴근</th>
               <th>근무 시간</th>
+              <th>근무 유형</th>
               <th id="emp-round-th" class="hidden">회차</th>
             </tr>
           </thead>
@@ -206,6 +207,7 @@
               <th>출근</th>
               <th>퇴근</th>
               <th>근무시간</th>
+              <th>근무 유형</th>
               <th>회차</th>
               <th>관리</th>
             </tr>
@@ -242,12 +244,28 @@
             <tr>
               <th>직원</th>
               <th>출근일수</th>
+              <th>정상</th>
+              <th>교육</th>
+              <th>대타</th>
               <th>총 근무시간</th>
               <th>평균</th>
             </tr>
           </thead>
           <tbody id="stat-by-user-body"></tbody>
         </table>
+
+        <h3>이번 달 대타 현황</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>대타 친 사람</th>
+              <th>대타 받은 사람</th>
+              <th>일수</th>
+            </tr>
+          </thead>
+          <tbody id="stat-cover-pairs-body"></tbody>
+        </table>
+        <p id="stat-cover-pairs-empty" class="empty hidden">이번 달 대타 기록이 없습니다.</p>
 
         <div class="section-head" style="margin-top:24px;">
           <h3 style="margin:0; text-transform:none; letter-spacing:0; font-size:14px;">월별 캘린더</h3>
@@ -358,6 +376,16 @@
         <label>날짜 <input type="date" id="record-date" required /></label>
         <label>출근 시간 <input type="time" id="record-checkin" step="1" /></label>
         <label>퇴근 시간 <input type="time" id="record-checkout" step="1" /></label>
+        <label>근무 유형
+          <select id="record-work-type">
+            <option value="normal">정상 근무</option>
+            <option value="training">교육 근무</option>
+            <option value="cover">대타 근무</option>
+          </select>
+        </label>
+        <label id="record-cover-for-label" class="hidden">대타 대상 직원
+          <select id="record-cover-for"></select>
+        </label>
         <label>오늘 담당한 회차 <input type="number" id="record-round-count" min="0" step="1" inputmode="numeric" placeholder="해당 없으면 비워두세요" /></label>
         <p id="record-modal-msg" class="msg"></p>
         <div class="modal-actions">
@@ -438,6 +466,32 @@
         <div class="modal-actions">
           <button type="button" id="round-count-skip" class="ghost">건너뛰기</button>
           <button type="submit" class="primary">저장하고 로그아웃</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 근무 유형 변경 모달 (직원이 본인 칩 클릭 시) -->
+  <div id="work-type-modal" class="modal hidden">
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-card">
+      <h3>근무 유형 변경</h3>
+      <p id="work-type-target" class="hint" style="margin:0 0 12px;"></p>
+      <form id="work-type-form" class="form">
+        <label>근무 유형
+          <select id="work-type-select">
+            <option value="normal">정상 근무</option>
+            <option value="training">교육 근무</option>
+            <option value="cover">대타 근무</option>
+          </select>
+        </label>
+        <label id="work-type-cover-label" class="hidden">누구 대신 일하셨나요?
+          <select id="work-type-cover-for"></select>
+        </label>
+        <p id="work-type-msg" class="msg"></p>
+        <div class="modal-actions">
+          <button type="button" class="ghost" data-close>취소</button>
+          <button type="submit" class="primary">저장</button>
         </div>
       </form>
     </div>

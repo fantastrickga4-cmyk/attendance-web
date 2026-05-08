@@ -11,11 +11,13 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE TABLE IF NOT EXISTS records (
-  user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  date        DATE NOT NULL,
-  check_in    TIME,
-  check_out   TIME,
-  round_count INTEGER,
+  user_id           TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  date              DATE NOT NULL,
+  check_in          TIME,
+  check_out         TIME,
+  round_count       INTEGER,
+  work_type         TEXT NOT NULL DEFAULT 'normal',
+  cover_for_user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
   PRIMARY KEY (user_id, date)
 );
 

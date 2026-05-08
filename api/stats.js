@@ -36,6 +36,9 @@ export default async function handler(req, res) {
         u.id,
         u.name,
         COUNT(*) FILTER (WHERE r.check_in IS NOT NULL)::int AS days,
+        COUNT(*) FILTER (WHERE r.check_in IS NOT NULL AND r.work_type = 'normal')::int   AS normal_days,
+        COUNT(*) FILTER (WHERE r.check_in IS NOT NULL AND r.work_type = 'training')::int AS training_days,
+        COUNT(*) FILTER (WHERE r.check_in IS NOT NULL AND r.work_type = 'cover')::int    AS cover_days,
         COALESCE(SUM(
           CASE WHEN r.check_in IS NOT NULL AND r.check_out IS NOT NULL
             THEN EXTRACT(EPOCH FROM (r.check_out - r.check_in))
@@ -46,6 +49,23 @@ export default async function handler(req, res) {
       WHERE u.role = 'employee'
       GROUP BY u.id, u.name
       ORDER BY u.name ASC
+    `;
+
+    // 이번 달 대타 현황: 누가(cover_by) 누구의(cover_for) 대타를 며칠 했는지
+    const coverPairs = await sql`
+      SELECT
+        r.user_id              AS "coverById",
+        cb.name                AS "coverByName",
+        r.cover_for_user_id    AS "coverForId",
+        cf.name                AS "coverForName",
+        COUNT(*)::int          AS days
+      FROM records r
+      JOIN users cb ON cb.id = r.user_id
+      LEFT JOIN users cf ON cf.id = r.cover_for_user_id
+      WHERE r.work_type = 'cover'
+        AND r.date >= ${monthStart}::date
+      GROUP BY r.user_id, cb.name, r.cover_for_user_id, cf.name
+      ORDER BY days DESC, cb.name ASC
     `;
 
     // 현재 근무중인 직원 (오늘 출근 ✓, 퇴근 ✗) — 출근 시각 빠른 순
@@ -68,6 +88,7 @@ export default async function handler(req, res) {
       todayCheckout,
       monthSeconds,
       byUser,
+      coverPairs,
       workingNow,
       today,
     });

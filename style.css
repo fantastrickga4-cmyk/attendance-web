@@ -724,6 +724,32 @@ footer {
 }
 .idle-warning-text strong { color: var(--danger); font-variant-numeric: tabular-nums; }
 
+/* 근무 유형 칩 */
+.work-type-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  font-family: inherit;
+  line-height: 1.4;
+}
+button.work-type-chip {
+  cursor: pointer;
+  transition: filter 0.12s, transform 0.06s;
+}
+button.work-type-chip:hover { filter: brightness(0.96); }
+button.work-type-chip:active { transform: scale(0.98); }
+button.work-type-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.work-type-chip.normal   { background: var(--bg);              color: var(--text-secondary); border-color: var(--border); }
+.work-type-chip.training { background: var(--accent-subtle);   color: var(--accent-text);    border-color: #c7d2fe; }
+.work-type-chip.cover    { background: #fff7ed;                color: #9a3412;               border-color: #fed7aa; }
+.work-type-chip .muted   { font-size: 11px; margin-left: 4px; }
+
 @media (max-width: 600px) {
   .container { padding: 0 16px 24px; }
   .app-header { padding: 16px 16px; margin-bottom: 16px; }

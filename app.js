@@ -47,6 +47,32 @@ function diffHours(start, end) {
   return formatDuration(diffSeconds(start, end));
 }
 
+// ====== 근무 유형 ======
+const WORK_TYPE_LABELS = { normal: "정상", training: "교육", cover: "대타" };
+
+function isThisMonthKST(dateStr) {
+  if (!dateStr) return false;
+  const k = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  const ym = `${k.getUTCFullYear()}-${pad(k.getUTCMonth() + 1)}`;
+  return dateStr.startsWith(ym);
+}
+
+function workTypeChipHtml(r, opts = {}) {
+  const type = r && r.workType ? r.workType : "normal";
+  const label = WORK_TYPE_LABELS[type] || type;
+  let suffix = "";
+  if (type === "cover") {
+    suffix = r && r.coverForUserName
+      ? ` · ${escapeHtml(r.coverForUserName)}`
+      : ' <span class="muted">대상 미지정</span>';
+  }
+  const cls = `work-type-chip ${type}`;
+  if (opts.clickable) {
+    return `<button type="button" class="${cls}" data-tag-date="${r.date}" title="클릭해서 변경">${label}${suffix}</button>`;
+  }
+  return `<span class="${cls}">${label}${suffix}</span>`;
+}
+
 // ====== 메시지 표시 ======
 function showMsg(elementId, text, type = "") {
   const el = document.getElementById(elementId);
@@ -326,15 +352,110 @@ async function renderMyRecords() {
     const roundCell = showRound
       ? `<td>${r.roundCount == null ? '<span class="muted">-</span>' : `<strong>${Number(r.roundCount)}</strong>`}</td>`
       : "";
+    const chip = workTypeChipHtml(r, { clickable: true });
     tr.innerHTML = `
       <td>${r.date}</td>
       <td>${r.checkIn || "-"}</td>
       <td>${r.checkOut || "-"}</td>
       <td>${work}</td>
+      <td>${chip}</td>
       ${roundCell}
     `;
     tbody.appendChild(tr);
   }
+}
+
+async function handleMyRecordsClick(e) {
+  const btn = e.target.closest("button[data-tag-date]");
+  if (!btn) return;
+  const date = btn.dataset.tagDate;
+  if (isThisMonthKST(date)) {
+    await openWorkTypeModal(date);
+  } else {
+    if (confirm(`${date}는 이번 달 이전 기록이라 직접 변경할 수 없어요.\n수정 신청 양식을 열까요? (사유에 변경하려는 근무 유형을 적어주세요.)`)) {
+      openRequestModal({ date });
+    }
+  }
+}
+
+// ====== 근무 유형 변경 모달 (직원 본인) ======
+async function openWorkTypeModal(date) {
+  let r = null;
+  try {
+    const data = await api(`/api/records?from=${date}&to=${date}`);
+    r = (data.records || []).find((x) => x.userId === currentUser.id);
+  } catch (err) {
+    alert(err.message);
+    return;
+  }
+  if (!r) {
+    alert("해당 날짜의 출퇴근 기록이 없어요.");
+    return;
+  }
+  let employees = [];
+  try {
+    const data = await api("/api/users");
+    employees = (data.users || []).filter((u) => u.role !== "admin" && u.id !== currentUser.id);
+  } catch {}
+  const sel = document.getElementById("work-type-cover-for");
+  sel.innerHTML = employees.length === 0
+    ? '<option value="">(다른 직원이 등록되어 있지 않습니다)</option>'
+    : employees
+        .map((u) => `<option value="${escapeAttr(u.id)}">${escapeHtml(u.name)} (${escapeHtml(u.id)})</option>`)
+        .join("");
+
+  document.getElementById("work-type-target").textContent = `${date} 기록의 근무 유형`;
+  document.getElementById("work-type-select").value = r.workType || "normal";
+  if (r.coverForUserId && employees.some((u) => u.id === r.coverForUserId)) {
+    sel.value = r.coverForUserId;
+  }
+  toggleWorkTypeCover();
+  const modal = document.getElementById("work-type-modal");
+  modal.dataset.date = date;
+  showMsg("work-type-msg", "");
+  modal.classList.remove("hidden");
+}
+
+function closeWorkTypeModal() {
+  document.getElementById("work-type-modal").classList.add("hidden");
+}
+
+function toggleWorkTypeCover() {
+  const t = document.getElementById("work-type-select").value;
+  document.getElementById("work-type-cover-label").classList.toggle("hidden", t !== "cover");
+}
+
+async function handleWorkTypeSubmit(e) {
+  e.preventDefault();
+  const submitBtn = e.submitter || e.target.querySelector('button[type="submit"]');
+  const modal = document.getElementById("work-type-modal");
+  const date = modal.dataset.date;
+  const workType = document.getElementById("work-type-select").value;
+  const coverForUserId = workType === "cover"
+    ? document.getElementById("work-type-cover-for").value
+    : null;
+  if (workType === "cover" && !coverForUserId) {
+    showMsg("work-type-msg", "대타 대상 직원을 선택해주세요.", "error");
+    return;
+  }
+  const params = new URLSearchParams({
+    action: "self-tag",
+    userId: currentUser.id,
+    date,
+  });
+  await withPending(submitBtn, "저장 중...", async () => {
+    try {
+      await api(`/api/records?${params.toString()}`, {
+        method: "PATCH",
+        body: { workType, coverForUserId },
+      });
+      closeWorkTypeModal();
+      await renderMyRecords();
+      await renderEmpCalendar();
+    } catch (err) {
+      showMsg("work-type-msg", err.message, "error");
+    }
+  });
 }
 
 // ====== 직원 본인 신청 내역 ======
@@ -983,6 +1104,7 @@ async function renderAllRecords() {
   for (const r of records) {
     const tr = document.createElement("tr");
     const roundCell = formatRoundCount(r);
+    const chip = workTypeChipHtml(r);
     tr.innerHTML = `
       <td>${r.date}</td>
       <td>${escapeHtml(r.userId)}</td>
@@ -990,6 +1112,7 @@ async function renderAllRecords() {
       <td>${r.checkIn || "-"}</td>
       <td>${r.checkOut || "-"}</td>
       <td>${diffHours(r.checkIn, r.checkOut)}</td>
+      <td>${chip}</td>
       <td>${roundCell}</td>
       <td class="row-actions">
         <button class="ghost small" data-action="edit-record" data-user="${escapeAttr(r.userId)}" data-date="${r.date}">수정</button>
@@ -1059,6 +1182,18 @@ async function openRecordModal(opts) {
     )
     .join("");
 
+  const workTypeSel = document.getElementById("record-work-type");
+  const coverSel = document.getElementById("record-cover-for");
+  // 대타 대상 후보: 본인 row(자기 자신)는 서버에서 막지만, UI에서도 자신은 제외
+  function refreshRecordCoverOptions(excludeId) {
+    const candidates = employees.filter((u) => u.id !== excludeId);
+    coverSel.innerHTML = candidates.length === 0
+      ? '<option value="">(선택 가능한 직원 없음)</option>'
+      : candidates
+          .map((u) => `<option value="${escapeAttr(u.id)}">${escapeHtml(u.name)} (${escapeHtml(u.id)})</option>`)
+          .join("");
+  }
+
   if (opts.mode === "edit") {
     const params = new URLSearchParams({ userId: opts.userId, from: opts.date, to: opts.date });
     let r = null;
@@ -1078,6 +1213,11 @@ async function openRecordModal(opts) {
     inInput.value = (r.checkIn || "").slice(0, 8);
     outInput.value = (r.checkOut || "").slice(0, 8);
     roundInput.value = r.roundCount == null ? "" : String(r.roundCount);
+    workTypeSel.value = r.workType || "normal";
+    refreshRecordCoverOptions(r.userId);
+    if (r.coverForUserId && [...coverSel.options].some((o) => o.value === r.coverForUserId)) {
+      coverSel.value = r.coverForUserId;
+    }
     modal.dataset.mode = "edit";
     modal.dataset.originalUser = r.userId;
     modal.dataset.originalDate = r.date;
@@ -1089,12 +1229,22 @@ async function openRecordModal(opts) {
     inInput.value = "";
     outInput.value = "";
     roundInput.value = "";
+    workTypeSel.value = "normal";
+    refreshRecordCoverOptions(userSel.value);
     modal.dataset.mode = "add";
     delete modal.dataset.originalUser;
     delete modal.dataset.originalDate;
   }
+  toggleRecordCoverFor();
+  // record-user 변경 시 cover 후보에서 자기 자신 제외 갱신 (add 모드용)
+  userSel.onchange = () => refreshRecordCoverOptions(userSel.value);
   showMsg("record-modal-msg", "");
   modal.classList.remove("hidden");
+}
+
+function toggleRecordCoverFor() {
+  const t = document.getElementById("record-work-type").value;
+  document.getElementById("record-cover-for-label").classList.toggle("hidden", t !== "cover");
 }
 
 function closeRecordModal() {
@@ -1121,6 +1271,14 @@ async function handleRecordSubmit(e) {
     }
     roundCount = n;
   }
+  const workType = document.getElementById("record-work-type").value;
+  const coverForUserId = workType === "cover"
+    ? document.getElementById("record-cover-for").value
+    : null;
+  if (workType === "cover" && !coverForUserId) {
+    showMsg("record-modal-msg", "대타 대상 직원을 선택해주세요.", "error");
+    return;
+  }
 
   if (!userId || !date) {
     showMsg("record-modal-msg", "직원과 날짜는 필수예요.", "error");
@@ -1135,7 +1293,7 @@ async function handleRecordSubmit(e) {
     if (mode === "add") {
       await api("/api/records", {
         method: "POST",
-        body: { userId, date, checkIn, checkOut, roundCount },
+        body: { userId, date, checkIn, checkOut, roundCount, workType, coverForUserId },
       });
     } else {
       const params = new URLSearchParams({
@@ -1144,7 +1302,7 @@ async function handleRecordSubmit(e) {
       });
       await api(`/api/records?${params.toString()}`, {
         method: "PATCH",
-        body: { checkIn, checkOut, roundCount },
+        body: { checkIn, checkOut, roundCount, workType, coverForUserId },
       });
     }
     closeRecordModal();
@@ -1237,14 +1395,40 @@ async function renderStats() {
     const totalSec = Number(u.total_seconds) || 0;
     const days = Number(u.days) || 0;
     const avgSec = days > 0 ? Math.floor(totalSec / days) : 0;
+    const normalDays = Number(u.normal_days) || 0;
+    const trainingDays = Number(u.training_days) || 0;
+    const coverDays = Number(u.cover_days) || 0;
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${escapeHtml(u.name)} <span class="muted">(${escapeHtml(u.id)})</span></td>
       <td>${days}일</td>
+      <td>${normalDays}</td>
+      <td>${trainingDays}</td>
+      <td>${coverDays}</td>
       <td>${formatDuration(totalSec)}</td>
       <td>${formatDuration(avgSec)}</td>
     `;
     tbody.appendChild(tr);
+  }
+
+  // 대타 현황
+  const pairsTbody = document.getElementById("stat-cover-pairs-body");
+  const pairsEmpty = document.getElementById("stat-cover-pairs-empty");
+  const pairs = s.coverPairs || [];
+  pairsTbody.innerHTML = "";
+  if (pairs.length === 0) {
+    pairsEmpty.classList.remove("hidden");
+  } else {
+    pairsEmpty.classList.add("hidden");
+    for (const p of pairs) {
+      const by = `${escapeHtml(p.coverByName || "")} <span class="muted">(${escapeHtml(p.coverById || "")})</span>`;
+      const forName = p.coverForName
+        ? `${escapeHtml(p.coverForName)} <span class="muted">(${escapeHtml(p.coverForId)})</span>`
+        : '<span class="muted">대상 미지정</span>';
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${by}</td><td>${forName}</td><td>${p.days}일</td>`;
+      pairsTbody.appendChild(tr);
+    }
   }
 }
 
@@ -1447,6 +1631,7 @@ const AUDIT_ACTION_LABELS = {
   "record.create": "기록 추가",
   "record.update": "기록 수정",
   "record.delete": "기록 삭제",
+  "record.tag_change": "근무 유형 변경",
   "user.role_change": "권한 변경",
   "user.delete": "직원 삭제",
   "user.password_reset": "비밀번호 초기화",
@@ -1481,6 +1666,15 @@ function summarizeDiff(action, before, after) {
   }
   if (action === "record.delete") {
     return `삭제: ${before?.checkIn || "-"}/${before?.checkOut || "-"}`;
+  }
+  if (action === "record.tag_change") {
+    const labelOf = (t) => WORK_TYPE_LABELS[t] || t || "-";
+    const beforeLabel = labelOf(before?.workType);
+    const afterLabel = labelOf(after?.workType);
+    const coverInfo = after?.workType === "cover" && after?.coverForUserId
+      ? ` (대상: ${after.coverForUserId})`
+      : "";
+    return `${beforeLabel} → ${afterLabel}${coverInfo}`;
   }
   if (action === "user.role_change") {
     return `${before?.role || "-"} → ${after?.role || "-"}`;
@@ -1740,6 +1934,15 @@ async function init() {
   document.getElementById("audit-refresh").addEventListener("click", renderAuditLog);
   document.getElementById("working-refresh").addEventListener("click", renderWorkingNow);
 
+  // 직원: 본인 기록 칩 클릭 → 근무 유형 변경
+  document.getElementById("records-body").addEventListener("click", handleMyRecordsClick);
+  document.getElementById("work-type-form").addEventListener("submit", handleWorkTypeSubmit);
+  document.getElementById("work-type-select").addEventListener("change", toggleWorkTypeCover);
+  document.querySelectorAll("#work-type-modal [data-close]").forEach((el) =>
+    el.addEventListener("click", closeWorkTypeModal)
+  );
+  document.getElementById("record-work-type").addEventListener("change", toggleRecordCoverFor);
+
   // 직원 수정 신청
   document.getElementById("open-request-btn").addEventListener("click", () => openRequestModal());
   document.getElementById("request-form").addEventListener("submit", handleRequestSubmit);
@@ -1818,6 +2021,7 @@ async function init() {
       closeTempPasswordModal();
       closeRequestModal();
       closeRejectModal();
+      closeWorkTypeModal();
       // 회차 모달은 ESC로도 건너뛰기 처리 (세션 정리 포함)
       const roundModal = document.getElementById("round-count-modal");
       if (roundModal && !roundModal.classList.contains("hidden")) handleRoundCountSkip();
