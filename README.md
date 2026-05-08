@@ -24,10 +24,11 @@
 - 🔐 회원가입 / 로그인 (bcrypt + 7일 JWT 쿠키, stateful 세션)
 - 🟢 출근 / 🔴 퇴근 (찍으면 바로 로그아웃됨)
 - 📋 내 출퇴근 기록 — **표 / 캘린더 토글** (월별 그리드, 이전/다음/오늘 이동)
-- 🏷️ **근무 유형 본인 체크** — 표의 칩(정상/교육/대타) 클릭으로 변경
+- 🏷️ **근무 유형 본인 체크** — 표의 칩(정상/교육/대타) 또는 캘린더 셀 클릭으로 변경
   - 기본값 `정상` (출근 찍으면 자동), 예외(교육·대타)만 본인이 표시
   - 대타는 누구 대신인지 직원 드롭다운에서 선택
   - **이번 달**은 즉시 반영, **이전 달**은 기존 "수정 신청"으로 안내
+  - 캘린더에서는 셀 하단에 표와 동일 톤의 mini 칩으로 노출 (이름은 ellipsis 처리)
 - 📝 **기록 수정 신청** — 누락·오기 신청 → 관리자 승인 시 자동 반영
   - 본인 신청 상태 조회 (대기/승인/반려/취소)
   - 대기 중 신청은 본인이 취소 가능
@@ -59,6 +60,7 @@
 - HttpOnly + Secure + SameSite=Lax 쿠키
 - 401 받으면 프론트 자동으로 로그인 화면 + "세션이 종료되었습니다" 메시지
 - 직원은 `requireUser`, 관리자는 `requireAdmin` 가드
+- `/api/users` GET은 양쪽 모두 허용 — 직원에게는 `id/name/role(='employee')`만 반환 (대타 대상 드롭다운용), 관리자에게만 풀 메타(가입일·총 근무시간 등) 반환
 - Cron은 `Authorization: Bearer ${CRON_SECRET}` 검증
 - 모바일 UA에서 직원 로그인은 서버에서 403 반환
 
@@ -213,4 +215,5 @@ vercel env ls
 - 새 audit action 추가 시 `lib/audit.js` 의 `ACTIONS`와 `app.js`의 `AUDIT_ACTION_LABELS` 양쪽 수정 필요
 - 새 admin 탭 추가 시 `index.html`(탭+pane), `app.js`의 `switchAdminTab` 의 배열 모두 수정
 - `records.work_type` 자기 변경(`PATCH /api/records?action=self-tag`)은 KST 기준 **이번 달만 허용**. 이전 달 변경은 의도적으로 막아 `record_requests` 흐름으로 우회시킴
-- 새 `work_type` 값 추가 시: 백엔드 `WORK_TYPES` 배열(`api/records/index.js`), 프론트 `WORK_TYPE_LABELS`/CSS `.work-type-chip.<value>`, stats `byUser` FILTER 모두 수정
+- 새 `work_type` 값 추가 시: 백엔드 `WORK_TYPES` 배열(`api/records/index.js`), 프론트 `WORK_TYPE_LABELS`/CSS `.work-type-chip.<value>`+`.cal-tag-chip.<value>`, stats `byUser` FILTER 모두 수정
+- 캘린더 셀의 근무 유형 칩은 `app.js`의 `buildCalendarFrame`에서 그림. 표 칩 스타일과 별개의 `.cal-tag-chip` 클래스를 씀(셀 폭 한계로 ellipsis가 필요)
