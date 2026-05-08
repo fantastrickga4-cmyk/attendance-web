@@ -587,6 +587,12 @@ footer {
   margin-top: 2px;
   display: block;
 }
+.cal-times .rounds {
+  display: block;
+  margin-top: 1px;
+  font-weight: 600;
+  color: #9a3412;
+}
 .cal-cell.no-data .cal-times { color: var(--text-muted); }
 
 /* 임시 비밀번호 박스 */

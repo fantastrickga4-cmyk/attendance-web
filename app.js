@@ -410,6 +410,11 @@ async function openWorkTypeModal(date) {
     sel.value = r.coverForUserId;
   }
   toggleWorkTypeCover();
+  const roundLabel = document.getElementById("work-type-round-label");
+  const roundInput = document.getElementById("work-type-round-input");
+  const showRound = needsRoundCountPrompt(currentUser);
+  roundLabel.classList.toggle("hidden", !showRound);
+  roundInput.value = showRound && r.roundCount != null ? String(r.roundCount) : "";
   const modal = document.getElementById("work-type-modal");
   modal.dataset.date = date;
   showMsg("work-type-msg", "");
@@ -438,6 +443,20 @@ async function handleWorkTypeSubmit(e) {
     showMsg("work-type-msg", "대타 대상 직원을 선택해주세요.", "error");
     return;
   }
+  const body = { workType, coverForUserId };
+  if (needsRoundCountPrompt(currentUser)) {
+    const raw = document.getElementById("work-type-round-input").value.trim();
+    if (raw === "") {
+      body.roundCount = null;
+    } else {
+      const n = Number(raw);
+      if (!Number.isFinite(n) || !Number.isInteger(n) || n < 0) {
+        showMsg("work-type-msg", "회차는 0 이상의 정수만 입력할 수 있어요.", "error");
+        return;
+      }
+      body.roundCount = n;
+    }
+  }
   const params = new URLSearchParams({
     action: "self-tag",
     userId: currentUser.id,
@@ -447,7 +466,7 @@ async function handleWorkTypeSubmit(e) {
     try {
       await api(`/api/records?${params.toString()}`, {
         method: "PATCH",
-        body: { workType, coverForUserId },
+        body,
       });
       closeWorkTypeModal();
       await renderMyRecords();
@@ -1674,7 +1693,14 @@ function summarizeDiff(action, before, after) {
     const coverInfo = after?.workType === "cover" && after?.coverForUserId
       ? ` (대상: ${after.coverForUserId})`
       : "";
-    return `${beforeLabel} → ${afterLabel}${coverInfo}`;
+    const fmtRound = (v) => (v == null ? "-" : `${v}회`);
+    const roundChanged =
+      Object.prototype.hasOwnProperty.call(after || {}, "roundCount") &&
+      (before?.roundCount ?? null) !== (after?.roundCount ?? null);
+    const roundInfo = roundChanged
+      ? ` · 회차 ${fmtRound(before?.roundCount)} → ${fmtRound(after?.roundCount)}`
+      : "";
+    return `${beforeLabel} → ${afterLabel}${coverInfo}${roundInfo}`;
   }
   if (action === "user.role_change") {
     return `${before?.role || "-"} → ${after?.role || "-"}`;
@@ -1768,6 +1794,9 @@ function buildCalendarFrame(year, month, todayStr, recordsByDate, opts = {}) {
     const work = r && r.checkIn && r.checkOut
       ? formatDuration(diffSeconds(r.checkIn, r.checkOut))
       : "";
+    const roundLine = r && r.roundCount != null
+      ? `<span class="rounds">${Number(r.roundCount)}회차</span>`
+      : "";
     // 본인 캘린더에서 기록 있는 셀은 클릭으로 근무 유형 변경 가능
     const tagAttr = isEmp && !noData ? ` data-emp-tag-date="${dateStr}"` : "";
     const clickableCls = isEmp && !noData ? "clickable" : "";
@@ -1784,7 +1813,7 @@ function buildCalendarFrame(year, month, todayStr, recordsByDate, opts = {}) {
       <div class="cal-cell ${dowCls} ${isToday ? "today" : ""} ${noData ? "no-data" : ""} ${clickableCls}"${tagAttr}>
         <div class="cal-day">${d}</div>
         <div class="cal-times">
-          ${noData ? "-" : `↓ ${inT}<br/>↑ ${outT}${work ? `<span class="work">${work}</span>` : ""}`}
+          ${noData ? "-" : `↓ ${inT}<br/>↑ ${outT}${work ? `<span class="work">${work}</span>` : ""}${roundLine}`}
         </div>
         ${tagChip ? `<div class="cal-tag-row">${tagChip}</div>` : ""}
       </div>

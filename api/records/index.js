@@ -174,25 +174,53 @@ async function selfTag(req, res) {
   const tag = await normalizeWorkType(body, session.id);
   if (tag.error) return res.status(400).json({ error: tag.error });
 
+  const wantsRound = Object.prototype.hasOwnProperty.call(body, "roundCount");
+  let nextRound = null;
+  if (wantsRound) {
+    if (!session.id.endsWith("3")) {
+      return res.status(403).json({ error: "회차를 직접 수정할 수 없는 계정이에요." });
+    }
+    const r = normalizeRoundCount(body.roundCount);
+    if (r === false) {
+      return res.status(400).json({ error: "회차는 0 이상의 정수만 입력할 수 있어요." });
+    }
+    nextRound = r;
+  }
+
   const prev = await sql`
-    SELECT work_type AS "workType", cover_for_user_id AS "coverForUserId"
+    SELECT work_type AS "workType",
+           cover_for_user_id AS "coverForUserId",
+           round_count AS "roundCount"
     FROM records WHERE user_id = ${session.id} AND date = ${date}
   `;
   if (prev.length === 0) {
     return res.status(404).json({ error: "해당 날짜의 출퇴근 기록이 없어요." });
   }
-  await sql`
-    UPDATE records
-    SET work_type = ${tag.workType}, cover_for_user_id = ${tag.coverForUserId}
-    WHERE user_id = ${session.id} AND date = ${date}
-  `;
+  if (wantsRound) {
+    await sql`
+      UPDATE records
+      SET work_type = ${tag.workType},
+          cover_for_user_id = ${tag.coverForUserId},
+          round_count = ${nextRound}
+      WHERE user_id = ${session.id} AND date = ${date}
+    `;
+  } else {
+    await sql`
+      UPDATE records
+      SET work_type = ${tag.workType}, cover_for_user_id = ${tag.coverForUserId}
+      WHERE user_id = ${session.id} AND date = ${date}
+    `;
+  }
+  const after = wantsRound
+    ? { workType: tag.workType, coverForUserId: tag.coverForUserId, roundCount: nextRound }
+    : { workType: tag.workType, coverForUserId: tag.coverForUserId };
   await logAction({
     actor: session,
     action: ACTIONS.RECORD_TAG_CHANGE,
     targetUserId: session.id,
     targetDate: date,
     before: prev[0],
-    after: { workType: tag.workType, coverForUserId: tag.coverForUserId },
+    after,
   });
   res.status(200).json({ ok: true });
 }
