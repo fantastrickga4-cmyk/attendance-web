@@ -7,7 +7,10 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash       TEXT NOT NULL,
   role                TEXT NOT NULL DEFAULT 'employee' CHECK (role IN ('employee','admin')),
   created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
-  first_check_in_date DATE
+  first_check_in_date DATE,
+  email               TEXT,
+  wage_type           TEXT NOT NULL DEFAULT 'hourly' CHECK (wage_type IN ('hourly','daily','monthly')),
+  wage_amount         NUMERIC NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS records (
@@ -76,3 +79,29 @@ CREATE TABLE IF NOT EXISTS sessions (
 );
 
 CREATE INDEX IF NOT EXISTS sessions_user_idx ON sessions (user_id, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS payslips (
+  id              BIGSERIAL PRIMARY KEY,
+  user_id         TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  period_year     INTEGER NOT NULL,
+  period_month    INTEGER NOT NULL CHECK (period_month BETWEEN 1 AND 12),
+  wage_type       TEXT NOT NULL,
+  wage_amount     NUMERIC NOT NULL,
+  work_days       INTEGER NOT NULL DEFAULT 0,
+  work_hours      NUMERIC NOT NULL DEFAULT 0,
+  breakdown       JSONB NOT NULL DEFAULT '{}'::jsonb,
+  gross_pay       NUMERIC NOT NULL DEFAULT 0,
+  deductions      JSONB NOT NULL DEFAULT '[]'::jsonb,
+  net_pay         NUMERIC NOT NULL DEFAULT 0,
+  note            TEXT,
+  status          TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft','sent','failed')),
+  sent_at         TIMESTAMPTZ,
+  sent_to         TEXT,
+  error_message   TEXT,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (user_id, period_year, period_month)
+);
+
+CREATE INDEX IF NOT EXISTS payslips_period_idx ON payslips (period_year DESC, period_month DESC);
+CREATE INDEX IF NOT EXISTS payslips_user_idx ON payslips (user_id, period_year DESC, period_month DESC);

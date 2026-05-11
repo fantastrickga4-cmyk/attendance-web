@@ -899,7 +899,7 @@ function updateNow() {
 async function switchAdminTab(name) {
   const tabs = document.querySelectorAll(".admin-tabs .tab");
   tabs.forEach((t) => t.classList.toggle("active", t.dataset.adminTab === name));
-  ["working", "employees", "records", "requests", "stats", "sessions", "audit"].forEach((n) => {
+  ["working", "employees", "records", "requests", "stats", "payslips", "sessions", "audit"].forEach((n) => {
     const pane = document.getElementById(`admin-tab-${n}`);
     if (pane) pane.classList.toggle("hidden", n !== name);
   });
@@ -914,6 +914,8 @@ async function switchAdminTab(name) {
     await renderStats();
     await refreshAdminCalUserSelect();
     renderAdminCalendar();
+  } else if (name === "payslips") {
+    await initPayslipTab();
   } else if (name === "sessions") {
     await renderSessions();
   } else if (name === "audit") {
@@ -977,15 +979,22 @@ async function renderEmployees() {
       : "";
 
     const firstIn = u.first_check_in_date || "-";
+    const wageLabel = formatWageLabel(u.wage_type, u.wage_amount);
+    const emailCell = u.email
+      ? `<span class="muted" style="font-size:12px;">${escapeHtml(u.email)}</span>`
+      : `<span class="muted" style="font-size:12px; color:var(--danger, #c00);">미설정</span>`;
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${escapeHtml(u.id)}</td>
       <td>${escapeHtml(u.name || "")}</td>
       <td>${u.role === "admin" ? '<span class="badge">관리자</span>' : "직원"}</td>
+      <td>${emailCell}</td>
+      <td><span class="muted" style="font-size:12px;">${wageLabel}</span></td>
       <td>${created}</td>
       <td>${firstIn}</td>
       <td>${formatDuration(Number(u.total_seconds) || 0)}</td>
       <td class="row-actions">
+        <button class="ghost small" data-action="edit-wage" data-id="${escapeAttr(u.id)}">급여·이메일</button>
         <button class="ghost small" data-action="toggle-role" data-id="${escapeAttr(u.id)}"
           ${isLastAdmin ? `disabled title="마지막 관리자는 강등할 수 없어요"` : ""}>
           ${u.role === "admin" ? "직원으로" : "관리자로"}
@@ -1010,6 +1019,56 @@ async function handleEmployeesClick(e) {
   if (btn.dataset.action === "delete-user") await deleteUser(id);
   else if (btn.dataset.action === "toggle-role") await toggleRole(id);
   else if (btn.dataset.action === "reset-password") await resetPassword(id);
+  else if (btn.dataset.action === "edit-wage") openWageModal(id);
+}
+
+function formatWageLabel(type, amount) {
+  const amt = Number(amount || 0);
+  if (!type || !amt) return "-";
+  const fmt = amt.toLocaleString("ko-KR");
+  if (type === "hourly") return `시급 ${fmt}원`;
+  if (type === "daily") return `일당 ${fmt}원`;
+  if (type === "monthly") return `월급 ${fmt}원`;
+  return "-";
+}
+
+// ---- 급여·이메일 모달 ----
+function openWageModal(id) {
+  const u = cachedEmployees.find((x) => x.id === id);
+  if (!u) return;
+  const modal = document.getElementById("wage-modal");
+  document.getElementById("wage-target").textContent = `${u.name} (${u.id})`;
+  document.getElementById("wage-email").value = u.email || "";
+  document.getElementById("wage-type").value = u.wage_type || "hourly";
+  document.getElementById("wage-amount").value = Number(u.wage_amount || 0);
+  document.getElementById("wage-msg").textContent = "";
+  modal.dataset.userId = id;
+  modal.classList.remove("hidden");
+}
+
+function closeWageModal() {
+  document.getElementById("wage-modal").classList.add("hidden");
+}
+
+async function handleWageSubmit(e) {
+  e.preventDefault();
+  const modal = document.getElementById("wage-modal");
+  const id = modal.dataset.userId;
+  const email = document.getElementById("wage-email").value.trim();
+  const wage_type = document.getElementById("wage-type").value;
+  const wage_amount = Number(document.getElementById("wage-amount").value);
+  const msg = document.getElementById("wage-msg");
+  msg.textContent = "";
+  try {
+    await api(`/api/users/${encodeURIComponent(id)}?action=wage`, {
+      method: "PATCH",
+      body: { email, wage_type, wage_amount },
+    });
+    closeWageModal();
+    await renderEmployees();
+  } catch (err) {
+    msg.textContent = err.message || "저장 실패";
+  }
 }
 
 async function resetPassword(id) {
@@ -1660,6 +1719,10 @@ const AUDIT_ACTION_LABELS = {
   "request.reject": "신청 반려",
   "request.cancel": "신청 취소",
   "session.revoke": "세션 강제 종료",
+  "user.wage_update": "급여·이메일 변경",
+  "payslip.upsert": "명세서 저장",
+  "payslip.send": "명세서 발송",
+  "payslip.delete": "명세서 삭제",
 };
 
 const REQUEST_STATUS_LABELS = {
@@ -1717,7 +1780,7 @@ async function renderAuditLog() {
   const count = document.getElementById("audit-count");
   let entries = [];
   try {
-    const data = await api("/api/audit?limit=200");
+    const data = await api("/api/stats?type=audit&limit=200");
     entries = data.entries || [];
   } catch (err) {
     alert(err.message);
@@ -1748,6 +1811,374 @@ async function renderAuditLog() {
     `;
     tbody.appendChild(tr);
   }
+}
+
+// ====== 명세서 ======
+const payslipState = {
+  year: null,
+  month: null,
+  items: [],
+  editing: null, // 현재 편집 중인 아이템
+};
+
+const PAYSLIP_STATUS_LABELS = {
+  draft: "대기",
+  sent: "발송완료",
+  failed: "실패",
+};
+
+function fmtMoney(n) {
+  return Number(n || 0).toLocaleString("ko-KR");
+}
+
+function payslipWageLabel(type, amount) {
+  if (type === "hourly") return `시급 ${fmtMoney(amount)}원`;
+  if (type === "daily")  return `일당 ${fmtMoney(amount)}원`;
+  if (type === "monthly")return `월급 ${fmtMoney(amount)}원`;
+  return "-";
+}
+
+async function initPayslipTab() {
+  const yearInput = document.getElementById("payslip-year");
+  const monthSelect = document.getElementById("payslip-month");
+  if (!yearInput.value) {
+    const now = new Date();
+    yearInput.value = now.getFullYear();
+    monthSelect.value = String(now.getMonth() + 1);
+  }
+  await loadPayslipPreview();
+}
+
+async function loadPayslipPreview() {
+  const year = parseInt(document.getElementById("payslip-year").value, 10);
+  const month = parseInt(document.getElementById("payslip-month").value, 10);
+  if (!year || !month) return;
+  const grid = document.getElementById("payslip-grid");
+  const empty = document.getElementById("payslip-empty");
+  const meta = document.getElementById("payslip-meta");
+  const msg = document.getElementById("payslip-msg");
+  msg.textContent = "";
+  grid.innerHTML = `<div class="muted" style="padding:24px;">불러오는 중...</div>`;
+  empty.classList.add("hidden");
+
+  let items = [];
+  try {
+    const data = await api(`/api/payslips/preview?year=${year}&month=${month}`);
+    items = data.items || [];
+  } catch (err) {
+    msg.textContent = err.message || "불러오기 실패";
+    grid.innerHTML = "";
+    return;
+  }
+  payslipState.year = year;
+  payslipState.month = month;
+  payslipState.items = items;
+
+  const draftCount = items.filter((i) => i.status !== "sent").length;
+  const sentCount = items.filter((i) => i.status === "sent").length;
+  meta.textContent = `${items.length}명 · 대기/실패 ${draftCount} · 발송완료 ${sentCount}`;
+
+  if (items.length === 0) {
+    grid.innerHTML = "";
+    empty.classList.remove("hidden");
+    return;
+  }
+
+  grid.innerHTML = items
+    .map((it) => {
+      const status = it.status || "draft";
+      const statusLabel = PAYSLIP_STATUS_LABELS[status] || status;
+      const emailWarn = !it.email
+        ? `<div class="payslip-warn">이메일 미설정 — 직원 관리에서 등록 필요</div>`
+        : "";
+      const errLine = it.error_message
+        ? `<div class="payslip-err" title="${escapeAttr(it.error_message)}">사유: ${escapeHtml(it.error_message.slice(0, 40))}${it.error_message.length > 40 ? "…" : ""}</div>`
+        : "";
+      const sentLine = it.sent_at
+        ? `<div class="muted" style="font-size:11px;">발송: ${formatAuditTime(it.sent_at)}</div>`
+        : "";
+      const breakdown = it.breakdown || {};
+      const hoursLine = it.wage_type === "monthly"
+        ? "월급 (출근 무관)"
+        : `${it.work_days || 0}일 · ${Number(it.work_hours || 0).toFixed(1)}h`;
+      const breakdownLine = it.wage_type === "monthly"
+        ? ""
+        : `<div class="muted" style="font-size:11px;">정상 ${breakdown.normal_days || 0} · 교육 ${breakdown.training_days || 0} · 대타 ${breakdown.cover_days || 0}</div>`;
+
+      const sendBtn = !it.email
+        ? `<button class="ghost small" disabled title="이메일 미설정">발송</button>`
+        : status === "sent"
+        ? `<button class="ghost small" data-ps-action="send" data-user-id="${escapeAttr(it.user_id)}" title="재발송">재발송</button>`
+        : `<button class="primary small" data-ps-action="send" data-user-id="${escapeAttr(it.user_id)}">발송</button>`;
+
+      return `
+        <div class="payslip-card payslip-status-${status}" data-user-id="${escapeAttr(it.user_id)}">
+          <div class="payslip-head">
+            <div>
+              <div class="payslip-name">${escapeHtml(it.name)}</div>
+              <div class="muted" style="font-size:12px;">${payslipWageLabel(it.wage_type, it.wage_amount)}</div>
+            </div>
+            <span class="payslip-status payslip-status-chip-${status}">${statusLabel}</span>
+          </div>
+          <div class="payslip-body">
+            <div class="muted" style="font-size:12px;">${hoursLine}</div>
+            ${breakdownLine}
+            <div class="payslip-amount">${fmtMoney(it.net_pay || it.gross_pay)}원</div>
+            ${emailWarn}
+            ${errLine}
+            ${sentLine}
+          </div>
+          <div class="payslip-actions">
+            <button class="ghost small" data-ps-action="edit" data-user-id="${escapeAttr(it.user_id)}">편집</button>
+            ${sendBtn}
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+}
+
+function findPayslipItem(userId) {
+  return payslipState.items.find((it) => it.user_id === userId);
+}
+
+async function handlePayslipGridClick(e) {
+  const btn = e.target.closest("button[data-ps-action]");
+  if (!btn) return;
+  const action = btn.dataset.psAction;
+  const userId = btn.dataset.userId;
+  const it = findPayslipItem(userId);
+  if (!it) return;
+  if (action === "edit") openPayslipModal(it);
+  else if (action === "send") await sendPayslipFromGrid(it);
+}
+
+async function sendPayslipFromGrid(it) {
+  if (!it.email) {
+    alert("이메일이 설정되지 않았어요. 직원 관리에서 먼저 등록해주세요.");
+    return;
+  }
+  // 저장된 명세서가 없으면 먼저 upsert
+  let savedId = it.saved ? await getSavedId(it) : null;
+  if (!savedId) {
+    try {
+      const upserted = await upsertPayslipFromItem(it);
+      savedId = upserted.id;
+    } catch (err) {
+      alert(`저장 실패: ${err.message || err}`);
+      return;
+    }
+  }
+  const force = it.status === "sent";
+  if (force && !confirm(`${it.name} 직원에게 이미 발송된 명세서예요. 재발송할까요?`)) return;
+
+  try {
+    await api("/api/payslips/send", { method: "POST", body: { id: savedId, force } });
+    await loadPayslipPreview();
+  } catch (err) {
+    alert(err.message || "발송 실패");
+    await loadPayslipPreview();
+  }
+}
+
+async function getSavedId(it) {
+  // preview에는 id가 직접 노출되지 않으므로 list로 조회
+  try {
+    const data = await api(`/api/payslips/list?year=${payslipState.year}&month=${payslipState.month}`);
+    const found = (data.items || []).find((p) => p.user_id === it.user_id);
+    return found ? found.id : null;
+  } catch {
+    return null;
+  }
+}
+
+async function upsertPayslipFromItem(it) {
+  const data = await api("/api/payslips/upsert", {
+    method: "POST",
+    body: {
+      user_id: it.user_id,
+      period_year: payslipState.year,
+      period_month: payslipState.month,
+      wage_type: it.wage_type,
+      wage_amount: it.wage_amount,
+      work_days: it.work_days,
+      work_hours: it.work_hours,
+      breakdown: it.breakdown,
+      gross_pay: it.gross_pay,
+      deductions: it.deductions || [],
+      note: it.note || null,
+    },
+  });
+  return data.item;
+}
+
+function openPayslipModal(it) {
+  payslipState.editing = it;
+  const modal = document.getElementById("payslip-modal");
+  document.getElementById("payslip-modal-meta").textContent =
+    `${it.name} · ${payslipState.year}년 ${payslipState.month}월 · ${payslipWageLabel(it.wage_type, it.wage_amount)}`;
+  document.getElementById("ps-work-days").value = it.work_days || 0;
+  document.getElementById("ps-work-hours").value = Number(it.work_hours || 0);
+  document.getElementById("ps-gross").value = Number(it.gross_pay || 0);
+  document.getElementById("ps-note").value = it.note || "";
+  document.getElementById("ps-msg").textContent = "";
+  renderDeductions(it.deductions || []);
+  updatePayslipNet();
+  modal.classList.remove("hidden");
+}
+
+function closePayslipModal() {
+  document.getElementById("payslip-modal").classList.add("hidden");
+  payslipState.editing = null;
+}
+
+function renderDeductions(arr) {
+  const root = document.getElementById("ps-deductions");
+  root.innerHTML = "";
+  for (const d of arr) addDeductionRow(d.label || "", d.amount || 0);
+}
+
+function addDeductionRow(label = "", amount = 0) {
+  const root = document.getElementById("ps-deductions");
+  const row = document.createElement("div");
+  row.className = "ps-deduction-row";
+  row.innerHTML = `
+    <input type="text" class="ps-d-label" placeholder="항목 (예: 국민연금)" value="${escapeAttr(label)}" />
+    <input type="number" class="ps-d-amount" min="0" step="100" placeholder="금액" value="${Number(amount) || 0}" />
+    <button type="button" class="ghost small ps-d-remove">삭제</button>
+  `;
+  root.appendChild(row);
+}
+
+function readDeductions() {
+  const rows = document.querySelectorAll("#ps-deductions .ps-deduction-row");
+  const out = [];
+  rows.forEach((r) => {
+    const label = r.querySelector(".ps-d-label").value.trim();
+    const amount = Number(r.querySelector(".ps-d-amount").value || 0);
+    if (label || amount) out.push({ label: label || "공제", amount });
+  });
+  return out;
+}
+
+function updatePayslipNet() {
+  const gross = Number(document.getElementById("ps-gross").value || 0);
+  const dedu = readDeductions();
+  const total = dedu.reduce((s, d) => s + Number(d.amount || 0), 0);
+  const net = Math.max(0, Math.round(gross - total));
+  document.getElementById("ps-net").value = `${fmtMoney(net)}원`;
+}
+
+async function handlePayslipSubmit(e, opts = {}) {
+  if (e && e.preventDefault) e.preventDefault();
+  const it = payslipState.editing;
+  if (!it) return;
+  const msg = document.getElementById("ps-msg");
+  msg.textContent = "";
+
+  const work_days = Number(document.getElementById("ps-work-days").value || 0);
+  const work_hours = Number(document.getElementById("ps-work-hours").value || 0);
+  const gross_pay = Number(document.getElementById("ps-gross").value || 0);
+  const deductions = readDeductions();
+  const note = document.getElementById("ps-note").value.trim() || null;
+
+  let saved;
+  try {
+    const data = await api("/api/payslips/upsert", {
+      method: "POST",
+      body: {
+        user_id: it.user_id,
+        period_year: payslipState.year,
+        period_month: payslipState.month,
+        wage_type: it.wage_type,
+        wage_amount: it.wage_amount,
+        work_days, work_hours,
+        breakdown: it.breakdown || {},
+        gross_pay, deductions, note,
+      },
+    });
+    saved = data.item;
+  } catch (err) {
+    msg.textContent = err.message || "저장 실패";
+    return;
+  }
+
+  if (opts.send) {
+    if (!it.email) {
+      msg.textContent = "이메일이 설정되지 않아 발송할 수 없어요.";
+      await loadPayslipPreview();
+      return;
+    }
+    const force = saved.status === "sent";
+    if (force && !confirm("이미 발송된 명세서예요. 재발송할까요?")) {
+      closePayslipModal();
+      await loadPayslipPreview();
+      return;
+    }
+    try {
+      await api("/api/payslips/send", { method: "POST", body: { id: saved.id, force } });
+    } catch (err) {
+      msg.textContent = err.message || "발송 실패";
+      await loadPayslipPreview();
+      return;
+    }
+  }
+  closePayslipModal();
+  await loadPayslipPreview();
+}
+
+async function handlePayslipDelete() {
+  const it = payslipState.editing;
+  if (!it || !it.saved) {
+    closePayslipModal();
+    return;
+  }
+  if (!confirm(`${it.name} 직원의 ${payslipState.year}년 ${payslipState.month}월 명세서를 삭제할까요?`)) return;
+  const savedId = await getSavedId(it);
+  if (!savedId) {
+    closePayslipModal();
+    return;
+  }
+  try {
+    await api(`/api/payslips/delete?id=${savedId}`, { method: "POST" });
+    closePayslipModal();
+    await loadPayslipPreview();
+  } catch (err) {
+    document.getElementById("ps-msg").textContent = err.message || "삭제 실패";
+  }
+}
+
+async function handlePayslipSendAll() {
+  const draft = payslipState.items.filter(
+    (it) => it.status !== "sent" && it.email
+  );
+  if (draft.length === 0) {
+    alert("발송 대기 중인 명세서가 없어요. (이메일 미설정 직원 제외)");
+    return;
+  }
+  if (!confirm(`${draft.length}명에게 명세서를 발송할까요? 저장되지 않은 자동 계산값은 먼저 저장됩니다.`)) return;
+
+  // 1) 저장 안 된 항목은 먼저 upsert
+  for (const it of draft) {
+    if (!it.saved) {
+      try { await upsertPayslipFromItem(it); } catch (err) {
+        console.warn("upsert failed for", it.user_id, err);
+      }
+    }
+  }
+
+  // 2) 일괄 발송 (서버가 draft+failed만 자동 선택)
+  try {
+    const data = await api("/api/payslips/send-batch", {
+      method: "POST",
+      body: { period_year: payslipState.year, period_month: payslipState.month, force: false },
+    });
+    const s = data.summary || {};
+    alert(`발송 완료\n총 ${s.total} · 성공 ${s.success} · 실패 ${s.failed}`);
+  } catch (err) {
+    alert(err.message || "일괄 발송 실패");
+  }
+  await loadPayslipPreview();
 }
 
 // ====== 캘린더 ======
@@ -1990,6 +2421,37 @@ async function init() {
   document.getElementById("audit-refresh").addEventListener("click", renderAuditLog);
   document.getElementById("working-refresh").addEventListener("click", renderWorkingNow);
 
+  // 급여·이메일 모달
+  document.getElementById("wage-form").addEventListener("submit", handleWageSubmit);
+  document.querySelectorAll("#wage-modal [data-close]").forEach((el) =>
+    el.addEventListener("click", closeWageModal)
+  );
+
+  // 명세서 탭
+  document.getElementById("payslip-load").addEventListener("click", loadPayslipPreview);
+  document.getElementById("payslip-send-all").addEventListener("click", handlePayslipSendAll);
+  document.getElementById("payslip-grid").addEventListener("click", handlePayslipGridClick);
+
+  // 명세서 모달
+  document.getElementById("payslip-form").addEventListener("submit", (e) => handlePayslipSubmit(e, { send: false }));
+  document.getElementById("ps-save-send").addEventListener("click", () => handlePayslipSubmit(null, { send: true }));
+  document.getElementById("ps-delete").addEventListener("click", handlePayslipDelete);
+  document.getElementById("ps-add-deduction").addEventListener("click", () => {
+    addDeductionRow();
+    updatePayslipNet();
+  });
+  document.getElementById("ps-deductions").addEventListener("input", updatePayslipNet);
+  document.getElementById("ps-deductions").addEventListener("click", (e) => {
+    const btn = e.target.closest(".ps-d-remove");
+    if (!btn) return;
+    btn.closest(".ps-deduction-row").remove();
+    updatePayslipNet();
+  });
+  document.getElementById("ps-gross").addEventListener("input", updatePayslipNet);
+  document.querySelectorAll("#payslip-modal [data-close]").forEach((el) =>
+    el.addEventListener("click", closePayslipModal)
+  );
+
   // 직원: 본인 기록 칩 클릭 → 근무 유형 변경
   document.getElementById("records-body").addEventListener("click", handleMyRecordsClick);
   document.getElementById("work-type-form").addEventListener("submit", handleWorkTypeSubmit);
@@ -2078,6 +2540,8 @@ async function init() {
       closeRequestModal();
       closeRejectModal();
       closeWorkTypeModal();
+      closeWageModal();
+      closePayslipModal();
       // 회차 모달은 ESC로도 건너뛰기 처리 (세션 정리 포함)
       const roundModal = document.getElementById("round-count-modal");
       if (roundModal && !roundModal.classList.contains("hidden")) handleRoundCountSkip();

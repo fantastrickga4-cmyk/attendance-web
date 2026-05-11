@@ -25,6 +25,9 @@ export default async function handler(req, res) {
         u.id,
         u.name,
         u.role,
+        u.email,
+        u.wage_type,
+        u.wage_amount::float AS wage_amount,
         u.created_at,
         to_char(u.first_check_in_date, 'YYYY-MM-DD') AS first_check_in_date,
         COALESCE(SUM(
@@ -36,7 +39,7 @@ export default async function handler(req, res) {
         ), 0)::int AS total_seconds
       FROM users u
       LEFT JOIN records r ON r.user_id = u.id
-      GROUP BY u.id, u.name, u.role, u.created_at, u.first_check_in_date
+      GROUP BY u.id, u.name, u.role, u.email, u.wage_type, u.wage_amount, u.created_at, u.first_check_in_date
       ORDER BY u.created_at ASC
     `;
     res.status(200).json({ users: rows });

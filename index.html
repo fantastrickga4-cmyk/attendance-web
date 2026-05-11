@@ -141,6 +141,7 @@
         <button class="tab" data-admin-tab="records">전체 기록</button>
         <button class="tab" data-admin-tab="requests">신청 <span id="pending-badge" class="pending-badge hidden">0</span></button>
         <button class="tab" data-admin-tab="stats">통계</button>
+        <button class="tab" data-admin-tab="payslips">명세서</button>
         <button class="tab" data-admin-tab="sessions">세션</button>
         <button class="tab" data-admin-tab="audit">이력</button>
       </div>
@@ -180,6 +181,8 @@
                 <th>아이디</th>
                 <th>이름</th>
                 <th>권한</th>
+                <th>이메일</th>
+                <th>급여</th>
                 <th>가입일</th>
                 <th>최초 근무일</th>
                 <th>총 근무시간</th>
@@ -323,6 +326,27 @@
           </table>
         </div>
         <p id="all-requests-empty" class="empty hidden">조건에 맞는 신청이 없습니다.</p>
+      </div>
+
+      <!-- 명세서 탭 -->
+      <div id="admin-tab-payslips" class="admin-pane hidden">
+        <div class="toolbar wrap">
+          <label>년 <input type="number" id="payslip-year" min="2020" max="2099" step="1" style="width:80px;" /></label>
+          <label>월
+            <select id="payslip-month">
+              <option value="1">1월</option><option value="2">2월</option><option value="3">3월</option>
+              <option value="4">4월</option><option value="5">5월</option><option value="6">6월</option>
+              <option value="7">7월</option><option value="8">8월</option><option value="9">9월</option>
+              <option value="10">10월</option><option value="11">11월</option><option value="12">12월</option>
+            </select>
+          </label>
+          <button id="payslip-load" class="primary small">자동 계산</button>
+          <button id="payslip-send-all" class="ghost small">대기 전체 발송</button>
+          <span id="payslip-meta" class="muted" style="font-size:12px;"></span>
+        </div>
+        <p id="payslip-msg" class="msg"></p>
+        <div id="payslip-grid" class="payslip-grid"></div>
+        <p id="payslip-empty" class="empty hidden">자동 계산 버튼을 눌러주세요.</p>
       </div>
 
       <!-- 세션 탭 -->
@@ -515,6 +539,72 @@
         <div class="modal-actions">
           <button type="button" class="ghost" data-close>취소</button>
           <button type="submit" class="primary">저장</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 직원 급여·이메일 편집 모달 -->
+  <div id="wage-modal" class="modal hidden">
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-card">
+      <h3>급여·이메일 설정</h3>
+      <p id="wage-target" class="hint" style="margin:0 0 12px;"></p>
+      <form id="wage-form" class="form">
+        <label>이메일
+          <input type="email" id="wage-email" placeholder="employee@example.com" />
+        </label>
+        <label>급여 방식
+          <select id="wage-type">
+            <option value="hourly">시급</option>
+            <option value="daily">일당</option>
+            <option value="monthly">월급</option>
+          </select>
+        </label>
+        <label>금액 (원)
+          <input type="number" id="wage-amount" min="0" step="100" inputmode="numeric" required />
+        </label>
+        <p class="hint" style="margin:0;">시급/일당은 출근 기록에서 자동 계산. 월급은 출근 기록과 무관하게 고정.</p>
+        <p id="wage-msg" class="msg"></p>
+        <div class="modal-actions">
+          <button type="button" class="ghost" data-close>취소</button>
+          <button type="submit" class="primary">저장</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 명세서 상세·편집 모달 -->
+  <div id="payslip-modal" class="modal hidden">
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-card" style="max-width:520px;">
+      <h3 id="payslip-modal-title">명세서 편집</h3>
+      <p id="payslip-modal-meta" class="hint" style="margin:0 0 12px;"></p>
+      <form id="payslip-form" class="form">
+        <div class="grid-2">
+          <label>근무 일수 <input type="number" id="ps-work-days" min="0" step="1" /></label>
+          <label>근무 시간 <input type="number" id="ps-work-hours" min="0" step="0.01" /></label>
+        </div>
+        <label>지급액 (총급여, 원) <input type="number" id="ps-gross" min="0" step="100" required /></label>
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span style="font-size:13px; color:var(--text-secondary);">공제 항목</span>
+            <button type="button" id="ps-add-deduction" class="ghost small">+ 공제 추가</button>
+          </div>
+          <div id="ps-deductions"></div>
+        </div>
+        <label>실지급액 (자동 계산)
+          <input type="text" id="ps-net" readonly style="font-weight:600; color:var(--accent);" />
+        </label>
+        <label>메모 (이메일 본문 하단에 표시)
+          <textarea id="ps-note" rows="2" placeholder="없으면 비워두세요"></textarea>
+        </label>
+        <p id="ps-msg" class="msg"></p>
+        <div class="modal-actions" style="flex-wrap:wrap; gap:8px;">
+          <button type="button" class="ghost" data-close>닫기</button>
+          <button type="button" id="ps-delete" class="danger" style="margin-right:auto;">삭제</button>
+          <button type="submit" class="ghost">저장</button>
+          <button type="button" id="ps-save-send" class="primary">저장 후 발송</button>
         </div>
       </form>
     </div>
