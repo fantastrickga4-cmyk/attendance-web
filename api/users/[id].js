@@ -99,46 +99,7 @@ async function handleAdmin(req, res, id) {
   }
 
   if (req.method === "PATCH") {
-    const body = await readBody(req);
-    const action = (req.query.action || "").toLowerCase();
-
-    // 급여·이메일 정보 변경
-    if (action === "wage") {
-      const { email, wage_type, wage_amount } = body || {};
-      if (email != null && email !== "" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        return res.status(400).json({ error: "이메일 형식이 올바르지 않아요." });
-      }
-      if (wage_type && !["hourly", "daily", "monthly"].includes(wage_type)) {
-        return res.status(400).json({ error: "급여 방식이 올바르지 않아요." });
-      }
-      const amt = wage_amount == null || wage_amount === "" ? null : Number(wage_amount);
-      if (amt != null && (!Number.isFinite(amt) || amt < 0)) {
-        return res.status(400).json({ error: "급여액이 올바르지 않아요." });
-      }
-      const beforeRows = await sql`SELECT email, wage_type, wage_amount::float AS wage_amount FROM users WHERE id = ${id}`;
-      const beforeRow = beforeRows[0] || {};
-      await sql`
-        UPDATE users SET
-          email       = ${email == null ? null : (email === "" ? null : email)},
-          wage_type   = ${wage_type || beforeRow.wage_type || 'hourly'},
-          wage_amount = ${amt == null ? beforeRow.wage_amount || 0 : amt}
-        WHERE id = ${id}
-      `;
-      await logAction({
-        actor: admin,
-        action: ACTIONS.USER_WAGE_UPDATE,
-        targetUserId: id,
-        before: beforeRow,
-        after: {
-          email: email == null ? beforeRow.email : (email === "" ? null : email),
-          wage_type: wage_type || beforeRow.wage_type,
-          wage_amount: amt == null ? beforeRow.wage_amount : amt,
-        },
-      });
-      return res.status(200).json({ ok: true });
-    }
-
-    const { role } = body;
+    const { role } = await readBody(req);
     if (role !== "admin" && role !== "employee") {
       return res.status(400).json({ error: "role 값이 올바르지 않아요." });
     }

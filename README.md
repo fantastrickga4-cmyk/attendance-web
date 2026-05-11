@@ -45,13 +45,6 @@
   - **이번 달 대타 현황** — 누가 누구의 대타를 며칠 했는지 집계
 - 🖥️ **세션** — 활성 세션 목록(IP·디바이스·시간), **강제 로그아웃**, 본인 세션 표시
 - 🧾 **이력** — 모든 변경 작업 audit log (시각·작업자·작업·대상·diff)
-- 💰 **명세서** — 월별 자동 계산 → 직원별 카드, 편집·발송
-  - 직원별 급여 방식 (시급/일당/월급) + 이메일 직원 관리에서 설정
-  - 자동 계산: 시급=근무시간×시급, 일당=출근일×일당, 월급=고정
-  - 편집 모달: 지급액·공제 항목·메모 직접 수정
-  - 카드별 발송 또는 "대기 전체 발송"
-  - 발송 결과: 대기/발송완료/실패+사유 표시, 재발송 가능
-  - **Resend 이메일 발송** (RESEND_API_KEY 필요)
 
 ### 자동화
 - 🔔 **푸시 알림** (관리자 대상): 출근/퇴근, 신청 등록, 미퇴근 (자정 KST cron)
@@ -94,21 +87,19 @@ attendance-web/
 │   ├── record-requests/[id].js    # 승인/반려/취소
 │   ├── sessions/index.js   # 활성 세션 목록
 │   ├── sessions/[id].js    # 세션 강제 종료
-│   ├── stats.js            # 통계 + ?type=audit 으로 audit log
+│   ├── stats.js            # 통계
+│   ├── audit.js            # 감사 로그
 │   ├── push/[action].js    # vapid-key, subscribe, unsubscribe, status
-│   ├── payslips/[action].js # preview, list, get, upsert, delete, send, send-batch
 │   └── cron/auto-checkout.js # 자정 미퇴근 알림 cron
 └── lib/
     ├── db.js               # Neon 연결 + 스키마 자동 부트스트랩
     ├── auth.js             # bcrypt, JWT, 세션 발급/검증, 권한 가드
     ├── audit.js            # logAction, ACTIONS 상수
     ├── push.js             # web-push 헬퍼 (sendToAdmins)
-    ├── payslip.js          # 월별 급여 자동 계산 + HTML 이메일 템플릿
-    ├── email.js            # Resend 발송 래퍼
     └── device.js           # User-Agent 모바일 감지
 ```
 
-> ⚠️ **Vercel Hobby 플랜은 함수 12개 한도**. 현재 정확히 12개. `audit.js`는 `stats.js?type=audit`으로 통합됨. 새 엔드포인트 추가 시 통합 필요.
+> ⚠️ **Vercel Hobby 플랜은 함수 12개 한도**. 현재 정확히 12개. 새 엔드포인트 추가 시 통합 필요.
 
 ---
 
@@ -116,18 +107,17 @@ attendance-web/
 
 | 테이블 | 핵심 컬럼 |
 |---|---|
-| `users` | id, name, password_hash, role(employee\|admin), created_at, **email**, **wage_type**(`hourly`\|`daily`\|`monthly`), **wage_amount** |
+| `users` | id, name, password_hash, role(employee\|admin), created_at |
 | `records` | user_id, date, check_in, check_out, round_count, **work_type**(`normal`\|`training`\|`cover`), **cover_for_user_id** (PK: user_id+date) |
 | `push_subscriptions` | id, user_id, endpoint, p256dh, auth |
 | `audit_log` | id, actor_id, action, target_user_id, target_date, before, after, created_at |
 | `record_requests` | id, user_id, target_date, requested_check_in/out, reason, status, reviewer_*, created_at |
 | `sessions` | jti(PK), user_id, ip, user_agent, created_at, last_seen_at |
-| `payslips` | id, user_id, period_year, period_month, wage_type/amount(스냅샷), work_days/hours, breakdown(JSONB), gross_pay, deductions(JSONB), net_pay, note, status(draft/sent/failed), sent_at, sent_to, error_message (UNIQUE: user_id+year+month) |
 
 전체 DDL은 `schema.sql`. `lib/db.js`가 첫 호출 시 자동 부트스트랩.
 
 ### Audit log 액션 종류
-`record.create/update/delete/tag_change`, `user.role_change/delete/password_reset/password_change/wage_update`, `request.create/approve/reject/cancel`, `session.revoke`, `payslip.upsert/send/delete`
+`record.create/update/delete/tag_change`, `user.role_change/delete/password_reset/password_change`, `request.create/approve/reject/cancel`, `session.revoke`
 
 ---
 
@@ -139,9 +129,6 @@ attendance-web/
 | `SESSION_SECRET` | JWT 서명 (32자+) | 수동 |
 | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` | 웹 푸시 | 수동 (`npx web-push generate-vapid-keys`) |
 | `CRON_SECRET` | cron 인증 | 수동 (랜덤 hex) |
-| `RESEND_API_KEY` | 명세서 이메일 발송 | resend.com 가입 후 발급 |
-| `PAYSLIP_FROM_EMAIL` | 명세서 발신 주소 (선택) | 미설정 시 `onboarding@resend.dev` (도메인 인증 전엔 그대로 사용 가능) |
-| `COMPANY_NAME` | 명세서·이메일 헤더 표시용 (선택) | 기본 "FANTASTRICK" |
 
 **Production + Development 모두 등록되어 있음.** Preview는 git branch 인자 요구로 미설정.
 
@@ -189,13 +176,6 @@ vercel env ls
 1. **휴가 관리** ⭐⭐⭐ — 연차/병가/반차 신청·승인, 잔여 연차. 신청/승인 인프라 재사용 가능 (3~4시간)
 2. **표준 근무시간 + 지각·조퇴 자동 판정** — 회사 설정 + 통계에 ⚠️ 표시 (2시간)
 3. **공휴일 관리** — 통계 정확도, 캘린더 가독성
-
-### 명세서 후속 작업
-- 직원 본인 명세서 조회 (현재는 admin only)
-- 4대보험·소득세 자동 계산 (요율 매년 갱신 필요)
-- PDF 첨부 (현재는 HTML 본문만)
-- 정상/교육/대타 단가 차등
-- 월말 자동 발송 cron
 
 ### 작은데 효과 큰 것
 4. **다크 모드** — CSS 변수만 분기 (1시간)
