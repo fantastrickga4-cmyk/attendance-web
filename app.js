@@ -395,7 +395,9 @@ async function openWorkTypeModal(date) {
   let employees = [];
   try {
     const data = await api("/api/users");
-    employees = (data.users || []).filter((u) => u.role !== "admin" && u.id !== currentUser.id);
+    employees = (data.users || [])
+      .filter((u) => u.role !== "admin" && u.id !== currentUser.id)
+      .sort((a, b) => (a.name || "").localeCompare(b.name || "", "ko"));
   } catch {}
   const sel = document.getElementById("work-type-cover-for");
   sel.innerHTML = employees.length === 0
@@ -939,6 +941,7 @@ async function renderEmployees() {
   } catch (err) {
     return;
   }
+  users.sort((a, b) => (a.name || "").localeCompare(b.name || "", "ko"));
   cachedEmployees = users;
 
   const search = (document.getElementById("employee-search")?.value || "")
@@ -1082,7 +1085,10 @@ async function refreshUserFilter() {
       cachedEmployees = users;
     } catch {}
   }
-  const employees = users.filter((u) => u.role !== "admin");
+  const employees = users
+    .filter((u) => u.role !== "admin")
+    .slice()
+    .sort((a, b) => (a.name || "").localeCompare(b.name || "", "ko"));
   select.innerHTML =
     '<option value="">전체</option>' +
     employees
@@ -1190,7 +1196,10 @@ async function openRecordModal(opts) {
       cachedEmployees = data.users || [];
     } catch {}
   }
-  const employees = cachedEmployees.filter((u) => u.role !== "admin");
+  const employees = cachedEmployees
+    .filter((u) => u.role !== "admin")
+    .slice()
+    .sort((a, b) => (a.name || "").localeCompare(b.name || "", "ko"));
   if (employees.length === 0) {
     alert("등록된 직원이 없어요. 먼저 직원이 회원가입해야 해요.");
     return;
@@ -1245,8 +1254,8 @@ async function openRecordModal(opts) {
     userSel.disabled = false;
     dateInput.disabled = false;
     dateInput.value = formatDate(new Date());
-    inInput.value = "";
-    outInput.value = "";
+    inInput.value = "12:00:00";
+    outInput.value = "12:00:00";
     roundInput.value = "";
     workTypeSel.value = "normal";
     refreshRecordCoverOptions(userSel.value);
@@ -1410,7 +1419,10 @@ async function renderStats() {
 
   const tbody = document.getElementById("stat-by-user-body");
   tbody.innerHTML = "";
-  for (const u of s.byUser || []) {
+  const byUserSorted = (s.byUser || [])
+    .slice()
+    .sort((a, b) => (a.name || "").localeCompare(b.name || "", "ko"));
+  for (const u of byUserSorted) {
     const totalSec = Number(u.total_seconds) || 0;
     const days = Number(u.days) || 0;
     const avgSec = days > 0 ? Math.floor(totalSec / days) : 0;
@@ -1433,7 +1445,13 @@ async function renderStats() {
   // 대타 현황
   const pairsTbody = document.getElementById("stat-cover-pairs-body");
   const pairsEmpty = document.getElementById("stat-cover-pairs-empty");
-  const pairs = s.coverPairs || [];
+  const pairs = (s.coverPairs || [])
+    .slice()
+    .sort((a, b) => {
+      const byCmp = (a.coverByName || "").localeCompare(b.coverByName || "", "ko");
+      if (byCmp !== 0) return byCmp;
+      return (a.coverForName || "").localeCompare(b.coverForName || "", "ko");
+    });
   pairsTbody.innerHTML = "";
   if (pairs.length === 0) {
     pairsEmpty.classList.remove("hidden");
@@ -1859,11 +1877,12 @@ async function refreshAdminCalUserSelect() {
     } catch {}
   }
   const previous = calState.admin.userId || sel.value;
-  sel.innerHTML = users
+  const sorted = users.slice().sort((a, b) => (a.name || "").localeCompare(b.name || "", "ko"));
+  sel.innerHTML = sorted
     .map((u) => `<option value="${escapeAttr(u.id)}">${escapeHtml(u.name)} (${escapeHtml(u.id)})</option>`)
     .join("");
-  if (previous && users.some((u) => u.id === previous)) sel.value = previous;
-  calState.admin.userId = sel.value || (users[0] && users[0].id) || null;
+  if (previous && sorted.some((u) => u.id === previous)) sel.value = previous;
+  calState.admin.userId = sel.value || (sorted[0] && sorted[0].id) || null;
 }
 
 async function renderAdminCalendar() {
