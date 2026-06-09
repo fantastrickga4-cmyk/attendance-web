@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>신당 키우기 — GDD</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #11111a;
+    --bg3: #18182a;
+    --border: #2a2a40;
+    --accent: #c084fc;
+    --accent2: #818cf8;
+    --gold: #f59e0b;
+    --green: #34d399;
+    --red: #f87171;
+    --text: #e2e8f0;
+    --muted: #64748b;
+  }
+  body { font-family: 'Segoe UI', 'Malgun Gothic', sans-serif; background: var(--bg); color: var(--text); padding: 40px 20px; }
+  .wrap { max-width: 1000px; margin: 0 auto; }
+
+  /* 헤더 */
+  .hero { text-align: center; padding: 40px 0 50px; }
+  .hero-tag { display: inline-block; background: #1e1030; border: 1px solid #4c2a7a; color: var(--accent); font-size: 11px; letter-spacing: 3px; text-transform: uppercase; padding: 5px 16px; border-radius: 20px; margin-bottom: 18px; }
+  .hero h1 { font-size: 42px; font-weight: 900; background: linear-gradient(135deg, #c084fc, #818cf8, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; }
+  .hero p { color: var(--muted); font-size: 15px; }
+  .hero-meta { display: flex; justify-content: center; gap: 24px; margin-top: 20px; flex-wrap: wrap; }
+  .hero-meta span { font-size: 12px; color: #555; background: var(--bg2); border: 1px solid var(--border); padding: 4px 14px; border-radius: 20px; }
+  .hero-meta strong { color: #aaa; }
+
+  /* 섹션 */
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 3px; color: var(--muted); margin: 44px 0 16px; display: flex; align-items: center; gap: 10px; }
+  h2::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* 카드 */
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; padding: 24px; margin-bottom: 16px; }
+  .card-title { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 10px; }
+  .card-body { font-size: 13px; color: #aaa; line-height: 1.8; }
+  .card-body strong { color: #ddd; }
+
+  /* 2열 그리드 */
+  .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  @media (max-width: 700px) { .g2, .g3 { grid-template-columns: 1fr; } }
+
+  /* 루프 다이어그램 */
+  .loop { display: flex; align-items: center; flex-wrap: wrap; gap: 0; justify-content: center; margin: 8px 0; }
+  .loop-node { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; text-align: center; font-size: 13px; min-width: 110px; }
+  .loop-node .icon { font-size: 22px; display: block; margin-bottom: 4px; }
+  .loop-node .label { color: #ccc; font-weight: 600; font-size: 12px; }
+  .loop-node .sub { color: #555; font-size: 10px; margin-top: 2px; }
+  .loop-arrow { color: #333; font-size: 20px; padding: 0 6px; }
+
+  /* 신령 트리 */
+  .deity-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  @media (max-width: 700px) { .deity-grid { grid-template-columns: repeat(2, 1fr); } }
+  .deity-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 14px; text-align: center; }
+  .deity-card .d-icon { font-size: 28px; margin-bottom: 6px; }
+  .deity-card .d-name { font-size: 13px; font-weight: 700; color: #ddd; margin-bottom: 2px; }
+  .deity-card .d-role { font-size: 11px; color: #555; margin-bottom: 6px; }
+  .deity-card .d-tier { font-size: 10px; padding: 2px 8px; border-radius: 10px; display: inline-block; }
+  .tier-1 { background: #1a1a2a; color: #888; border: 1px solid #333; }
+  .tier-2 { background: #0d2318; color: #34d399; border: 1px solid #1e5c3a; }
+  .tier-3 { background: #231f0d; color: #f59e0b; border: 1px solid #5c4e1e; }
+  .tier-4 { background: #2a0d2a; color: #c084fc; border: 1px solid #5c1e5c; }
+
+  /* 수익화 */
+  .money-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .money-table th { text-align: left; padding: 10px 12px; font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); border-bottom: 1px solid var(--border); }
+  .money-table td { padding: 11px 12px; border-bottom: 1px solid #1a1a28; color: #bbb; vertical-align: top; }
+  .money-table tr:last-child td { border-bottom: none; }
+  .money-table td:first-child { color: #fff; font-weight: 600; }
+  .price { color: var(--green); font-weight: 700; }
+
+  /* 개발 로드맵 */
+  .roadmap { list-style: none; }
+  .roadmap li { display: flex; gap: 16px; padding: 16px 0; border-bottom: 1px solid #1a1a28; }
+  .roadmap li:last-child { border-bottom: none; }
+  .rm-week { flex-shrink: 0; width: 70px; }
+  .rm-week .w-num { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .rm-week .w-label { font-size: 14px; font-weight: 700; color: #fff; }
+  .rm-content .r-title { font-size: 14px; font-weight: 600; color: #ddd; margin-bottom: 6px; }
+  .rm-content .r-tasks { display: flex; flex-wrap: wrap; gap: 6px; }
+  .rm-content .r-task { font-size: 11px; background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 3px 10px; color: #888; }
+  .phase-badge { display: inline-block; font-size: 10px; padding: 2px 10px; border-radius: 10px; margin-bottom: 8px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  .ph-core { background: #0d2318; color: #34d399; border: 1px solid #1e5c3a; }
+  .ph-content { background: #1a1030; color: #c084fc; border: 1px solid #4c2a7a; }
+  .ph-polish { background: #231f0d; color: #f59e0b; border: 1px solid #5c4e1e; }
+  .ph-launch { background: #2a0d0d; color: #f87171; border: 1px solid #5c1e1e; }
+
+  /* Unity 구조 */
+  .scene-box { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; }
+  .scene-title { font-size: 12px; font-weight: 700; color: var(--accent2); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+  .scene-items { list-style: none; }
+  .scene-items li { font-size: 12px; color: #888; padding: 3px 0; padding-left: 14px; position: relative; }
+  .scene-items li::before { content: '—'; position: absolute; left: 0; color: #333; }
+  .scene-items li strong { color: #bbb; }
+
+  /* 태그 */
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .tag { font-size: 11px; background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 3px 10px; color: #777; }
+  .tag.green { background: #0d2318; color: #34d399; border-color: #1e5c3a; }
+  .tag.purple { background: #1a1030; color: #c084fc; border-color: #4c2a7a; }
+  .tag.gold { background: #231f0d; color: #f59e0b; border-color: #5c4e1e; }
+
+  /* KPI */
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  @media (max-width: 700px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
+  .kpi { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
+  .kpi .k-val { font-size: 24px; font-weight: 800; color: #fff; }
+  .kpi .k-label { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  /* 구분선 */
+  hr { border: none; border-top: 1px solid var(--border); margin: 8px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 히어로 -->
+  <div class="hero">
+    <div class="hero-tag">Game Design Document v1.0</div>
+    <h1>🔮 신당 키우기</h1>
+    <p>한국 무속 세계관 기반 콘텐츠 깊이형 Incremental RPG</p>
+    <div class="hero-meta">
+      <span><strong>장르</strong> Incremental / Idle RPG</span>
+      <span><strong>플랫폼</strong> Android (Play Store)</span>
+      <span><strong>엔진</strong> Unity 6 LTS</span>
+      <span><strong>개발 기간</strong> 8~10주 (1인)</span>
+      <span><strong>목표</strong> r/incremental_games 바이럴 → IAP 수익화</span>
+    </div>
+  </div>
+
+  <!-- 한 줄 요약 -->
+  <h2>게임 컨셉</h2>
+  <div class="card">
+    <div class="card-body" style="font-size:14px; line-height:2;">
+      작은 신당을 운영하는 무당. 굿을 올려 신령의 신뢰를 쌓고, 의뢰인의 소원을 들어주며 복채를 모은다.<br>
+      신뢰가 높아질수록 <strong>더 강한 신령이 강림</strong>하고, 더 큰 소원을 이뤄줄 수 있게 된다.<br>
+      오방신장 → 산신 → 용왕 → 옥황상제까지 한국 신화 pantheon을 트리 구조로 모두 해금하는 것이 최종 목표.
+    </div>
+  </div>
+
+  <!-- 핵심 루프 -->
+  <h2>핵심 루프</h2>
+  <div class="card">
+    <div class="card-title">Core Loop (세션 내)</div>
+    <div class="loop">
+      <div class="loop-node"><span class="icon">🕯️</span><span class="label">제물 준비</span><span class="sub">소비성 자원</span></div>
+      <div class="loop-arrow">→</div>
+      <div class="loop-node"><span class="icon">🥁</span><span class="label">굿 진행</span><span class="sub">탭/자동화</span></div>
+      <div class="loop-arrow">→</div>
+      <div class="loop-node"><span class="icon">✨</span><span class="label">신령 강림</span><span class="sub">신뢰도↑</span></div>
+      <div class="loop-arrow">→</div>
+      <div class="loop-node"><span class="icon">🙏</span><span class="label">소원 처리</span><span class="sub">의뢰 완료</span></div>
+      <div class="loop-arrow">→</div>
+      <div class="loop-node"><span class="icon">💰</span><span class="label">복채 수령</span><span class="sub">골드↑</span></div>
+      <div class="loop-arrow">→</div>
+      <div class="loop-node"><span class="icon">⬆️</span><span class="label">신당 업그레이드</span><span class="sub">생산속도↑</span></div>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="card-title">메타 루프 (세션 간)</div>
+      <div class="card-body">
+        앱을 꺼도 오프라인 굿판이 자동 진행.<br>
+        재접속 시 <strong>"신령이 XX건을 처리했습니다"</strong> 연출.<br><br>
+        복채 축적 → 신당 확장 → 더 많은 신령 슬롯 → 더 빠른 복채 생산.<br>
+        수직 성장이 핵심 재미.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">프레스티지 시스템</div>
+      <div class="card-body">
+        <strong>다음 생(轉生)</strong>: 모든 것을 리셋하고 영구 보너스 획득.<br><br>
+        리셋 보상: 무당 레벨 ×1.5 영구 복채 배율<br>
+        전생 횟수에 따라 새 신령 계보 해금.<br>
+        "더 빠르게 처음부터" 중독성 유발.
+      </div>
+    </div>
+  </div>
+
+  <!-- 자원 시스템 -->
+  <h2>자원 & 시스템</h2>
+  <div class="g3">
+    <div class="card">
+      <div class="card-title">💰 복채 (골드)</div>
+      <div class="card-body">
+        기본 화폐. 의뢰 완료 시 획득.<br>
+        신당 업그레이드, 제물 구매에 사용.<br>
+        <strong>오프라인에도 쌓임</strong> (최대 8시간).
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">✨ 신기(神氣)</div>
+      <div class="card-body">
+        프리미엄 화폐 (IAP 또는 보상광고 획득).<br>
+        신령 즉시 소환, 슬롯 확장, 속도 부스터에 사용.<br>
+        광고 보면 소량 획득 가능.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🌟 신뢰도</div>
+      <div class="card-body">
+        신령별 개별 수치.<br>
+        굿 횟수 누적 시 상승.<br>
+        임계값 도달 → 신령 등급 승급.<br>
+        <strong>숫자가 커지는 핵심 지표.</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- 신령 트리 -->
+  <h2>신령 pantheon (해금 트리)</h2>
+  <div class="deity-grid">
+    <div class="deity-card">
+      <div class="d-icon">🗡️</div>
+      <div class="d-name">오방신장</div>
+      <div class="d-role">초반 수호신 × 5</div>
+      <div class="d-tier tier-1">Tier 1 · 시작</div>
+    </div>
+    <div class="deity-card">
+      <div class="d-icon">🌲</div>
+      <div class="d-name">산신령</div>
+      <div class="d-role">제물 생산 +50%</div>
+      <div class="d-tier tier-2">Tier 2 · 해금</div>
+    </div>
+    <div class="deity-card">
+      <div class="d-icon">🐉</div>
+      <div class="d-name">용왕</div>
+      <div class="d-role">오프라인 수익 2배</div>
+      <div class="d-tier tier-2">Tier 2 · 해금</div>
+    </div>
+    <div class="deity-card">
+      <div class="d-icon">👶</div>
+      <div class="d-name">삼신할머니</div>
+      <div class="d-role">신뢰도 획득 +30%</div>
+      <div class="d-tier tier-2">Tier 2 · 해금</div>
+    </div>
+    <div class="deity-card">
+      <div class="d-icon">⚔️</div>
+      <div class="d-name">장군신</div>
+      <div class="d-role">의뢰 처리속도 2배</div>
+      <div class="d-tier tier-3">Tier 3 · 희귀</div>
+    </div>
+    <div class="deity-card">
+      <div class="d-icon">🌊</div>
+      <div class="d-name">해신</div>
+      <div class="d-role">복채 자동 수령</div>
+      <div class="d-tier tier-3">Tier 3 · 희귀</div>
+    </div>
+    <div class="deity-card">
+      <div class="d-icon">🌙</div>
+      <div class="d-name">달신</div>
+      <div class="d-role">야간 수익 ×3</div>
+      <div class="d-tier tier-3">Tier 3 · 희귀</div>
+    </div>
+    <div class="deity-card">
+      <div class="d-icon">☁️</div>
+      <div class="d-name">옥황상제</div>
+      <div class="d-role">전체 배율 ×10</div>
+      <div class="d-tier tier-4">Tier 4 · 전설</div>
+    </div>
+  </div>
+  <div style="margin-top:12px; font-size:12px; color:#555;">
+    ▸ 총 신령 20~30종 목표 · 각 신령마다 고유 굿 연출 애니메이션 · 전설 신령은 전생 3회 이상 필요
+  </div>
+
+  <!-- 의뢰 시스템 -->
+  <h2>의뢰 시스템</h2>
+  <div class="g2">
+    <div class="card">
+      <div class="card-title">의뢰 종류</div>
+      <div class="card-body">
+        <strong>일반 의뢰</strong> — 자동 처리, 낮은 복채<br>
+        (예: 합격 기원, 건강 회복, 연애 성취)<br><br>
+        <strong>특별 의뢰</strong> — 탭 인터랙션 필요, 높은 복채<br>
+        (예: 조상 천도, 집안 액막이, 사업 번창)<br><br>
+        <strong>긴급 의뢰</strong> — 한정 시간, 완료 시 신기 보상<br>
+        (예: 출산 임박, 큰 수술 전날)
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">계절 이벤트</div>
+      <div class="card-body">
+        <strong>동짓날</strong> — 팥죽 제물 이벤트, 복채 2배<br>
+        <strong>추석</strong> — 조상 굿판, 희귀 신령 출현율↑<br>
+        <strong>정월 대보름</strong> — 소원 처리 슬롯 +2 (24시간)<br>
+        <strong>음력 생일</strong> — 무당 레벨업 보너스<br><br>
+        실제 한국 절기 날짜 기반으로 자동 트리거.
+      </div>
+    </div>
+  </div>
+
+  <!-- 수익화 -->
+  <h2>수익화 구조</h2>
+  <div class="card">
+    <table class="money-table">
+      <thead>
+        <tr>
+          <th>상품</th>
+          <th>가격</th>
+          <th>내용</th>
+          <th>타겟</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>신기 소량팩</td>
+          <td class="price">₩1,100</td>
+          <td>신기 100개 + 제물 ×10</td>
+          <td>첫 결제 유도 (저항선 낮춤)</td>
+        </tr>
+        <tr>
+          <td>신령 소환팩</td>
+          <td class="price">₩2,200</td>
+          <td>Tier 3 신령 즉시 해금 1종</td>
+          <td>컬렉션 욕구 자극</td>
+        </tr>
+        <tr>
+          <td>신당 확장</td>
+          <td class="price">₩3,300</td>
+          <td>소원 처리 슬롯 영구 +2</td>
+          <td>코어 플레이어</td>
+        </tr>
+        <tr>
+          <td>무당 의상팩</td>
+          <td class="price">₩1,100</td>
+          <td>코스튬 3종 세트 (외형만)</td>
+          <td>캐릭터 애착 유저</td>
+        </tr>
+        <tr>
+          <td>오프라인 부적</td>
+          <td class="price">₩2,200</td>
+          <td>오프라인 수익 한도 8h → 24h</td>
+          <td>바쁜 직장인</td>
+        </tr>
+        <tr>
+          <td>광고 제거</td>
+          <td class="price">₩3,300</td>
+          <td>배너 광고 영구 제거</td>
+          <td>몰입 중시 유저</td>
+        </tr>
+        <tr>
+          <td>보상형 광고</td>
+          <td class="price">무료</td>
+          <td>광고 1회 → 신기 10개 or 복채 2배 30분</td>
+          <td>비결제 유저 리텐션</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- KPI 목표 -->
+  <h2>목표 KPI (출시 3개월)</h2>
+  <div class="kpi-row">
+    <div class="kpi"><div class="k-val">5,000</div><div class="k-label">DAU 목표</div></div>
+    <div class="kpi"><div class="k-val">D7 30%</div><div class="k-label">7일 잔존율</div></div>
+    <div class="kpi"><div class="k-val">3%</div><div class="k-label">결제 전환율</div></div>
+    <div class="kpi"><div class="k-val">₩150</div><div class="k-label">ARPDAU 목표</div></div>
+  </div>
+
+  <!-- Unity 씬 구조 -->
+  <h2>Unity 씬 & 컴포넌트 구조</h2>
+  <div class="g2">
+    <div class="scene-box">
+      <div class="scene-title">씬 구성</div>
+      <ul class="scene-items">
+        <li><strong>Boot</strong> — 저장 데이터 로드, 초기화</li>
+        <li><strong>MainGame</strong> — 신당 메인 화면</li>
+        <li><strong>ShrineMap</strong> — 신령 트리 / 해금 화면</li>
+        <li><strong>Shop</strong> — IAP / 신기 상점</li>
+        <li><strong>Ritual</strong> — 굿 진행 팝업</li>
+        <li><strong>Prestige</strong> — 전생 확인 화면</li>
+      </ul>
+    </div>
+    <div class="scene-box">
+      <div class="scene-title">핵심 매니저 (싱글톤)</div>
+      <ul class="scene-items">
+        <li><strong>GameManager</strong> — 전체 상태 관리</li>
+        <li><strong>SaveManager</strong> — JSON 직렬화 로컬 저장</li>
+        <li><strong>OfflineManager</strong> — 오프라인 경과 계산</li>
+        <li><strong>DeityManager</strong> — 신령 해금/레벨 관리</li>
+        <li><strong>QuestManager</strong> — 의뢰 큐 처리</li>
+        <li><strong>IAPManager</strong> — Unity IAP 래퍼</li>
+        <li><strong>AdsManager</strong> — AdMob 보상광고 래퍼</li>
+      </ul>
+    </div>
+    <div class="scene-box">
+      <div class="scene-title">데이터 구조 (ScriptableObject)</div>
+      <ul class="scene-items">
+        <li><strong>DeityData</strong> — 신령 스탯, 보너스, 아이콘</li>
+        <li><strong>QuestData</strong> — 의뢰 종류, 복채, 소요시간</li>
+        <li><strong>UpgradeData</strong> — 업그레이드 비용 곡선</li>
+        <li><strong>SeasonEventData</strong> — 이벤트 날짜, 보상</li>
+      </ul>
+    </div>
+    <div class="scene-box">
+      <div class="scene-title">수식 설계 (밸런스)</div>
+      <ul class="scene-items">
+        <li>복채 생산: <strong>base × tier^1.8 × bonuses</strong></li>
+        <li>업그레이드 비용: <strong>base × 1.15^level</strong></li>
+        <li>신뢰도 요구: <strong>100 × 2^(tier-1)</strong></li>
+        <li>오프라인 효율: <strong>온라인 대비 60%</strong></li>
+        <li>전생 보너스: <strong>+5% 복채 배율/회</strong></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 개발 로드맵 -->
+  <h2>개발 로드맵</h2>
+  <div class="card">
+    <ul class="roadmap">
+      <li>
+        <div class="rm-week"><div class="w-num">Week</div><div class="w-label">1~2</div></div>
+        <div class="rm-content">
+          <div class="phase-badge ph-core">Core</div>
+          <div class="r-title">기반 시스템 구축</div>
+          <div class="r-tasks">
+            <span class="r-task">Unity 프로젝트 세팅</span>
+            <span class="r-task">GameManager / SaveManager</span>
+            <span class="r-task">복채 생산 루프 (숫자만)</span>
+            <span class="r-task">ScriptableObject 데이터 구조</span>
+            <span class="r-task">오프라인 계산 로직</span>
+          </div>
+        </div>
+      </li>
+      <li>
+        <div class="rm-week"><div class="w-num">Week</div><div class="w-label">3~4</div></div>
+        <div class="rm-content">
+          <div class="phase-badge ph-core">Core</div>
+          <div class="r-title">신령 & 업그레이드 시스템</div>
+          <div class="r-tasks">
+            <span class="r-task">DeityManager + 해금 트리</span>
+            <span class="r-task">업그레이드 비용 곡선</span>
+            <span class="r-task">의뢰 큐 시스템</span>
+            <span class="r-task">프레스티지 기반 로직</span>
+            <span class="r-task">기본 UI (Canvas)</span>
+          </div>
+        </div>
+      </li>
+      <li>
+        <div class="rm-week"><div class="w-num">Week</div><div class="w-label">5~6</div></div>
+        <div class="rm-content">
+          <div class="phase-badge ph-content">Content</div>
+          <div class="r-title">콘텐츠 & 비주얼</div>
+          <div class="r-tasks">
+            <span class="r-task">신령 20종 데이터 입력</span>
+            <span class="r-task">신당 배경 일러스트</span>
+            <span class="r-task">굿 진행 애니메이션</span>
+            <span class="r-task">계절 이벤트 시스템</span>
+            <span class="r-task">사운드 (장구·징·환경음)</span>
+          </div>
+        </div>
+      </li>
+      <li>
+        <div class="rm-week"><div class="w-num">Week</div><div class="w-label">7</div></div>
+        <div class="rm-content">
+          <div class="phase-badge ph-polish">Polish</div>
+          <div class="r-title">수익화 연동</div>
+          <div class="r-tasks">
+            <span class="r-task">Unity IAP 설정</span>
+            <span class="r-task">AdMob 보상광고 연동</span>
+            <span class="r-task">상점 UI</span>
+            <span class="r-task">Google Play 인앱 상품 등록</span>
+          </div>
+        </div>
+      </li>
+      <li>
+        <div class="rm-week"><div class="w-num">Week</div><div class="w-label">8~9</div></div>
+        <div class="rm-content">
+          <div class="phase-badge ph-polish">Polish</div>
+          <div class="r-title">밸런싱 & QA</div>
+          <div class="r-tasks">
+            <span class="r-task">수치 밸런스 조정</span>
+            <span class="r-task">튜토리얼 제작</span>
+            <span class="r-task">알림 (오프라인 수익 알림)</span>
+            <span class="r-task">기기별 UI 테스트</span>
+            <span class="r-task">버그 수정</span>
+          </div>
+        </div>
+      </li>
+      <li>
+        <div class="rm-week"><div class="w-num">Week</div><div class="w-label">10</div></div>
+        <div class="rm-content">
+          <div class="phase-badge ph-launch">Launch</div>
+          <div class="r-title">출시</div>
+          <div class="r-tasks">
+            <span class="r-task">APK 서명 & AAB 빌드</span>
+            <span class="r-task">Play Store 등록</span>
+            <span class="r-task">스토어 스크린샷 제작</span>
+            <span class="r-task">r/incremental_games 포스팅</span>
+            <span class="r-task">TikTok 프리뷰 영상</span>
+          </div>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- 차별화 포인트 -->
+  <h2>핵심 차별화</h2>
+  <div class="g3">
+    <div class="card">
+      <div class="card-title">🌏 글로벌 유일 테마</div>
+      <div class="card-body">
+        한국 무속 incremental 게임은 전 세계에 없음.<br>
+        "Korean mythology idle" 키워드 선점 → 미디어·커뮤니티 픽업 가능.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">📖 콘텐츠 깊이</div>
+      <div class="card-body">
+        신령 20~30종 × 의뢰 50+ × 전생 시스템.<br>
+        40시간+ 플레이 콘텐츠 → 코어 유저 LTV 극대화.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">💸 UA 비용 0</div>
+      <div class="card-body">
+        광고비 없이 Reddit·TikTok 한국문화 태그로 바이럴.<br>
+        Magic Research 성공 공식 동일 적용.
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align:center; padding:40px 0 20px; color:#333; font-size:12px;">
+    GDD v1.0 · 신당 키우기 · 2026.06.09
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>신당 키우기 — 시장 분석 보고서</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', 'Malgun Gothic', sans-serif; background: #0a0a0f; color: #e2e8f0; padding: 40px 20px; }
+  .wrap { max-width: 960px; margin: 0 auto; }
+
+  .hero { text-align: center; padding: 36px 0 44px; }
+  .hero-tag { display: inline-block; background: #1a1020; border: 1px solid #5c1e1e; color: #f87171; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; padding: 5px 16px; border-radius: 20px; margin-bottom: 16px; }
+  .hero h1 { font-size: 30px; font-weight: 900; color: #fff; margin-bottom: 8px; }
+  .hero p { color: #555; font-size: 13px; }
+
+  /* 종합 점수 */
+  .score-hero { background: #11111a; border: 1px solid #2a2a40; border-radius: 16px; padding: 28px; margin-bottom: 32px; display: flex; align-items: center; gap: 32px; flex-wrap: wrap; }
+  .score-circle { width: 100px; height: 100px; border-radius: 50%; border: 4px solid #f59e0b; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; }
+  .score-num { font-size: 36px; font-weight: 900; color: #f59e0b; }
+  .score-denom { font-size: 13px; color: #555; }
+  .score-right { flex: 1; min-width: 200px; }
+  .score-verdict { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  .score-sub { font-size: 13px; color: #888; line-height: 1.8; }
+
+  .radar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+  @media (max-width: 600px) { .radar { grid-template-columns: repeat(2,1fr); } }
+  .radar-item .r-label { font-size: 11px; color: #555; margin-bottom: 5px; }
+  .radar-item .r-bar { height: 6px; background: #1a1a28; border-radius: 3px; overflow: hidden; margin-bottom: 3px; }
+  .radar-item .r-fill { height: 100%; border-radius: 3px; }
+  .radar-item .r-score { font-size: 12px; font-weight: 700; }
+  .fill-green { background: #34d399; }
+  .fill-yellow { background: #f59e0b; }
+  .fill-red { background: #f87171; }
+
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 3px; color: #555; margin: 36px 0 14px; display: flex; align-items: center; gap: 10px; }
+  h2::after { content: ''; flex: 1; height: 1px; background: #1e1e2e; }
+
+  .card { background: #11111a; border: 1px solid #1e1e2e; border-radius: 12px; padding: 20px 22px; margin-bottom: 14px; }
+  .card.danger { border-color: #5c1e1e; background: #160d0d; }
+  .card.warn { border-color: #5c4e1e; background: #141208; }
+  .card.good { border-color: #1e4c30; background: #0d1a12; }
+  .card-title { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .card-body { font-size: 13px; color: #999; line-height: 1.8; }
+  .card-body strong { color: #ddd; }
+
+  .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 600px) { .g2 { grid-template-columns: 1fr; } }
+
+  .table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .table th { text-align: left; padding: 8px 10px; color: #444; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #1e1e2e; }
+  .table td { padding: 9px 10px; border-bottom: 1px solid #141420; color: #999; }
+  .table tr:last-child td { border: none; }
+  .table td:first-child { color: #ddd; font-weight: 600; }
+  .ok { color: #34d399 !important; }
+  .ng { color: #f87171 !important; }
+  .warn-text { color: #f59e0b !important; }
+
+  .fix-list { list-style: none; }
+  .fix-list li { display: flex; gap: 14px; padding: 14px 0; border-bottom: 1px solid #141420; }
+  .fix-list li:last-child { border: none; }
+  .fix-num { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; background: #1e1e2e; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #888; }
+  .fix-num.critical { background: #2a0d0d; color: #f87171; border: 1px solid #5c1e1e; }
+  .fix-num.important { background: #231f0d; color: #f59e0b; border: 1px solid #5c4e1e; }
+  .fix-num.minor { background: #0d1a12; color: #34d399; border: 1px solid #1e4c30; }
+  .fix-title { font-size: 13px; font-weight: 700; color: #ddd; margin-bottom: 4px; }
+  .fix-body { font-size: 12px; color: #777; line-height: 1.7; }
+
+  .compare-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .compare-table th { background: #0d0d18; padding: 10px; text-align: left; color: #555; font-size: 10px; text-transform: uppercase; border-bottom: 1px solid #1e1e2e; }
+  .compare-table td { padding: 10px; border-bottom: 1px solid #141420; color: #888; }
+  .compare-table tr:last-child td { border: none; }
+
+  .badge { display: inline-block; font-size: 10px; padding: 2px 10px; border-radius: 20px; font-weight: 700; }
+  .badge-red { background: #2a0d0d; color: #f87171; border: 1px solid #5c1e1e; }
+  .badge-yellow { background: #231f0d; color: #f59e0b; border: 1px solid #5c4e1e; }
+  .badge-green { background: #0d1a12; color: #34d399; border: 1px solid #1e4c30; }
+  .badge-blue { background: #0d1a2a; color: #60a5fa; border: 1px solid #1e3a5c; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="hero-tag">Market Analysis Report</div>
+    <h1>신당 키우기 — 시장 분석 결과</h1>
+    <p>시장분석가 에이전트 독립 검토 · 2026.06.09</p>
+  </div>
+
+  <!-- 종합 점수 -->
+  <div class="score-hero">
+    <div class="score-circle">
+      <div class="score-num">5.5</div>
+      <div class="score-denom">/ 10</div>
+    </div>
+    <div class="score-right">
+      <div class="score-verdict">조건부 출시 권고</div>
+      <div class="score-sub">컨셉·테마는 진짜 강점. 그러나 <strong style="color:#f87171">수익화 모델과 마케팅 전략이 서로 충돌</strong>하고 있어 지금 상태로 출시하면 좋은 테마가 낭비됨. 두 가지 결정을 먼저 내리고 GDD를 재정렬해야 함.</div>
+      <div class="radar" style="margin-top:14px;">
+        <div class="radar-item">
+          <div class="r-label">컨셉·테마</div>
+          <div class="r-bar"><div class="r-fill fill-green" style="width:75%"></div></div>
+          <div class="r-score" style="color:#34d399">7.5</div>
+        </div>
+        <div class="radar-item">
+          <div class="r-label">장르 시장성</div>
+          <div class="r-bar"><div class="r-fill fill-green" style="width:65%"></div></div>
+          <div class="r-score" style="color:#34d399">6.5</div>
+        </div>
+        <div class="radar-item">
+          <div class="r-label">수익화 정합성</div>
+          <div class="r-bar"><div class="r-fill fill-red" style="width:45%"></div></div>
+          <div class="r-score" style="color:#f87171">4.5</div>
+        </div>
+        <div class="radar-item">
+          <div class="r-label">마케팅 현실성</div>
+          <div class="r-bar"><div class="r-fill fill-red" style="width:35%"></div></div>
+          <div class="r-score" style="color:#f87171">3.5</div>
+        </div>
+        <div class="radar-item">
+          <div class="r-label">리텐션 설계</div>
+          <div class="r-bar"><div class="r-fill fill-yellow" style="width:50%"></div></div>
+          <div class="r-score" style="color:#f59e0b">5.0</div>
+        </div>
+        <div class="radar-item">
+          <div class="r-label">실행 가능성</div>
+          <div class="r-bar"><div class="r-fill fill-yellow" style="width:50%"></div></div>
+          <div class="r-score" style="color:#f59e0b">5.0</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 치명적 오류 -->
+  <h2>🚨 치명적 오류 — 즉시 수정 필요</h2>
+
+  <div class="card danger">
+    <div class="card-title">⚠️ Magic Research 비교 자체가 틀렸다</div>
+    <div class="card-body">
+      GDD가 벤치마크로 삼은 Magic Research는 <strong>프리미엄 유료($3.99), 광고·IAP 전혀 없는 모델</strong>임. 이 GDD는 F2P + 광고 + IAP = 정반대 모델.<br><br>
+      r/incremental_games에서 통한 이유가 바로 "광고 없는 깨끗한 프리미엄"이었기 때문. <strong>F2P·광고·IAP 게임을 거기 올리면 다운보트·삭제·밴</strong> 위험이 있음. 커뮤니티가 가장 적대적인 대상이 바로 이 모델.
+      <table class="compare-table" style="margin-top:14px;">
+        <thead><tr><th></th><th>Magic Research (실제)</th><th>신당 키우기 (현재)</th></tr></thead>
+        <tbody>
+          <tr><td>모델</td><td class="ok">프리미엄 유료 $3.99</td><td class="ng">F2P + 광고 + IAP</td></tr>
+          <tr><td>플랫폼</td><td>Steam 우선 + 모바일</td><td>Android만</td></tr>
+          <tr><td>Reddit 반응</td><td class="ok">환영 (광고 없음)</td><td class="ng">거부 예상</td></tr>
+          <tr><td>LTV 구조</td><td>1회 구매 누적</td><td>DAU × 전환율 × ARPPU</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card danger">
+    <div class="card-title">⚠️ KPI 수치들이 서로 모순</div>
+    <div class="card-body">
+      <strong>ARPDAU ₩150 × DAU 5,000 = 일 매출 ₩750,000 → 월 ₩22,500,000</strong><br>
+      결제 전환율 3% = 결제자 150명/일 → 결제자당 일평균 ₩5,000 = ARPPU 비현실적 높음.<br><br>
+      현실적 목표치로 재설정 필요:
+      <table class="compare-table" style="margin-top:12px;">
+        <thead><tr><th>KPI</th><th>GDD 목표</th><th class="warn-text">현실 벤치마크</th><th>수정 권고</th></tr></thead>
+        <tbody>
+          <tr><td>D7 잔존율</td><td class="ng">30%</td><td>idle 평균 14.5%</td><td class="warn-text">12~18% (1차)</td></tr>
+          <tr><td>ARPDAU</td><td class="warn-text">₩150($0.11)</td><td>IAP형 $0.15~$0.50</td><td class="warn-text">₩70~100 (1차)</td></tr>
+          <tr><td>결제 전환율</td><td class="ng">3%</td><td>평균 1.5~3%</td><td class="warn-text">1.5~2%</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 주요 약점 -->
+  <h2>⚡ 주요 약점</h2>
+  <div class="g2">
+    <div class="card warn">
+      <div class="card-title">📱 TikTok 오가닉 전략 — 2025년 이후 붕괴</div>
+      <div class="card-body">
+        2025년부터 TikTok 오가닉 도달이 극적으로 위축. 의미 있는 조회수엔 사실상 유료 부스팅 필요. "한국문화 태그로 바이럴"은 복권에 의존하는 계획.
+      </div>
+    </div>
+    <div class="card warn">
+      <div class="card-title">🔄 반복 과금 동인 없음</div>
+      <div class="card-body">
+        현재 IAP 대부분이 <strong>일회성</strong>. 월정액·시즌패스·가챠 없이는 LTV 상한이 낮음. 코어 idle LTV는 반복 가능한 수익 구조에서 나옴.
+      </div>
+    </div>
+    <div class="card warn">
+      <div class="card-title">⬆️ 프레스티지 보너스가 너무 약함</div>
+      <div class="card-body">
+        전생당 +5% 복채 배율은 반복 동기로 매우 약함. 일반적으로 프레스티지는 <strong>새 시스템 해금 또는 곡선 가속</strong>을 줘야 반복됨. 수치 재설계 필요.
+      </div>
+    </div>
+    <div class="card warn">
+      <div class="card-title">📅 계절 이벤트만으론 공백 과다</div>
+      <div class="card-body">
+        동짓날·추석은 연 1~2회. 이벤트 공백이 길면 리텐션 도구로 작동 안 함. <strong>주간 반복 이벤트</strong> 추가 필수.
+      </div>
+    </div>
+    <div class="card warn">
+      <div class="card-title">🌐 온보딩 장벽</div>
+      <div class="card-body">
+        오방신장·신기·복채 등 무속 용어가 글로벌 유저에게 진입장벽. 첫 5분 이탈 위험. 아이콘·툴팁 설계와 튜토리얼 단순화 필수.
+      </div>
+    </div>
+    <div class="card warn">
+      <div class="card-title">🛡️ 종교·정서 리스크</div>
+      <div class="card-body">
+        무당·굿 소재에 일부 유저 거부감·부정 리뷰 가능성. "오락용 픽션" 디스클레이머와 스토어 표기 전략 필요.
+      </div>
+    </div>
+  </div>
+
+  <!-- 강점 -->
+  <h2>✅ 유지해야 할 강점</h2>
+  <div class="g2">
+    <div class="card good">
+      <div class="card-title">🌏 글로벌 유일 테마</div>
+      <div class="card-body">
+        한국 무속 incremental은 전 세계에 없음. "Korean mythology idle" 키워드 선점 가능. 테마만으로 미디어·커뮤니티 픽업 현실적으로 가능.
+      </div>
+    </div>
+    <div class="card good">
+      <div class="card-title">📐 핵심 루프 설계</div>
+      <div class="card-body">
+        제물→굿→강림→복채 루프는 전형적이지만 검증된 구조. 오프라인 수익 + 재접속 연출은 idle 재방문 메커니즘으로 적절.
+      </div>
+    </div>
+    <div class="card good">
+      <div class="card-title">📊 신령 트리 구조</div>
+      <div class="card-body">
+        Tier 1→4 점진적 해금, 컬렉션 완성 욕구. 대형사가 안 건드리는 니치 + 실제 신화 기반 → 모방 어려운 아트 디렉션 가능.
+      </div>
+    </div>
+    <div class="card good">
+      <div class="card-title">💸 낮은 초기 비용</div>
+      <div class="card-body">
+        UA 없이도 TapTap·커뮤니티로 검증 가능. 실패해도 손실 최소. "터지면 $40만, 안 터져도 포트폴리오"인 비대칭 리스크 구조 유효.
+      </div>
+    </div>
+  </div>
+
+  <!-- 보완 리스트 -->
+  <h2>🔧 보완 필요 항목 (우선순위순)</h2>
+  <div class="card">
+    <ul class="fix-list">
+      <li>
+        <div class="fix-num critical">1</div>
+        <div><div class="fix-title">수익화 모델 결단 <span class="badge badge-red">Critical</span></div><div class="fix-body">F2P+IAP+광고 vs 프리미엄 유료 중 하나 선택. 지금은 둘 사이에 끼어 있음. Reddit 채널을 쓸 거면 "광고 없는 1회 언락" 모델에 가까워야 함.</div></div>
+      </li>
+      <li>
+        <div class="fix-num critical">2</div>
+        <div><div class="fix-title">마케팅 채널 재설계 <span class="badge badge-red">Critical</span></div><div class="fix-body">Reddit은 F2P 게임에 적대적. TikTok 오가닉은 2025년 이후 사실상 사망. 대안: <strong>TapTap</strong>(아시아 idle 유저 밀집), Discord incremental 커뮤니티, Play Store ASO 집중.</div></div>
+      </li>
+      <li>
+        <div class="fix-num critical">3</div>
+        <div><div class="fix-title">KPI 재정합 <span class="badge badge-red">Critical</span></div><div class="fix-body">ARPDAU·전환율·ARPPU가 산술적으로 맞아야 함. 1차 목표: D7 12~18%, ARPDAU ₩70~100, 전환율 1.5~2%로 재설정.</div></div>
+      </li>
+      <li>
+        <div class="fix-num important">4</div>
+        <div><div class="fix-title">반복 매출 상품 추가 <span class="badge badge-yellow">Important</span></div><div class="fix-body">월정액 VIP 패스(오프라인 무제한 + 복채 배율 + 광고 제거 번들 ₩3,300/월) 추가. 일회성 IAP만으론 LTV 한계.</div></div>
+      </li>
+      <li>
+        <div class="fix-num important">5</div>
+        <div><div class="fix-title">프레스티지 보너스 강화 <span class="badge badge-yellow">Important</span></div><div class="fix-body">전생당 +5% → 전생마다 새로운 신령 계보·업그레이드 트리 해금. 숫자 배율보다 새 콘텐츠 개방이 반복 동기 효과 훨씬 강함.</div></div>
+      </li>
+      <li>
+        <div class="fix-num important">6</div>
+        <div><div class="fix-title">주간 반복 이벤트 <span class="badge badge-yellow">Important</span></div><div class="fix-body">절기 이벤트(연 4~5회)만으론 라이브 운영 공백 과다. 주간 "특별 의뢰 보드" or "신령 축제" 추가로 D14~D30 리텐션 방어.</div></div>
+      </li>
+      <li>
+        <div class="fix-num important">7</div>
+        <div><div class="fix-title">타겟 페르소나 1명으로 확정 <span class="badge badge-yellow">Important</span></div><div class="fix-body">코어 incremental 유저(Reddit·Steam) vs 한국 캐주얼 idle 유저 중 택일. 두 페르소나의 원하는 게 충돌함 — 모두 잡으려다 둘 다 놓침.</div></div>
+      </li>
+      <li>
+        <div class="fix-num minor">8</div>
+        <div><div class="fix-title">오프라인 한도 기본 12시간으로 상향 <span class="badge badge-green">Minor</span></div><div class="fix-body">현재 8시간은 idle 코어 기준 짧음. 경쟁작 다수 12~24h 기본 제공. IAP 상품(24h)과 격차 유지하면서 기본값만 올려도 리뷰 개선.</div></div>
+      </li>
+      <li>
+        <div class="fix-num minor">9</div>
+        <div><div class="fix-title">소프트런치 계획 추가 <span class="badge badge-green">Minor</span></div><div class="fix-body">글로벌 출시 전 소규모 지역(캐나다·필리핀 등) 먼저 출시해 D1/D7·튜토리얼 완료율 측정. 1인 개발일수록 데이터 기반 반복 필수.</div></div>
+      </li>
+      <li>
+        <div class="fix-num minor">10</div>
+        <div><div class="fix-title">아트 디렉션 명세 <span class="badge badge-green">Minor</span></div><div class="fix-body">단청·오방색·굿 연출 등 카피 어려운 비주얼 시그니처 정의. 메커니즘은 복제 쉬워도 아트 톤은 방어 가능한 해자.</div></div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- 결론 -->
+  <h2>📋 결론 및 다음 단계</h2>
+  <div class="card">
+    <div class="card-body" style="font-size:14px; line-height:2;">
+      <strong style="color:#fff">테마는 살려라. 모델은 다시 못 박아라.</strong><br><br>
+      "한국 무속 incremental"이라는 컨셉은 출시할 가치가 충분하다. 문제는 GDD가 Magic Research(프리미엄·무광고) 성공을 F2P·광고·IAP 모델에 잘못 이식했다는 것.<br><br>
+      지금 당장 결정해야 할 것 두 가지:<br>
+      <span style="color:#f59e0b">① 수익화: F2P+IAP+광고 OR 프리미엄 유료 중 하나 선택</span><br>
+      <span style="color:#f59e0b">② 마케팅: Reddit·TapTap·ASO 중 어디에 집중할지 결정</span><br><br>
+      이 두 결정이 나면 나머지 GDD(KPI·상품 구성·이벤트 구조)가 저절로 정렬된다.
+    </div>
+  </div>
+
+  <div style="text-align:center; padding:36px 0 16px; color:#2a2a3e; font-size:11px;">
+    시장분석가 에이전트 독립 검토 · 신당 키우기 GDD v1.0 · 2026.06.09
+  </div>
+</div>
+</body>
+</html>

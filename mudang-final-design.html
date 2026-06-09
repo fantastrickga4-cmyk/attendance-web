@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>신당 키우기 — 최종 설계서 (개발 확정판)</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#08080e;--bg2:#10101a;--bg3:#16162a;--bg4:#1e1e35;
+    --border:#252540;--accent:#c084fc;--gold:#f59e0b;
+    --green:#34d399;--red:#f87171;--blue:#60a5fa;--orange:#fb923c;
+    --text:#e2e8f0;--muted:#4a5568
+  }
+  body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--text);padding:40px 20px}
+  .wrap{max-width:1060px;margin:0 auto}
+
+  /* 히어로 */
+  .hero{text-align:center;padding:48px 0 56px;position:relative}
+  .hero::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:600px;height:300px;background:radial-gradient(ellipse at center,rgba(192,132,252,.07) 0%,transparent 70%);pointer-events:none}
+  .hero-lock{display:inline-flex;align-items:center;gap:8px;background:#1a1030;border:1px solid #6d28d9;color:#a78bfa;font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:5px 16px;border-radius:20px;margin-bottom:18px}
+  .hero h1{font-size:44px;font-weight:900;background:linear-gradient(135deg,#c084fc,#818cf8 40%,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.1;margin-bottom:10px}
+  .hero-sub{color:#555;font-size:14px;margin-bottom:24px}
+  .hero-pills{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+  .pill{font-size:11px;padding:4px 14px;border-radius:20px;background:var(--bg2);border:1px solid var(--border);color:#666}
+  .pill strong{color:#999}
+
+  /* 섹션 타이틀 */
+  h2{font-size:11px;text-transform:uppercase;letter-spacing:3px;color:#3a3a60;margin:48px 0 16px;display:flex;align-items:center;gap:10px}
+  h2::after{content:'';flex:1;height:1px;background:var(--border)}
+  h2 span{color:#555}
+
+  /* 카드 */
+  .card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:14px}
+  .card.accent-purple{border-color:#4c1d95;background:#0f0b1a}
+  .card.accent-gold{border-color:#713f12;background:#0f0e09}
+  .card.accent-green{border-color:#14532d;background:#090f0b}
+  .card.accent-blue{border-color:#1e3a5c;background:#090d14}
+  .card-title{font-size:14px;font-weight:700;color:#fff;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .card-body{font-size:13px;color:#888;line-height:1.9}
+  .card-body strong{color:#ccc}
+  .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  @media(max-width:700px){.g2,.g3,.g4{grid-template-columns:1fr}}
+
+  /* 결정 박스 */
+  .decision{background:#0d0b18;border:1px solid #4c1d95;border-radius:12px;padding:20px 24px;margin-bottom:14px}
+  .decision-label{font-size:10px;text-transform:uppercase;letter-spacing:2px;color:#6d28d9;margin-bottom:8px}
+  .decision-value{font-size:15px;font-weight:700;color:#e9d5ff;line-height:1.6}
+
+  /* 공식 블록 */
+  .formula{background:#08080e;border:1px solid #1e1e35;border-radius:10px;padding:16px 18px;margin:10px 0;font-family:'Courier New',monospace;font-size:12px;color:#94a3b8;line-height:1.8;overflow-x:auto}
+  .formula .comment{color:#374151}
+  .formula .num{color:#f59e0b}
+  .formula .var{color:#c084fc}
+  .formula .fn{color:#34d399}
+
+  /* 타임라인 */
+  .timeline{position:relative;padding-left:28px}
+  .timeline::before{content:'';position:absolute;left:8px;top:8px;bottom:8px;width:1px;background:var(--border)}
+  .tl-item{position:relative;padding:14px 0;border-bottom:1px solid #111122}
+  .tl-item:last-child{border:none}
+  .tl-dot{position:absolute;left:-24px;top:18px;width:10px;height:10px;border-radius:50%;border:2px solid var(--border);background:var(--bg)}
+  .tl-dot.active{background:var(--accent);border-color:var(--accent)}
+  .tl-dot.gold{background:var(--gold);border-color:var(--gold)}
+  .tl-dot.green{background:var(--green);border-color:var(--green)}
+  .tl-time{font-size:11px;color:#444;margin-bottom:3px}
+  .tl-title{font-size:13px;font-weight:700;color:#ddd;margin-bottom:4px}
+  .tl-desc{font-size:12px;color:#666;line-height:1.6}
+
+  /* 신령 그리드 */
+  .deity-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+  @media(max-width:700px){.deity-grid{grid-template-columns:repeat(3,1fr)}}
+  .deity-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 8px;text-align:center}
+  .deity-card.t1{border-color:#2a2a40}
+  .deity-card.t2{border-color:#14532d}
+  .deity-card.t3{border-color:#713f12}
+  .deity-card.t4{border-color:#6d28d9}
+  .deity-icon{font-size:24px;margin-bottom:5px}
+  .deity-name{font-size:11px;font-weight:700;color:#ccc;margin-bottom:2px}
+  .deity-effect{font-size:10px;color:#555;line-height:1.4}
+
+  /* KPI 카드 */
+  .kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+  @media(max-width:700px){.kpi-row{grid-template-columns:repeat(2,1fr)}}
+  .kpi{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center}
+  .kpi .v{font-size:20px;font-weight:900;color:#fff;margin-bottom:4px}
+  .kpi .l{font-size:10px;color:#444}
+
+  /* 로드맵 */
+  .rm-list{list-style:none}
+  .rm-item{display:flex;gap:16px;padding:14px 0;border-bottom:1px solid #111122}
+  .rm-item:last-child{border:none}
+  .rm-week{flex-shrink:0;width:60px}
+  .rm-week .wn{font-size:9px;color:#333;text-transform:uppercase}
+  .rm-week .wl{font-size:18px;font-weight:900;color:#fff;line-height:1}
+  .rm-body .phase{font-size:10px;padding:2px 10px;border-radius:20px;font-weight:700;display:inline-block;margin-bottom:6px}
+  .ph1{background:#1a1030;color:#c084fc;border:1px solid #4c1d95}
+  .ph2{background:#1a1010;color:#fb923c;border:1px solid #7c2d12}
+  .ph3{background:#0d1a12;color:#4ade80;border:1px solid #14532d}
+  .ph4{background:#0d1a2a;color:#60a5fa;border:1px solid #1e3a5c}
+  .ph5{background:#231f0d;color:#fbbf24;border:1px solid #713f12}
+  .ph-qa{background:#1a1a1a;color:#888;border:1px solid #333}
+  .ph-launch{background:#2a0d0d;color:#f87171;border:1px solid #7c1d1d}
+  .rm-title{font-size:13px;font-weight:600;color:#ccc;margin-bottom:6px}
+  .rm-tags{display:flex;flex-wrap:wrap;gap:5px}
+  .rm-tag{font-size:10px;background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:2px 8px;color:#555}
+
+  /* 수익화 테이블 */
+  .rev-table{width:100%;border-collapse:collapse;font-size:12px}
+  .rev-table th{text-align:left;padding:9px 12px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#444;border-bottom:1px solid var(--border)}
+  .rev-table td{padding:10px 12px;border-bottom:1px solid #111122;color:#888;vertical-align:top}
+  .rev-table tr:last-child td{border:none}
+  .rev-table td:first-child{color:#ddd;font-weight:600}
+  .price{color:var(--green);font-weight:700}
+  .core-product{background:#0d1a12 !important}
+  .core-product td{border-color:#1a3a22 !important}
+
+  /* 스킬 테이블 */
+  .skill-table{width:100%;border-collapse:collapse;font-size:12px}
+  .skill-table th{padding:8px 10px;background:var(--bg3);text-align:left;color:#444;font-size:10px;text-transform:uppercase;letter-spacing:1px}
+  .skill-table td{padding:9px 10px;border-bottom:1px solid #111122;color:#888}
+  .skill-table td:first-child{color:#ccc;font-weight:600}
+  .skill-table tr:last-child td{border:none}
+
+  /* 시나리오 */
+  .scenario-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  @media(max-width:600px){.scenario-grid{grid-template-columns:1fr}}
+  .scenario{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px}
+  .scenario.good{border-color:#14532d;background:#090f0b}
+  .scenario.mid{border-color:#713f12;background:#0f0e09}
+  .scenario.bad{border-color:#3a1a1a;background:#0f0909}
+  .scenario .s-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+  .scenario.good .s-label{color:#4ade80}
+  .scenario.mid .s-label{color:#fbbf24}
+  .scenario.bad .s-label{color:#f87171}
+  .scenario .s-dau{font-size:22px;font-weight:900;color:#fff;margin-bottom:4px}
+  .scenario .s-rev{font-size:13px;color:#888;line-height:1.8}
+
+  /* 체크리스트 */
+  .checklist{list-style:none}
+  .checklist li{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid #111122;font-size:13px;color:#888}
+  .checklist li:last-child{border:none}
+  .checklist li .ck{flex-shrink:0;width:18px;height:18px;border-radius:4px;border:1px solid #333;display:flex;align-items:center;justify-content:center;font-size:10px;color:#34d399;background:#0d1a12}
+
+  /* 배지 */
+  .badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700}
+  .badge-purple{background:#1a1030;color:#c084fc;border:1px solid #4c1d95}
+  .badge-green{background:#0d1a12;color:#4ade80;border:1px solid #14532d}
+  .badge-gold{background:#231f0d;color:#fbbf24;border:1px solid #713f12}
+  .badge-red{background:#2a0d0d;color:#f87171;border:1px solid #7c1d1d}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 히어로 -->
+  <div class="hero">
+    <div class="hero-lock">🔒 최종 확정 설계서 — 개발 시작 전 변경 금지</div>
+    <h1>🔮 신당 키우기</h1>
+    <p class="hero-sub">시장분석가 + 게임시스템 전문가 2중 검증 완료 · 2026.06.09</p>
+    <div class="hero-pills">
+      <span class="pill"><strong>장르</strong> 방치형 RPG (Idle RPG)</span>
+      <span class="pill"><strong>플랫폼</strong> Android Play Store</span>
+      <span class="pill"><strong>엔진</strong> Unity 6 LTS</span>
+      <span class="pill"><strong>개발기간</strong> 18주 (1인)</span>
+      <span class="pill"><strong>목표 플레이타임</strong> 80~120h</span>
+      <span class="pill"><strong>출시 전략</strong> 필리핀 소프트런치 → 한국 본출시</span>
+    </div>
+  </div>
+
+  <!-- 핵심 결정 3가지 -->
+  <h2><span>01</span> 개발 전 3대 핵심 결정 (확정)</h2>
+
+  <div class="g3">
+    <div class="decision">
+      <div class="decision-label">수익 모델</div>
+      <div class="decision-value">F2P + IAP 박리다매<br>+ 보상형 광고 보조</div>
+    </div>
+    <div class="decision">
+      <div class="decision-label">마케팅 채널</div>
+      <div class="decision-value">디시 방치형 갤러리<br>+ 디스코드 + ASO</div>
+    </div>
+    <div class="decision">
+      <div class="decision-label">출시 순서</div>
+      <div class="decision-value">필리핀 기술검증 1주<br>→ 한국 본출시</div>
+    </div>
+  </div>
+
+  <!-- 핵심 수치 공식 -->
+  <h2><span>02</span> 핵심 수치 시스템 (Unity 코드로 바로 사용)</h2>
+
+  <div class="g2">
+    <div class="card accent-purple">
+      <div class="card-title">💰 복채 생산 공식</div>
+      <div class="formula">
+<span class="comment">// 전체 BK/s</span>
+<span class="var">BK/s</span> = Σ (<span class="var">base</span> × <span class="fn">LevelMult</span>(<span class="var">lv</span>) × <span class="fn">SpiritMult</span> × <span class="fn">RegionMult</span> × <span class="fn">EraMult</span>)
+
+<span class="comment">// 레벨 배율</span>
+<span class="fn">LevelMult</span>(<span class="var">lv</span>) = <span class="var">lv</span>^<span class="num">1.5</span> × <span class="num">1.2</span>^(<span class="var">lv</span> / <span class="num">25</span>)
+
+<span class="comment">// 업그레이드 비용</span>
+<span class="fn">Cost</span>(<span class="var">lv</span>) = <span class="var">base</span> × <span class="num">1.15</span>^<span class="var">lv</span> × <span class="fn">Compress</span>(<span class="var">lv</span>)
+<span class="comment">// Compress: lv&lt;25→1.0, lv&lt;50→0.85, lv&lt;100→0.70</span>
+      </div>
+    </div>
+    <div class="card accent-purple">
+      <div class="card-title">🌙 오프라인 수익 공식</div>
+      <div class="formula">
+<span class="fn">offline_BK</span> = <span class="var">BK/s</span> × <span class="fn">min</span>(<span class="var">elapsed</span>, <span class="var">cap</span>)
+            × <span class="var">efficiency</span> × (<span class="num">1</span> + <span class="var">shamanLv</span> × <span class="num">0.002</span>)
+
+<span class="var">efficiency</span>:
+  기본:             <span class="num">0.25</span>  (25%)
+  자동화 제단 구매:  <span class="num">0.50</span>
+  야광귀 신령:       <span class="num">0.60</span>
+  프리미엄 굿 완료:  <span class="num">0.75</span> (24h)
+
+<span class="var">cap</span> (시간 상한):
+  기본:        <span class="num">14,400</span>s (4h)
+  수호 신령:   <span class="num">28,800</span>s (8h)
+  3회 전생+:  <span class="num">43,200</span>s (12h)
+      </div>
+    </div>
+    <div class="card accent-gold">
+      <div class="card-title">⚡ 신뢰도 요구량</div>
+      <div class="formula">
+<span class="fn">TR_required</span>(<span class="var">tier</span>) = <span class="num">100</span> × <span class="num">2.8</span>^(<span class="var">tier</span> - <span class="num">1</span>)
+
+tier=<span class="num">1</span>:  <span class="num">100</span>     (~10분)
+tier=<span class="num">2</span>:  <span class="num">280</span>     (~30분)
+tier=<span class="num">3</span>:  <span class="num">784</span>     (~2시간)
+tier=<span class="num">4</span>:  <span class="num">2,195</span>   (~6시간)
+tier=<span class="num">5</span>:  <span class="num">6,147</span>   (~15시간)
+tier=<span class="num">6</span>:  <span class="num">17,211</span>  (~30시간)
+tier=<span class="num">7</span>:  <span class="num">48,191</span>  (~60시간)
+tier=<span class="num">8</span>:  <span class="num">134,934</span> (100h+)
+
+<span class="fn">TR/s</span> = (<span class="var">BK/s</span> × <span class="num">0.01</span>) + 굿완료 보너스
+  소굿: +<span class="num">50</span>  중굿: +<span class="num">200</span>  대굿: +<span class="num">1,000</span>
+      </div>
+    </div>
+    <div class="card accent-gold">
+      <div class="card-title">🔄 프레스티지 SK 공식</div>
+      <div class="formula">
+<span class="fn">SK_gain</span> = floor(sqrt(<span class="var">totalBK</span> / <span class="num">1,000,000</span>)) × <span class="var">eraMult</span>
+
+<span class="var">eraMult</span>:
+  현대(1회):   <span class="num">×1.0</span>
+  조선(2회):   <span class="num">×1.3</span>
+  고려(3회):   <span class="num">×1.7</span>
+  고조선(4회): <span class="num">×2.2</span>
+  신계(5회):   <span class="num">×3.0</span>
+
+영구 복채 배율:
+  SK <span class="num">0~500</span>:  각 SK = +<span class="num">1%</span>  (상한 +500%)
+  SK <span class="num">500~2K</span>: 각 SK = +<span class="num">0.5%</span>
+  SK <span class="num">2K~10K</span>: 각 SK = +<span class="num">0.1%</span>
+  SK <span class="num">10K+</span>: BK배율 고정, 신계 콘텐츠 화폐 전환
+      </div>
+    </div>
+  </div>
+
+  <!-- 레이어 해금 타이밍 -->
+  <h2><span>03</span> 레이어 해금 타이밍 & 리텐션 설계</h2>
+
+  <div class="g2">
+    <div class="card">
+      <div class="card-title">⏱️ 해금 타이밍 (이탈 방지선)</div>
+      <div class="timeline">
+        <div class="tl-item">
+          <div class="tl-dot active"></div>
+          <div class="tl-time">0:00 ~ 5:00</div>
+          <div class="tl-title">D1 훅 — 삼신할미 자동 강림</div>
+          <div class="tl-desc">3분 내 자동 발동. 플레이어가 아무것도 안 해도 첫 신령 강림 연출 발생. 이탈 최대 위험구간.</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot active"></div>
+          <div class="tl-time">0:45 ~ 1:00</div>
+          <div class="tl-title">Layer 2 진입 — 무당 고용</div>
+          <div class="tl-desc">45분 미만: 루프 파괴. 90분 초과: 이탈(ChurnPoint #1). 반드시 이 창에 진입 유도.</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot gold"></div>
+          <div class="tl-time">6 ~ 8시간</div>
+          <div class="tl-title">Layer 3 진입 — 지역 확장</div>
+          <div class="tl-desc">D1 종료 전 반드시 진입. 지도 UI 등장 + 지역 조명 켜지는 연출 → "와" 모멘트 #2.</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot gold"></div>
+          <div class="tl-time">15 ~ 20시간</div>
+          <div class="tl-title">Layer 4 진입 — 제자 시스템</div>
+          <div class="tl-desc">D2 세션에서 경험. 자동화 레이어 추가 → "게임이 커진다" 느낌.</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot"></div>
+          <div class="tl-time">35 ~ 50시간</div>
+          <div class="tl-title">첫 프레스티지 권유</div>
+          <div class="tl-desc">조건: 누적BK ≥ 1B, L4 해금, 신령 10종+, 플레이 35h+. SK 예상량 HUD 표시 → "전생 욕구" 극대화.</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot"></div>
+          <div class="tl-time">30 ~ 40시간</div>
+          <div class="tl-title">Layer 5 — 신계 탐험 (v1.0 초안)</div>
+          <div class="tl-desc">v1.0은 "파견→대기→귀환" 타이머 방식으로 단순 구현. 풀 콘텐츠는 v1.1.</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🎯 리텐션 훅 설계</div>
+      <div class="card-body" style="font-size:12px;">
+        <div style="margin-bottom:14px;">
+          <strong style="color:#c084fc">D1 훅 (첫 5분)</strong><br>
+          0:00 제단설치 → 0:30 복채 첫 획득 → 1:30 향초 구매(BK×5) → 3:00 <strong>삼신할미 강림 자동연출</strong> → 5:00 굿 완료
+        </div>
+        <div style="margin-bottom:14px;">
+          <strong style="color:#fb923c">D3 훅 ("와" 순간 3가지)</strong><br>
+          ① 대굿 첫 완료 (징·꽹과리 사운드 + 화면 연출)<br>
+          ② D2 아침 오프라인 귀환 (스택 카운터 애니메이션)<br>
+          ③ 지역 확장 지도 UI 첫 등장
+        </div>
+        <div style="margin-bottom:14px;">
+          <strong style="color:#4ade80">D7 훅</strong><br>
+          주간 굿 달력 특별굿 / 신령 일일 친밀도 대화 / 프레스티지 예고 UI
+        </div>
+        <div style="margin-bottom:14px;">
+          <strong style="color:#60a5fa">D30 훅 (장기 목표 3축)</strong><br>
+          ① 신령 도감 50종 완성<br>
+          ② 시대 스토리 챕터 완주<br>
+          ③ 제자 10명 육성 → 독립 이벤트
+        </div>
+        <div style="background:var(--bg3);border-radius:8px;padding:12px;font-size:11px;color:#555;margin-top:12px;">
+          <strong style="color:#888">알림 전략</strong><br>
+          일 최대 4회 상한. "신령들이 기다립니다" 스타일 문구. 오프라인 80% → 예고 / 100% → 확정 알림.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 무당 스킬 트리 -->
+  <h2><span>04</span> 무당 스킬 트리 (강신계 / 치병계 / 예언계)</h2>
+
+  <div class="g3">
+    <div class="card accent-purple">
+      <div class="card-title">👻 강신계 — 신령 강화</div>
+      <table class="skill-table">
+        <tr><th>스킬</th><th>효과</th><th>조건</th></tr>
+        <tr><td>신기 감응</td><td>신령 BK배율 +15%</td><td>Lv5</td></tr>
+        <tr><td>접신 가속</td><td>강림 쿨타임 -20%</td><td>G1+Lv10</td></tr>
+        <tr><td>다신 접속</td><td>신령 슬롯 +1</td><td>G2+Lv15</td></tr>
+        <tr><td>신력 공명</td><td>같은 계열 2종시 각 +25%</td><td>Lv20</td></tr>
+        <tr><td>신계 연결</td><td>L5 수익 +40%</td><td>G3+G4+Lv30</td></tr>
+        <tr><td>강신 극의</td><td>강림시 BK×10 즉시(4h쿨)</td><td>G5+Lv40</td></tr>
+      </table>
+    </div>
+    <div class="card accent-green">
+      <div class="card-title">🌿 치병계 — 굿 효율</div>
+      <table class="skill-table">
+        <tr><th>스킬</th><th>효과</th><th>조건</th></tr>
+        <tr><td>치성 기도</td><td>굿 완료 TR +10%</td><td>Lv5</td></tr>
+        <tr><td>부적 강화</td><td>부적 BK/s +25%</td><td>C1+Lv8</td></tr>
+        <tr><td>의뢰 숙련</td><td>의뢰 보상 +30%</td><td>C1+Lv12</td></tr>
+        <tr><td>복채 흥정</td><td>TR×0.001 BK/s 추가</td><td>C2+C3+Lv18</td></tr>
+        <tr><td>굿판 확장</td><td>동시 굿 +1 (1→2)</td><td>C3+Lv22</td></tr>
+        <tr><td>공수 전수</td><td>제자 성장속도 +20%</td><td>C4+Lv28</td></tr>
+        <tr><td>만신 경지</td><td>전체 BK/s +5%</td><td>C6+Lv35</td></tr>
+      </table>
+    </div>
+    <div class="card accent-blue">
+      <div class="card-title">🔭 예언계 — 오프라인/자동화</div>
+      <table class="skill-table">
+        <tr><th>스킬</th><th>효과</th><th>조건</th></tr>
+        <tr><td>신몽 해석</td><td>오프라인 효율 +10%</td><td>Lv5</td></tr>
+        <tr><td>점술 자동화</td><td>굿 자동 쿨타임 -15%</td><td>Y1+Lv10</td></tr>
+        <tr><td>미래 통찰</td><td>오프라인 시간 +2h</td><td>Y1+Lv15</td></tr>
+        <tr><td>복채 예측</td><td>다음 업그레이드 페이백 시간 표시</td><td>Lv15</td></tr>
+        <tr><td>신계 지식</td><td>지역 해금 비용 -15%</td><td>Y2+Y3+Lv20</td></tr>
+        <tr><td>시간 역행</td><td>프레스티지 SK +20%</td><td>Y4+Lv30</td></tr>
+        <tr><td>운명 조종</td><td>오프라인 효율 +25%추가</td><td>Y3+Y6+Lv40</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- 신령 시스템 -->
+  <h2><span>05</span> 신령 시스템 (50종, Tier 1~4)</h2>
+
+  <div class="deity-grid">
+    <div class="deity-card t1"><div class="deity-icon">👶</div><div class="deity-name">삼신할미</div><div class="deity-effect">오프라인 +1h<br>BK/s +5% · 자동획득</div></div>
+    <div class="deity-card t1"><div class="deity-icon">🏠</div><div class="deity-name">성주신</div><div class="deity-effect">신당 BK/s +10%<br>TR 200 달성</div></div>
+    <div class="deity-card t1"><div class="deity-icon">🔥</div><div class="deity-name">조왕신</div><div class="deity-effect">굿 완료 복채 +5%<br>소굿 3회 완료</div></div>
+    <div class="deity-card t1"><div class="deity-icon">🌱</div><div class="deity-name">터주신</div><div class="deity-effect">지역 생산 +8%<br>지역 첫 해금</div></div>
+    <div class="deity-card t1"><div class="deity-icon">💼</div><div class="deity-name">업신</div><div class="deity-effect">레벨업 BK 보너스 ×2<br>무당 Lv20</div></div>
+    <div class="deity-card t2"><div class="deity-icon">🌲</div><div class="deity-name">산신령</div><div class="deity-effect">오프라인 BK ×1.3<br>산자락 지역 해금</div></div>
+    <div class="deity-card t2"><div class="deity-icon">🐉</div><div class="deity-name">용왕신</div><div class="deity-effect">BK/s에 TR 보너스<br>대굿 5회 완료</div></div>
+    <div class="deity-card t2"><div class="deity-icon">⭐</div><div class="deity-name">칠성신</div><div class="deity-effect">자정 BK 보너스<br>7일 연속 접속</div></div>
+    <div class="deity-card t2"><div class="deity-icon">🌊</div><div class="deity-name">영등할망</div><div class="deity-effect">제주 지역 전용<br>지역 생산 ×1.5</div></div>
+    <div class="deity-card t2"><div class="deity-icon">🐯</div><div class="deity-name">호랑이신</div><div class="deity-effect">경상 지역 전용<br>의뢰 보상 ×1.5</div></div>
+    <div class="deity-card t3"><div class="deity-icon">👺</div><div class="deity-name">도깨비신</div><div class="deity-effect">의뢰 보상 ×2<br>Tier2 신령 5종 보유</div></div>
+    <div class="deity-card t3"><div class="deity-icon">🌙</div><div class="deity-name">야광귀</div><div class="deity-effect">오프라인 효율 60%<br>조선 전생 후 획득</div></div>
+    <div class="deity-card t3"><div class="deity-icon">🙏</div><div class="deity-name">제석신</div><div class="deity-effect">TR 획득 +50%<br>신계 탐험 5회</div></div>
+    <div class="deity-card t3"><div class="deity-icon">🌈</div><div class="deity-name">바리데기</div><div class="deity-effect">신계 탐험 보상 ×3<br>스토리 챕터 완주</div></div>
+    <div class="deity-card t3"><div class="deity-icon">⚔️</div><div class="deity-name">장군신</div><div class="deity-effect">처리속도 ×2<br>지역 3개 완성</div></div>
+    <div class="deity-card t4" style="border-color:#6d28d9;background:#100a1e"><div class="deity-icon">☁️</div><div class="deity-name">옥황상제</div><div class="deity-effect" style="color:#c084fc">전 레이어 BK/s ×2<br>신계 진입+도감 40종</div></div>
+    <div class="deity-card t4" style="border-color:#6d28d9;background:#100a1e"><div class="deity-icon">🌞</div><div class="deity-name">환인</div><div class="deity-effect" style="color:#c084fc">모든 수치 +100%<br>도감 50종 완성</div></div>
+    <div class="deity-card t4" style="border-color:#6d28d9;background:#100a1e"><div class="deity-icon">💀</div><div class="deity-name">저승사자</div><div class="deity-effect" style="color:#c084fc">프레스티지 SK +50%<br>5회 전생 완료</div></div>
+    <div class="deity-card t1"><div class="deity-icon">📜</div><div class="deity-name">+17종 Tier1</div><div class="deity-effect">지역·시대·이벤트 해금</div></div>
+    <div class="deity-card t2"><div class="deity-icon">✨</div><div class="deity-name">+11종 Tier2~3</div><div class="deity-effect">조합 발현·시대 전용</div></div>
+  </div>
+
+  <div style="margin-top:14px; padding:14px 18px; background:var(--bg2); border:1px solid var(--border); border-radius:10px; font-size:12px; color:#666;">
+    <strong style="color:#888">신령 획득 경로 (가챠 없음)</strong> — ① 퀘스트 완료 ② 스토리 챕터 ③ 업적 달성 ④ 신령 조합 발현 (동일Tier 3종 → 선택지 3개 중 1개 획득) ⑤ 지역 특화 굿 ⑥ 시대 전생 보상 ⑦ 일일/주간 퀘스트 포인트 교환
+  </div>
+
+  <!-- 수익화 확정 -->
+  <h2><span>06</span> 수익화 구조 확정</h2>
+
+  <div class="card">
+    <table class="rev-table">
+      <thead><tr><th>상품</th><th>가격</th><th>구성</th><th>노출 트리거</th><th>목표</th></tr></thead>
+      <tbody>
+        <tr class="core-product">
+          <td>🌟 월간 베이직 패스</td><td class="price">₩9,900/월</td>
+          <td>매일 접속 시 재화 + 즉시 보너스</td>
+          <td>D3 이후 상시 노출</td><td>핵심 구독 — LTV 기둥</td>
+        </tr>
+        <tr class="core-product">
+          <td>👑 월간 프리미엄 패스</td><td class="price">₩19,900/월</td>
+          <td>베이직 + 신령 소환권 + 오프라인 ×2</td>
+          <td>첫 프레스티지 이후</td><td>ARPPU 견인</td>
+        </tr>
+        <tr>
+          <td>🚫 광고 제거</td><td class="price">₩7,700 (영구)</td>
+          <td>전면 광고 영구 제거 + QoL</td>
+          <td>전면 광고 첫 노출 시</td><td>첫 결제 진입 (저항 최소)</td>
+        </tr>
+        <tr>
+          <td>🎁 첫 결제 패키지</td><td class="price">₩1,200 (1회)</td>
+          <td>초고효율 신기+재화 묶음</td>
+          <td>튜토리얼 직후</td><td>결제 전환율 극대화</td>
+        </tr>
+        <tr>
+          <td>📦 성장 패키지</td><td class="price">₩6,000~12,000</td>
+          <td>프레스티지 직전 부스트</td>
+          <td>전생 조건 80% 달성 시</td><td>자연스러운 IAP 유도</td>
+        </tr>
+        <tr>
+          <td>👻 신령 소환 10연</td><td class="price">₩29,000</td>
+          <td>10연 + 확정 1종 (미보유 우선)</td>
+          <td>도감 수집 욕구 자극</td><td>컬렉션 과금</td>
+        </tr>
+        <tr>
+          <td>📺 보상형 광고</td><td class="price">무료</td>
+          <td>신기 10개 or 복채 ×2 (1h)</td>
+          <td>상시 (하루 5회 상한)</td><td>비결제 유저 리텐션</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="margin-top:14px; padding:12px 16px; background:#090f0b; border:1px solid #14532d; border-radius:8px; font-size:12px; color:#666;">
+      <strong style="color:#4ade80">광고 구성</strong> — 보상형 80% / 전면 20% / 배너 0%. 전면 광고는 시대 전환·대굿 완료 등 자연 휴지점에만.
+      전체 매출 비중: <strong style="color:#ccc">IAP 75~80% / 광고 20~25%</strong>
+    </div>
+  </div>
+
+  <!-- KPI 확정 -->
+  <h2><span>07</span> 현실 KPI 확정 (이전 비현실 KPI 폐기)</h2>
+
+  <div class="kpi-row">
+    <div class="kpi"><div class="v">35%</div><div class="l">D1 잔존율</div></div>
+    <div class="kpi"><div class="v">13%</div><div class="l">D7 잔존율</div></div>
+    <div class="kpi"><div class="v">5%</div><div class="l">D30 잔존율</div></div>
+    <div class="kpi"><div class="v">₩50</div><div class="l">ARPDAU 목표</div></div>
+    <div class="kpi"><div class="v">2%</div><div class="l">IAP 전환율</div></div>
+  </div>
+
+  <div style="margin-top:14px;">
+    <div class="scenario-grid">
+      <div class="scenario bad">
+        <div class="s-label">보수 시나리오</div>
+        <div class="s-dau">DAU 300</div>
+        <div class="s-rev">3개월: ~45만원/월<br>12개월: ~105만원/월<br>서버비는 손해 안 남</div>
+      </div>
+      <div class="scenario mid">
+        <div class="s-label">현실 시나리오</div>
+        <div class="s-dau">DAU 1,800</div>
+        <div class="s-rev">3개월: ~270만원/월<br>12개월: ~525만원/월<br>누적 12개월 ~2,500만원</div>
+      </div>
+      <div class="scenario good">
+        <div class="s-label">낙관 시나리오 (바이럴 1건)</div>
+        <div class="s-dau">DAU 6,000</div>
+        <div class="s-rev">3개월: ~900만원/월<br>12개월: ~3,000만원+/월<br>Magic Research급 가능</div>
+      </div>
+    </div>
+    <div style="margin-top:10px; font-size:12px; color:#444; padding:10px 14px; background:var(--bg2); border-radius:8px;">
+      손익분기 DAU: <strong style="color:#888">~100명</strong> (서버비 최소 가정, 순 ARPDAU ₩35 × 30일 기준)
+    </div>
+  </div>
+
+  <!-- 마케팅 -->
+  <h2><span>08</span> 마케팅 & 출시 전략</h2>
+
+  <div class="g2">
+    <div class="card">
+      <div class="card-title">📣 채널 전략</div>
+      <div class="card-body" style="font-size:12px; line-height:2;">
+        <strong>1순위: 디시인사이드 방치형게임 마이너 갤러리</strong><br>
+        한국 코어 타깃 정확히 집결. 개발일지·테스터 모집. <br><br>
+        <strong>2순위: 공식 디스코드 서버</strong><br>
+        베타 피드백 + LiveOps 공지 + 충성 유저 락인.<br><br>
+        <strong>3순위: ASO (Play Store 최적화)</strong><br>
+        제목: <strong style="color:#c084fc">신당 키우기: 무당 방치형 RPG</strong><br>
+        핵심 키워드: 방치형, 키우기, 무당, 신당, 한국신화, RPG, 신령<br><br>
+        <strong>4순위: 인플루언서 소액 협찬</strong><br>
+        방치형 유튜버 ₩10~50만 단위. 무속 테마 영상 후킹 강함.<br><br>
+        <strong>Reddit / TikTok 오가닉: 사용 안 함</strong><br>
+        F2P 게임 적대적 / TikTok 오가닉 2025년 붕괴 확인됨.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🗓️ 출시 일정</div>
+      <div class="timeline">
+        <div class="tl-item">
+          <div class="tl-dot active"></div>
+          <div class="tl-time">개발 완료 후 D-14</div>
+          <div class="tl-title">디시·디스코드 베타 모집</div>
+          <div class="tl-desc">ASO 메타데이터·스크린샷 완성. 베타 테스터 30~50명 확보.</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot active"></div>
+          <div class="tl-time">소프트런치 (1~2주)</div>
+          <div class="tl-title">필리핀 기술 검증</div>
+          <div class="tl-desc">버그·트래킹·서버 부하·튜토리얼 깔때기 검증. 수익 KPI는 보지 말 것.</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot gold"></div>
+          <div class="tl-time">본 출시</div>
+          <div class="tl-title">한국 Play Store 출시</div>
+          <div class="tl-desc">디시·에펨·디스코드 동시 공지. 베타 테스터 리뷰 30+ 확보. 인플루언서 영상 동시 공개.</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot"></div>
+          <div class="tl-time">출시 3~6개월 후</div>
+          <div class="tl-title">글로벌 영어권 확장</div>
+          <div class="tl-desc">영문 현지화 + TapTap + 서구 incremental Discord. "Korean folklore idle" 키워드.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 18주 로드맵 -->
+  <h2><span>09</span> 18주 개발 로드맵</h2>
+
+  <div class="card">
+    <ul class="rm-list">
+      <li class="rm-item">
+        <div class="rm-week"><div class="wn">Week</div><div class="wl">1~2</div></div>
+        <div class="rm-body">
+          <span class="phase ph1">코어 루프</span>
+          <div class="rm-title">복채 생산 공식 + 오프라인 + 세이브 프로토타입</div>
+          <div class="rm-tags"><span class="rm-tag">BK/s 공식 구현</span><span class="rm-tag">GameManager</span><span class="rm-tag">SaveManager (JSON)</span><span class="rm-tag">오프라인 계산기</span><span class="rm-tag">ScriptableObject 구조</span></div>
+          <div style="margin-top:8px;font-size:11px;color:#4ade80;">★ 이 2주가 전체의 기반. 숫자가 커지는 게 재미있는지 먼저 검증.</div>
+        </div>
+      </li>
+      <li class="rm-item">
+        <div class="rm-week"><div class="wn">Week</div><div class="wl">3~4</div></div>
+        <div class="rm-body">
+          <span class="phase ph1">Layer 1~2</span>
+          <div class="rm-title">신당 운영 UI + 무당 고용 + 스킬 트리</div>
+          <div class="rm-tags"><span class="rm-tag">신당 업그레이드 UI</span><span class="rm-tag">무당 고용 시스템</span><span class="rm-tag">스킬 트리 UI (3트리)</span><span class="rm-tag">굿 자동화 기초</span></div>
+        </div>
+      </li>
+      <li class="rm-item">
+        <div class="rm-week"><div class="wn">Week</div><div class="wl">5~6</div></div>
+        <div class="rm-body">
+          <span class="phase ph2">신령 시스템</span>
+          <div class="rm-title">신령 20종 (Tier1~2) + 강림 연출 + 도감</div>
+          <div class="rm-tags"><span class="rm-tag">신령 데이터 20종</span><span class="rm-tag">강림 파티클 연출</span><span class="rm-tag">도감 UI</span><span class="rm-tag">신령 조합 발현 4종</span></div>
+        </div>
+      </li>
+      <li class="rm-item">
+        <div class="rm-week"><div class="wn">Week</div><div class="wl">7~8</div></div>
+        <div class="rm-body">
+          <span class="phase ph3">Layer 3</span>
+          <div class="rm-title">지역 확장 (3개 지역) + 의뢰 게시판</div>
+          <div class="rm-tags"><span class="rm-tag">지역 3개 구현</span><span class="rm-tag">지역별 신령 계보</span><span class="rm-tag">교류 수익 공식</span><span class="rm-tag">의뢰 게시판 (3슬롯)</span></div>
+        </div>
+      </li>
+      <li class="rm-item">
+        <div class="rm-week"><div class="wn">Week</div><div class="wl">9~10</div></div>
+        <div class="rm-body">
+          <span class="phase ph4">알림·오프라인</span>
+          <div class="rm-title">FCM 알림 + 오프라인 귀환 연출 강화</div>
+          <div class="rm-tags"><span class="rm-tag">FCM 알림 연동</span><span class="rm-tag">귀환 스택 카운터 애니</span><span class="rm-tag">세이브 안정화</span><span class="rm-tag">ChurnPoint 방어 UI</span></div>
+        </div>
+      </li>
+      <li class="rm-item">
+        <div class="rm-week"><div class="wn">Week</div><div class="wl">11~12</div></div>
+        <div class="rm-body">
+          <span class="phase ph5">프레스티지</span>
+          <div class="rm-title">시대 이동 (현대→조선) + SK 시스템</div>
+          <div class="rm-tags"><span class="rm-tag">전생 화면 UI</span><span class="rm-tag">SK 공식 구현</span><span class="rm-tag">조선 시대 규칙</span><span class="rm-tag">"전생 욕구" 연출</span></div>
+        </div>
+      </li>
+      <li class="rm-item">
+        <div class="rm-week"><div class="wn">Week</div><div class="wl">13~14</div></div>
+        <div class="rm-body">
+          <span class="phase ph3">Layer 4</span>
+          <div class="rm-title">제자 시스템 5명 + 파견 타이머</div>
+          <div class="rm-tags"><span class="rm-tag">제자 5명 구현</span><span class="rm-tag">파견 타이머</span><span class="rm-tag">귀환 보상</span><span class="rm-tag">제자 육성 트리 (단순)</span></div>
+        </div>
+      </li>
+      <li class="rm-item">
+        <div class="rm-week"><div class="wn">Week</div><div class="wl">15</div></div>
+        <div class="rm-body">
+          <span class="phase ph1">튜토리얼</span>
+          <div class="rm-title">첫 5분 스크립트 + 삼신할미 자동 강림</div>
+          <div class="rm-tags"><span class="rm-tag">5분 튜토리얼 스크립트</span><span class="rm-tag">삼신할미 3분 자동 발동</span><span class="rm-tag">손 UI 가이드</span></div>
+          <div style="margin-top:8px;font-size:11px;color:#4ade80;">★ 시스템 완성 후 튜토리얼 제작 — 실제 게임 흐름에 맞게 가이드 가능.</div>
+        </div>
+      </li>
+      <li class="rm-item">
+        <div class="rm-week"><div class="wn">Week</div><div class="wl">16</div></div>
+        <div class="rm-body">
+          <span class="phase ph4">수익화</span>
+          <div class="rm-title">Unity IAP + AdMob 보상광고 연동</div>
+          <div class="rm-tags"><span class="rm-tag">Unity IAP 세팅</span><span class="rm-tag">월정액 구독 구현</span><span class="rm-tag">AdMob 보상광고</span><span class="rm-tag">상점 UI</span></div>
+        </div>
+      </li>
+      <li class="rm-item">
+        <div class="rm-week"><div class="wn">Week</div><div class="wl">17</div></div>
+        <div class="rm-body">
+          <span class="phase ph-qa">밸런스·QA</span>
+          <div class="rm-title">수치 밸런싱 + 5분·8h·D7 검증 테스트</div>
+          <div class="rm-tags"><span class="rm-tag">수치 밸런스 조정</span><span class="rm-tag">5분 테스트</span><span class="rm-tag">8h 오프라인 테스트</span><span class="rm-tag">D7 시뮬레이션</span><span class="rm-tag">기기 3종 테스트</span></div>
+        </div>
+      </li>
+      <li class="rm-item">
+        <div class="rm-week"><div class="wn">Week</div><div class="wl">18</div></div>
+        <div class="rm-body">
+          <span class="phase ph-launch">출시</span>
+          <div class="rm-title">필리핀 소프트런치 → 한국 본 출시</div>
+          <div class="rm-tags"><span class="rm-tag">AAB 빌드+서명</span><span class="rm-tag">Play Store 등록</span><span class="rm-tag">스크린샷 제작</span><span class="rm-tag">개인정보처리방침</span><span class="rm-tag">디시 출시 공지</span><span class="rm-tag">디스코드 오픈</span></div>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- v1.0 스코프 확정 -->
+  <h2><span>10</span> v1.0 스코프 확정 (넣는 것 vs 빼는 것)</h2>
+
+  <div class="g2">
+    <div class="card accent-green">
+      <div class="card-title">✅ v1.0 필수 포함</div>
+      <ul class="checklist">
+        <li><div class="ck">✓</div>Layer 1~4 (신당·무당·지역·제자)</li>
+        <li><div class="ck">✓</div>신령 20종 (Tier1·2), 도감 UI</li>
+        <li><div class="ck">✓</div>무당 스킬 트리 3갈래 × 6~7스킬</li>
+        <li><div class="ck">✓</div>지역 3개 (마을·산자락·강변)</li>
+        <li><div class="ck">✓</div>프레스티지 현대→조선 (1~2회)</li>
+        <li><div class="ck">✓</div>의뢰 게시판 (3슬롯)</li>
+        <li><div class="ck">✓</div>제자 5명</li>
+        <li><div class="ck">✓</div>삼신할미 강림 자동 연출 (D1 훅)</li>
+        <li><div class="ck">✓</div>오프라인 귀환 연출 (리텐션 기둥)</li>
+        <li><div class="ck">✓</div>FCM 알림 (오프라인 수익 한도)</li>
+        <li><div class="ck">✓</div>Unity IAP + AdMob 보상광고</li>
+        <li><div class="ck">✓</div>월정액 베이직/프리미엄 패스</li>
+        <li><div class="ck">✓</div>세이브/로드 (로컬 JSON)</li>
+      </ul>
+    </div>
+    <div class="card accent-blue">
+      <div class="card-title">🔜 v1.1~1.2 업데이트로 이관</div>
+      <div class="card-body" style="font-size:12px;line-height:2.2;">
+        <strong>v1.1</strong><br>
+        Layer 5 신계 탐험 (풀 콘텐츠)<br>
+        신령 Tier3~4 추가 15종<br>
+        지역 4~5번 (항구·신계 입구)<br>
+        프레스티지 3~5회차 (고려/고조선/신계)<br>
+        신령 조합 시너지 전체 10가지<br>
+        Google Play 게임 서비스 (클라우드 세이브)<br><br>
+        <strong>v1.2</strong><br>
+        제자 5→10명 확장<br>
+        시대별 스토리 챕터<br>
+        계절 이벤트 (동짓날·추석 등)<br>
+        영어 현지화 + 글로벌 출시
+      </div>
+    </div>
+  </div>
+
+  <!-- 출시 전 체크리스트 -->
+  <h2><span>11</span> 출시 전 반드시 통과해야 할 5가지 테스트</h2>
+
+  <div class="card">
+    <ul class="checklist">
+      <li><div class="ck" style="border-color:#6d28d9;background:#1a1030;color:#c084fc">1</div><strong style="color:#ddd">5분 테스트</strong> — 낯선 사람에게 시키기. 5분 내 삼신할미 강림 + 업그레이드 2~3회 완료.</li>
+      <li><div class="ck" style="border-color:#713f12;background:#231f0d;color:#fbbf24">2</div><strong style="color:#ddd">8시간 오프라인 테스트</strong> — 귀환 수익이 "플레이 전 10분치 이상"이어야 함.</li>
+      <li><div class="ck" style="border-color:#14532d;background:#0d1a12;color:#4ade80">3</div><strong style="color:#ddd">D7 시뮬레이션</strong> — 7일치 세션 연속 플레이. D7 시점에 프레스티지 욕구가 느껴지는가.</li>
+      <li><div class="ck" style="border-color:#1e3a5c;background:#0d1a2a;color:#60a5fa">4</div><strong style="color:#ddd">전생 후 30분 테스트</strong> — 전생 직후 30분 내에 이전 진행의 60~70% 지점 재도달.</li>
+      <li><div class="ck" style="border-color:#3a3a60;background:#1a1a30;color:#888">5</div><strong style="color:#ddd">숫자 크기 체크</strong> — 삼성 갤럭시 S22 기준 모든 화면에서 숫자가 잘리지 않는가.</li>
+    </ul>
+  </div>
+
+  <div style="text-align:center;padding:48px 0 20px;color:#1e1e35;font-size:11px;">
+    신당 키우기 최종 설계서 — 시장분석가 + 게임시스템 전문가 2중 검증 · 2026.06.09 · 이후 변경 없음
+  </div>
+
+</div>
+</body>
+</html>
