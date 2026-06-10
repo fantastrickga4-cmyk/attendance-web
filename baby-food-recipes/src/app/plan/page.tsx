@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Sparkles, ShoppingBasket } from "lucide-react";
+import { Sparkles, ShoppingBasket, Bookmark, X } from "lucide-react";
 import { RECIPES, getRecipe } from "@/lib/recipes";
 import {
   WEEKDAYS,
@@ -25,10 +25,14 @@ function emptyPlan(): WeeklyPlan {
 }
 
 const CHECKED_KEY = "ibanchan-shopping-checked";
+const TEMPLATE_KEY = "ibanchan-plan-templates";
+
+type Template = { name: string; plan: WeeklyPlan };
 
 export default function PlanPage() {
   const [plan, setPlan] = useState<WeeklyPlan>(emptyPlan);
   const [checked, setChecked] = useState<Set<string>>(new Set());
+  const [templates, setTemplates] = useState<Template[]>([]);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -37,6 +41,8 @@ export default function PlanPage() {
       if (raw) setPlan({ ...emptyPlan(), ...JSON.parse(raw) });
       const c = localStorage.getItem(CHECKED_KEY);
       if (c) setChecked(new Set(JSON.parse(c) as string[]));
+      const t = localStorage.getItem(TEMPLATE_KEY);
+      if (t) setTemplates(JSON.parse(t) as Template[]);
     } catch {
       /* 무시 */
     }
@@ -50,6 +56,25 @@ export default function PlanPage() {
   useEffect(() => {
     if (loaded) localStorage.setItem(CHECKED_KEY, JSON.stringify([...checked]));
   }, [checked, loaded]);
+
+  useEffect(() => {
+    if (loaded) localStorage.setItem(TEMPLATE_KEY, JSON.stringify(templates));
+  }, [templates, loaded]);
+
+  function saveTemplate() {
+    const name = prompt("이 식단의 이름을 정해주세요 (예: 6개월 1주차)");
+    if (!name) return;
+    setTemplates((prev) => [...prev.filter((t) => t.name !== name), { name, plan }]);
+  }
+
+  function loadTemplate(t: Template) {
+    if (confirm(`'${t.name}' 식단을 불러올까요? 현재 식단을 덮어써요.`))
+      setPlan({ ...emptyPlan(), ...t.plan });
+  }
+
+  function deleteTemplate(name: string) {
+    setTemplates((prev) => prev.filter((t) => t.name !== name));
+  }
 
   function setSlot(day: Weekday, slot: string, recipeId: string) {
     setPlan((prev) => ({
@@ -138,7 +163,7 @@ export default function PlanPage() {
         </p>
       </section>
 
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-wrap justify-end gap-2">
         <button
           onClick={autoFill}
           className="inline-flex items-center gap-1.5 rounded-lg bg-brand px-3.5 py-1.5 text-xs font-bold text-white transition hover:bg-brand-dark active:scale-95"
@@ -146,6 +171,15 @@ export default function PlanPage() {
           <Sparkles className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
           자동 채우기
         </button>
+        {filledCount > 0 && (
+          <button
+            onClick={saveTemplate}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-3.5 py-1.5 text-xs font-semibold text-ink/65 transition hover:border-ink/25 hover:text-ink"
+          >
+            <Bookmark className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
+            저장
+          </button>
+        )}
         <button
           onClick={clearAll}
           className="rounded-lg border border-line bg-surface px-3.5 py-1.5 text-xs font-semibold text-ink/55 transition hover:border-ink/25 hover:text-ink"
@@ -153,6 +187,30 @@ export default function PlanPage() {
           전체 비우기
         </button>
       </div>
+
+      {/* 저장된 식단 템플릿 */}
+      {templates.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-bold text-ink/45">저장된 식단</span>
+          {templates.map((t) => (
+            <span
+              key={t.name}
+              className="inline-flex items-center gap-1 rounded-full border border-line bg-surface py-1 pl-3 pr-1 text-xs font-semibold text-ink/70"
+            >
+              <button onClick={() => loadTemplate(t)} className="hover:text-brand-dark">
+                {t.name}
+              </button>
+              <button
+                onClick={() => deleteTemplate(t.name)}
+                aria-label={`${t.name} 삭제`}
+                className="flex h-5 w-5 items-center justify-center rounded-full text-ink/35 hover:text-rose-500"
+              >
+                <X className="h-3 w-3" strokeWidth={2.5} aria-hidden="true" />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
 
       <p className="-mb-2 text-center text-[11px] text-ink/40 sm:hidden">
         좌우로 밀어 끼니를 채워보세요 →

@@ -17,6 +17,7 @@ import { STAGE_STYLE } from "@/lib/theme";
 import { RecipeThumb } from "@/components/recipe-thumb";
 import { RecipeActions } from "@/components/recipe-actions";
 import { CookTimer } from "@/components/cook-timer";
+import { ServingsCalc } from "@/components/servings-calc";
 
 export function generateStaticParams() {
   return RECIPES.map((r) => ({ id: r.id }));
@@ -125,14 +126,7 @@ export default async function RecipePage({
 
       <section>
         <SectionTitle icon={ShoppingBasket}>재료</SectionTitle>
-        <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-surface">
-          {recipe.ingredients.map((ing) => (
-            <li key={ing.name} className="flex justify-between px-4 py-3 text-sm">
-              <span className="font-medium text-ink">{ing.name}</span>
-              <span className="text-ink/55">{ing.amount}</span>
-            </li>
-          ))}
-        </ul>
+        <ServingsCalc ingredients={recipe.ingredients} />
       </section>
 
       <CookTimer minutes={recipe.timeMinutes} />
