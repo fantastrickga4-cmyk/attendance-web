@@ -7,6 +7,7 @@ import {
   Carrot,
   CalendarDays,
   ClipboardList,
+  ChefHat,
   type LucideIcon,
 } from "lucide-react";
 
@@ -41,6 +42,12 @@ const ITEMS: Item[] = [
     label: "기록",
     icon: ClipboardList,
     match: (p) => p.startsWith("/log"),
+  },
+  {
+    href: "/my",
+    label: "마이",
+    icon: ChefHat,
+    match: (p) => p.startsWith("/my"),
   },
 ];
 

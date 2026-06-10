@@ -80,6 +80,12 @@ export default function RootLayout({
                 >
                   기록
                 </Link>
+                <Link
+                  href="/my"
+                  className="rounded-full px-3 py-1.5 text-ink/70 transition hover:bg-black/5 hover:text-ink"
+                >
+                  내 레시피
+                </Link>
               </nav>
               <ThemeToggle />
             </div>
