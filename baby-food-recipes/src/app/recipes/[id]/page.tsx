@@ -30,7 +30,17 @@ export async function generateMetadata({
   const { id } = await params;
   const recipe = getRecipe(id);
   if (!recipe) return { title: "레시피를 찾을 수 없어요" };
-  return { title: `${recipe.name} | 아이반찬`, description: recipe.summary };
+  const title = `${recipe.name} | 아이반찬`;
+  return {
+    title,
+    description: recipe.summary,
+    openGraph: {
+      title,
+      description: recipe.summary,
+      type: "article",
+      images: [{ url: `/recipes/${recipe.id}.png` }],
+    },
+  };
 }
 
 export default async function RecipePage({

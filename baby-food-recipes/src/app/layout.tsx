@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import Link from "next/link";
 import { Baby, ShieldCheck } from "lucide-react";
@@ -15,6 +15,13 @@ export const metadata: Metadata = {
   title: "아이반찬 — 단계별 이유식·유아식 레시피",
   description:
     "오늘 뭐 먹일까? 초기부터 유아식까지 단계별 맞춤 레시피와 주간 식단. 알레르기 필터까지.",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "아이반찬" },
+  icons: { icon: "/icon-512.png", apple: "/icon-512.png" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#c2603f",
 };
 
 export default function RootLayout({

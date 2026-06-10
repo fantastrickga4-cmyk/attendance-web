@@ -1,0 +1,18 @@
+{
+  "name": "아이반찬 — 단계별 이유식·유아식",
+  "short_name": "아이반찬",
+  "description": "우리 아이 개월 수에 맞는 이유식·유아식 레시피와 주간 식단",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#faf8f5",
+  "theme_color": "#c2603f",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

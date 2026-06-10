@@ -51,6 +51,10 @@ export function AgeBar({
 
   const stage = stageForMonth(months);
   const st = STAGE_STYLE[stage];
+  const idx = STAGES.findIndex((s) => s.key === stage);
+  const meta = STAGES[idx];
+  const next = STAGES[idx + 1];
+  const soon = next && meta && months >= meta.range[1];
 
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-surface p-4">
@@ -66,6 +70,11 @@ export function AgeBar({
             {stage}
           </span>
         </div>
+        {soon && (
+          <div className="mt-0.5 text-[11px] font-semibold text-brand">
+            곧 {next.label} 단계예요 — 새 레시피를 둘러보세요
+          </div>
+        )}
       </div>
       <label className="flex items-center gap-1.5">
         <span className="sr-only">아이 개월 수 변경</span>
