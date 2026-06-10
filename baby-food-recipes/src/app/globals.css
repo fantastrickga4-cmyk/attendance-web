@@ -1,14 +1,17 @@
 @import "tailwindcss";
 
 @theme {
-  /* 브랜드 코랄 — CTA·활성 상태·로고에 일관 사용 */
-  --color-brand: #ff7a59;
-  --color-brand-dark: #f2613f;
-  --color-brand-soft: #fff1ec;
+  /* 포인트: 테라코타 — CTA·활성 상태·로고에만 절제해서 사용 */
+  --color-brand: #c2603f;
+  --color-brand-dark: #a84e30;
+  --color-brand-soft: #f6ece6;
 
-  /* 따뜻한 크림 배경 */
-  --color-cream: #fffaf5;
-  --color-ink: #43352b;
+  /* 오프화이트 배경 + 차콜 텍스트 (모던 미니멀) */
+  --color-cream: #faf8f5;
+  --color-surface: #ffffff;
+  --color-ink: #2b2520;
+  /* 얇은 구분선 */
+  --color-line: #e7e2db;
 
   --font-sans: "Pretendard Variable", Pretendard, var(--font-geist-sans),
     system-ui, sans-serif;
@@ -26,9 +29,9 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* 둥근 도형 베이스 — 부드러운 그림자 */
+/* 모던 미니멀 — 그림자 대신 거의 안 보이는 미세 그림자(보더로 형태를 잡음) */
 .card-soft {
-  box-shadow: 0 1px 2px rgb(67 53 43 / 0.04), 0 6px 20px -8px rgb(67 53 43 / 0.12);
+  box-shadow: 0 1px 2px rgb(43 37 32 / 0.03);
 }
 
 /* 키보드(Tab) 이동에만 보이는 포커스 링 — 마우스 클릭엔 안 뜸 */

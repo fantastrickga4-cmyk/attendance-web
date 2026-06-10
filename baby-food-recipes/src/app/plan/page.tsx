@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { CalendarDays, ShoppingBasket } from "lucide-react";
 import { RECIPES, getRecipe } from "@/lib/recipes";
 import { WEEKDAYS, MEAL_SLOTS, type WeeklyPlan, type Weekday } from "@/lib/types";
-import { STAGE_STYLE, CATEGORY_EMOJI } from "@/lib/theme";
+import { STAGE_STYLE } from "@/lib/theme";
 import { RecipeThumb } from "@/components/recipe-thumb";
 
 const STORAGE_KEY = "baby-food-weekly-plan";
@@ -50,7 +51,6 @@ export default function PlanPage() {
     0,
   );
 
-  // 장보기 리스트 — 채워진 레시피들의 재료를 합산(재료명별 등장 횟수)
   const shopping = useMemo(() => {
     const map = new Map<string, number>();
     WEEKDAYS.forEach((d) =>
@@ -68,11 +68,17 @@ export default function PlanPage() {
   }, [plan]);
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-6">
       {/* 헤더 */}
-      <section className="rounded-3xl bg-gradient-to-br from-brand to-brand-dark px-6 py-6 text-white card-soft">
-        <h1 className="text-2xl font-extrabold">📅 주간 식단표</h1>
-        <p className="mt-1.5 text-sm text-white/85">
+      <section className="rounded-2xl border border-line bg-surface px-7 py-8">
+        <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-brand">
+          <span className="h-px w-6 bg-brand/50" />
+          주간 식단
+        </div>
+        <h1 className="mt-3 flex items-center gap-2 text-3xl font-extrabold tracking-tight text-ink">
+          한 주 식단표
+        </h1>
+        <p className="mt-2 text-sm leading-relaxed text-ink/55">
           요일·끼니별 레시피를 골라두면 자동 저장돼요. 현재 {filledCount}칸 채움.
         </p>
       </section>
@@ -80,7 +86,7 @@ export default function PlanPage() {
       <div className="flex justify-end">
         <button
           onClick={clearAll}
-          className="rounded-full border border-black/10 bg-white px-4 py-1.5 text-xs font-semibold text-ink/60 transition hover:border-black/20"
+          className="rounded-lg border border-line bg-surface px-3.5 py-1.5 text-xs font-semibold text-ink/55 transition hover:border-ink/25 hover:text-ink"
         >
           전체 비우기
         </button>
@@ -89,15 +95,15 @@ export default function PlanPage() {
       <p className="-mb-2 text-center text-[11px] text-ink/40 sm:hidden">
         좌우로 밀어 끼니를 채워보세요 →
       </p>
-      <div className="overflow-x-auto rounded-3xl border border-black/5 bg-white p-2 card-soft">
+      <div className="overflow-x-auto rounded-2xl border border-line bg-surface p-2 [scrollbar-width:thin]">
         <table className="w-full min-w-[680px] border-collapse text-sm">
           <thead>
             <tr>
-              <th className="w-14 p-2"></th>
+              <th className="w-12 p-2"></th>
               {MEAL_SLOTS.map((slot) => (
                 <th
                   key={slot}
-                  className="p-2 text-center text-xs font-extrabold text-ink/60"
+                  className="p-2 text-center text-xs font-bold text-ink/55"
                 >
                   {slot}
                 </th>
@@ -108,7 +114,7 @@ export default function PlanPage() {
             {WEEKDAYS.map((day) => (
               <tr key={day}>
                 <th className="p-2 text-center">
-                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-brand-soft text-sm font-extrabold text-brand-dark">
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#f3f0ec] text-sm font-bold text-ink/70">
                     {day}
                   </span>
                 </th>
@@ -119,20 +125,16 @@ export default function PlanPage() {
                   return (
                     <td key={slot} className="p-1.5 align-top">
                       <div
-                        className={`flex flex-col items-center gap-1 rounded-2xl border p-1.5 transition ${
-                          recipe
-                            ? "border-transparent " + (st?.soft ?? "bg-black/5")
-                            : "border-dashed border-black/10 bg-transparent"
+                        className={`flex flex-col items-center gap-1 rounded-xl border p-1.5 transition ${
+                          recipe ? "border-line bg-cream" : "border-dashed border-line"
                         }`}
                       >
                         {recipe && (
-                          <span
-                            className={`relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-white/70`}
-                          >
+                          <span className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg bg-surface">
                             <RecipeThumb
                               id={recipe.id}
-                              emoji={CATEGORY_EMOJI[recipe.category] ?? "🍽️"}
-                              emojiClassName="text-base"
+                              category={recipe.category}
+                              iconClassName="h-4 w-4 text-ink/30"
                             />
                           </span>
                         )}
@@ -140,7 +142,7 @@ export default function PlanPage() {
                           value={selected}
                           onChange={(e) => setSlot(day, slot, e.target.value)}
                           aria-label={`${day}요일 ${slot} 레시피 선택`}
-                          className={`w-full rounded-lg bg-transparent px-1.5 py-1 text-center text-xs font-medium outline-none ${
+                          className={`w-full rounded-md bg-transparent px-1 py-1 text-center text-xs font-semibold outline-none ${
                             recipe ? st?.text : "text-ink/40"
                           }`}
                         >
@@ -154,7 +156,7 @@ export default function PlanPage() {
                         {recipe && (
                           <Link
                             href={`/recipes/${recipe.id}`}
-                            className="block px-1.5 text-[10px] font-semibold text-ink/40 hover:text-ink/70"
+                            className="block px-1 text-[10px] font-semibold text-ink/40 hover:text-ink/70"
                           >
                             상세 →
                           </Link>
@@ -171,12 +173,11 @@ export default function PlanPage() {
 
       {/* 장보기 리스트 */}
       {shopping.length > 0 && (
-        <section className="rounded-3xl border border-black/5 bg-white p-5 card-soft">
-          <h2 className="mb-1 flex items-center gap-1.5 text-base font-extrabold text-ink">
-            <span aria-hidden="true">🧺</span> 장보기 리스트
-            <span className="text-sm font-semibold text-ink/45">
-              재료 {shopping.length}종
-            </span>
+        <section className="rounded-2xl border border-line bg-surface p-5">
+          <h2 className="mb-1 flex items-center gap-1.5 text-base font-bold text-ink">
+            <ShoppingBasket className="h-4 w-4 text-ink/40" strokeWidth={1.75} aria-hidden="true" />
+            장보기 리스트
+            <span className="text-sm font-semibold text-ink/40">재료 {shopping.length}종</span>
           </h2>
           <p className="mb-3 text-xs text-ink/45">
             이번 주 식단에 들어가는 재료예요. 숫자는 등장하는 레시피 수입니다.
@@ -185,7 +186,7 @@ export default function PlanPage() {
             {shopping.map(([name, count]) => (
               <li
                 key={name}
-                className="inline-flex items-center gap-1.5 rounded-full border border-black/8 bg-cream px-3 py-1.5 text-sm font-medium text-ink/75"
+                className="inline-flex items-center gap-1.5 rounded-full border border-line bg-cream px-3 py-1.5 text-sm font-medium text-ink/75"
               >
                 {name}
                 {count > 1 && (

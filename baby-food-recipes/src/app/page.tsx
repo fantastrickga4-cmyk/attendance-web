@@ -2,6 +2,16 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import {
+  Search,
+  Clock,
+  Heart,
+  AlertTriangle,
+  RotateCcw,
+  Sparkles,
+  CalendarDays,
+  ChevronRight,
+} from "lucide-react";
 import { RECIPES } from "@/lib/recipes";
 import {
   STAGES,
@@ -12,13 +22,17 @@ import {
   type Allergen,
   type Recipe,
 } from "@/lib/types";
-import { STAGE_STYLE, CATEGORY_EMOJI } from "@/lib/theme";
+import { STAGE_STYLE, CATEGORY_ICON } from "@/lib/theme";
 import { RecipeThumb } from "@/components/recipe-thumb";
 import { AgeBar } from "@/components/age-bar";
 import { StageGuide } from "@/components/stage-guide";
 import { useRecipeLog } from "@/lib/use-recipe-log";
 
-/** 검색창 아래 빠른 재료 칩 (클릭 → 검색) */
+/** 단계 → 월령 표기 */
+const STAGE_MONTHS = Object.fromEntries(
+  STAGES.map((s) => [s.key, s.months]),
+) as Record<Stage, string>;
+
 const QUICK_INGREDIENTS = [
   "소고기",
   "닭고기",
@@ -29,15 +43,6 @@ const QUICK_INGREDIENTS = [
   "애호박",
   "브로콜리",
 ];
-
-/** 단계 → 월령 표기 (예: "만 4~6개월"). 카드 월령 배지에 사용 */
-const STAGE_MONTHS = Object.fromEntries(
-  STAGES.map((s) => [s.key, s.months]),
-) as Record<Stage, string>;
-
-/** 카드 속성 칩 공통 스타일 */
-const CHIP =
-  "inline-flex items-center gap-1 rounded-full bg-ink/5 px-2 py-0.5 text-[11px] font-semibold text-ink/55";
 
 const MONTHS_KEY = "ibanchan-baby-months";
 const ALLERGEN_KEY = "ibanchan-excluded-allergens";
@@ -62,7 +67,6 @@ export default function Home() {
 
   const { favs, toggleFav } = useRecipeLog();
 
-  // localStorage 로드
   useEffect(() => {
     try {
       const m = localStorage.getItem(MONTHS_KEY);
@@ -75,7 +79,6 @@ export default function Home() {
     setLoaded(true);
   }, []);
 
-  // localStorage 저장
   useEffect(() => {
     if (!loaded) return;
     if (babyMonths == null) localStorage.removeItem(MONTHS_KEY);
@@ -114,7 +117,6 @@ export default function Home() {
     return sorted;
   }, [stage, category, query, excluded, sort, onlyFav, favs]);
 
-  // 월령 맞춤 추천 (알레르기 제외 반영)
   const recommended = useMemo(() => {
     if (babyMonths == null) return [];
     const s = stageForMonth(babyMonths);
@@ -148,58 +150,62 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-9">
       {/* 히어로 */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand to-brand-dark px-6 py-7 text-white card-soft">
+      <section className="relative overflow-hidden rounded-3xl border border-line bg-surface px-7 py-12 sm:px-10 sm:py-16">
+        {/* 미묘한 배경 악센트 */}
         <div
           aria-hidden="true"
-          className="absolute -right-6 -top-8 text-[7rem] opacity-20 select-none"
-        >
-          🥕
+          className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-brand-soft/60 blur-2xl"
+        />
+        <div className="relative">
+          <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-brand">
+            <span className="h-px w-6 bg-brand/50" />
+            단계별 이유식 · 유아식
+          </div>
+          <h1 className="mt-4 text-[2.6rem] font-extrabold leading-[1.05] tracking-tight text-ink sm:text-6xl">
+            오늘은<br />뭐 먹일까?
+          </h1>
+          <p className="mt-4 max-w-sm text-[15px] leading-relaxed text-ink/55">
+            우리 아이 개월 수에 맞는 레시피를 찾고, 한 주 식단을 미리 짜보세요.
+          </p>
+          <Link
+            href="/plan"
+            className="group mt-7 inline-flex items-center gap-2 rounded-xl bg-ink px-5 py-3 text-sm font-bold text-white transition hover:bg-brand"
+          >
+            <CalendarDays className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
+            주간 식단 짜기
+            <ChevronRight
+              className="h-4 w-4 transition group-hover:translate-x-0.5"
+              strokeWidth={2}
+              aria-hidden="true"
+            />
+          </Link>
         </div>
-        <p className="text-sm font-semibold text-white/80">
-          단계별 맞춤 이유식 · 유아식
-        </p>
-        <h1 className="mt-1 text-2xl font-extrabold leading-snug sm:text-3xl">
-          오늘은 뭐 먹일까?
-        </h1>
-        <p className="mt-2 max-w-md text-sm text-white/85">
-          우리 아이 개월 수에 맞는 레시피를 찾고, 한 주 식단을 미리 짜보세요.
-        </p>
-        <Link
-          href="/plan"
-          className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-bold text-brand-dark shadow-sm transition hover:bg-white/90"
-        >
-          주간 식단 짜기 →
-        </Link>
       </section>
 
       {/* 월령 개인화 바 */}
       <AgeBar months={babyMonths} onChange={setBabyMonths} />
 
-      {/* 월령 맞춤 추천 (가로 캐러셀) */}
+      {/* 월령 맞춤 추천 */}
       {babyMonths != null && recommended.length > 0 && (
         <section>
-          <div className="mb-2.5 flex items-center justify-between gap-2">
-            <h2 className="flex items-center gap-1.5 text-sm font-extrabold text-ink">
-              <span aria-hidden="true">✨</span>
-              지금 우리 아이(만 {babyMonths}개월)에게 맞는 레시피
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <h2 className="flex items-center gap-1.5 text-sm font-bold text-ink">
+              <Sparkles className="h-4 w-4 text-brand" strokeWidth={2} aria-hidden="true" />
+              만 {babyMonths}개월에게 맞는 레시피
             </h2>
             <button
               onClick={() => setStage(stageForMonth(babyMonths))}
-              className="shrink-0 text-xs font-semibold text-brand-dark transition hover:underline"
+              className="shrink-0 text-xs font-semibold text-brand transition hover:underline"
             >
-              이 단계 전체 →
+              이 단계 전체
             </button>
           </div>
-          <ul className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
+          <ul className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {recommended.map((r) => (
-              <li key={r.id} className="w-40 shrink-0">
-                <MiniCard
-                  r={r}
-                  isFav={favs.has(r.id)}
-                  onToggleFav={toggleFav}
-                />
+              <li key={r.id} className="w-40 shrink-0 snap-start">
+                <MiniCard r={r} isFav={favs.has(r.id)} onToggleFav={toggleFav} />
               </li>
             ))}
           </ul>
@@ -207,29 +213,26 @@ export default function Home() {
       )}
 
       {/* 검색 */}
-      <div className="relative">
-        <label htmlFor="recipe-search" className="sr-only">
-          레시피 검색
-        </label>
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-ink/40"
-        >
-          🔍
-        </span>
-        <input
-          id="recipe-search"
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="재료나 이름으로 검색 (예: 소고기, 단호박)"
-          className="w-full rounded-2xl border border-black/8 bg-white py-3 pl-11 pr-4 text-sm outline-none transition placeholder:text-ink/40 focus:border-brand focus:ring-4 focus:ring-brand/15"
-        />
-        {/* 빠른 재료 칩 */}
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          <span className="self-center text-[11px] font-bold text-ink/35">
-            재료로 빠르게:
-          </span>
+      <div>
+        <div className="relative">
+          <label htmlFor="recipe-search" className="sr-only">
+            레시피 검색
+          </label>
+          <Search
+            className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink/35"
+            aria-hidden="true"
+          />
+          <input
+            id="recipe-search"
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="재료나 이름으로 검색 (예: 소고기, 단호박)"
+            className="w-full rounded-xl border border-line bg-surface py-3 pl-10 pr-4 text-sm text-ink outline-none transition placeholder:text-ink/35 focus:border-brand"
+          />
+        </div>
+        <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+          <span className="text-xs font-semibold text-ink/35">재료로 빠르게</span>
           {QUICK_INGREDIENTS.map((ing) => {
             const active = query.trim() === ing;
             return (
@@ -239,8 +242,8 @@ export default function Home() {
                 aria-pressed={active}
                 className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold transition ${
                   active
-                    ? "border-transparent bg-brand text-white"
-                    : "border-black/8 bg-white text-ink/55 hover:border-black/15"
+                    ? "border-brand bg-brand text-white"
+                    : "border-line bg-surface text-ink/55 hover:border-ink/25"
                 }`}
               >
                 {ing}
@@ -252,13 +255,21 @@ export default function Home() {
 
       {/* 단계 세그먼트 */}
       <div>
-        <div className="mb-2 text-xs font-bold uppercase tracking-wide text-ink/45">
+        <div className="mb-2.5 text-xs font-bold uppercase tracking-wide text-ink/40">
           단계
         </div>
         <div className="flex flex-wrap gap-2" role="group" aria-label="단계 선택">
-          <StageChip active={stage === "전체"} onClick={() => setStage("전체")}>
+          <button
+            onClick={() => setStage("전체")}
+            aria-pressed={stage === "전체"}
+            className={`rounded-xl border px-4 py-2 text-sm font-bold transition ${
+              stage === "전체"
+                ? "border-ink bg-ink text-white"
+                : "border-line bg-surface text-ink/65 hover:border-ink/25"
+            }`}
+          >
             전체
-          </StageChip>
+          </button>
           {STAGES.map((s) => {
             const st = STAGE_STYLE[s.key];
             const active = stage === s.key;
@@ -267,18 +278,21 @@ export default function Home() {
                 key={s.key}
                 onClick={() => setStage(s.key)}
                 aria-pressed={active}
-                className={`flex items-center gap-1.5 rounded-2xl border px-3.5 py-2 text-sm font-bold transition ${
+                className={`flex items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-bold transition ${
                   active
-                    ? `${st.solid} border-transparent text-white shadow-sm`
-                    : "border-black/8 bg-white text-ink/70 hover:border-black/15"
+                    ? "border-ink bg-ink text-white"
+                    : "border-line bg-surface text-ink/65 hover:border-ink/25"
                 }`}
               >
-                <span aria-hidden="true">{s.emoji}</span>
+                <span
+                  aria-hidden="true"
+                  className={`h-1.5 w-1.5 rounded-full ${active ? "bg-white" : st.dot}`}
+                />
                 <span className="flex flex-col items-start leading-none">
                   {s.label}
                   <span
-                    className={`mt-0.5 text-[10px] font-medium ${
-                      active ? "text-white/80" : "text-ink/40"
+                    className={`mt-1 text-[10px] font-medium ${
+                      active ? "text-white/70" : "text-ink/40"
                     }`}
                   >
                     {s.months}
@@ -290,29 +304,33 @@ export default function Home() {
         </div>
       </div>
 
-      {/* 단계 가이드 헤더 (특정 단계 선택 시) */}
+      {/* 단계 가이드 */}
       {stage !== "전체" && <StageGuide stage={stage} />}
 
       {/* 카테고리 + 알레르기 */}
-      <div className="flex flex-col gap-3 rounded-2xl border border-black/5 bg-white/60 p-3.5">
+      <div className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-4">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-bold text-ink/45">종류</span>
+          <span className="text-xs font-bold text-ink/40">종류</span>
           <SmallChip active={category === "전체"} onClick={() => setCategory("전체")}>
             전체
           </SmallChip>
-          {CATEGORIES.map((c) => (
-            <SmallChip
-              key={c}
-              active={category === c}
-              onClick={() => setCategory(c)}
-            >
-              {CATEGORY_EMOJI[c]} {c}
-            </SmallChip>
-          ))}
+          {CATEGORIES.map((c) => {
+            const Icon = CATEGORY_ICON[c];
+            return (
+              <SmallChip
+                key={c}
+                active={category === c}
+                onClick={() => setCategory(c)}
+              >
+                <Icon className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
+                {c}
+              </SmallChip>
+            );
+          })}
         </div>
         {usedAllergens.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 border-t border-black/5 pt-3">
-            <span className="text-xs font-bold text-ink/45">알레르기 제외</span>
+          <div className="flex flex-wrap items-center gap-2 border-t border-line pt-3">
+            <span className="text-xs font-bold text-ink/40">알레르기 제외</span>
             {usedAllergens.map((a) => (
               <button
                 key={a}
@@ -321,8 +339,8 @@ export default function Home() {
                 aria-label={`${a} 알레르기 ${excluded.has(a) ? "제외 해제" : "제외"}`}
                 className={`rounded-full border px-2.5 py-1 text-xs font-medium transition ${
                   excluded.has(a)
-                    ? "border-rose-300 bg-rose-100 text-rose-700 line-through"
-                    : "border-black/10 bg-white text-ink/60 hover:border-black/20"
+                    ? "border-rose-300 bg-rose-50 text-rose-600 line-through"
+                    : "border-line bg-surface text-ink/55 hover:border-ink/25"
                 }`}
               >
                 {a}
@@ -334,20 +352,26 @@ export default function Home() {
 
       {/* 결과 수 + 정렬 + 초기화 */}
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-semibold text-ink/50" aria-live="polite">
-          총 <span className="text-brand-dark">{filtered.length}</span>개의 레시피
+        <p className="text-sm font-semibold text-ink/55" aria-live="polite">
+          총 <span className="text-ink">{filtered.length}</span>개
         </p>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setOnlyFav((v) => !v)}
             aria-pressed={onlyFav}
-            className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold transition ${
+            className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition ${
               onlyFav
-                ? "border-rose-300 bg-rose-100 text-rose-600"
-                : "border-black/10 bg-white text-ink/60 hover:border-black/20"
+                ? "border-brand bg-brand-soft text-brand-dark"
+                : "border-line bg-surface text-ink/55 hover:border-ink/25"
             }`}
           >
-            <span aria-hidden="true">{onlyFav ? "♥" : "♡"}</span> 찜만
+            <Heart
+              className="h-3.5 w-3.5"
+              strokeWidth={2}
+              fill={onlyFav ? "currentColor" : "none"}
+              aria-hidden="true"
+            />
+            찜만
           </button>
           <label htmlFor="sort" className="sr-only">
             정렬 기준
@@ -356,7 +380,7 @@ export default function Home() {
             id="sort"
             value={sort}
             onChange={(e) => setSort(e.target.value as SortKey)}
-            className="rounded-full border border-black/10 bg-white px-3 py-1 text-xs font-semibold text-ink/70 outline-none focus:ring-4 focus:ring-brand/15"
+            className="rounded-lg border border-line bg-surface px-2.5 py-1.5 text-xs font-semibold text-ink/70 outline-none focus:border-brand"
           >
             {SORTS.map((s) => (
               <option key={s} value={s}>
@@ -367,9 +391,10 @@ export default function Home() {
           {hasActiveFilter && (
             <button
               onClick={resetFilters}
-              className="inline-flex items-center gap-1 rounded-full border border-black/10 bg-white px-3 py-1 text-xs font-semibold text-ink/60 transition hover:border-black/20 hover:text-ink"
+              className="inline-flex items-center gap-1 rounded-lg border border-line bg-surface px-2.5 py-1.5 text-xs font-semibold text-ink/55 transition hover:border-ink/25 hover:text-ink"
             >
-              <span aria-hidden="true">↺</span> 초기화
+              <RotateCcw className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
+              초기화
             </button>
           )}
         </div>
@@ -385,8 +410,8 @@ export default function Home() {
       </ul>
 
       {filtered.length === 0 && (
-        <div className="rounded-3xl border border-dashed border-black/10 py-12 text-center">
-          <div className="text-3xl">🍽️</div>
+        <div className="rounded-2xl border border-dashed border-line py-12 text-center">
+          <Search className="mx-auto h-7 w-7 text-ink/20" strokeWidth={1.5} aria-hidden="true" />
           <p className="mt-2 text-sm text-ink/50">
             조건에 맞는 레시피가 없어요. 필터를 줄여보세요.
           </p>
@@ -407,19 +432,20 @@ function RecipeCard({
   onToggleFav: (id: string) => void;
 }) {
   const st = STAGE_STYLE[r.stage];
+  const Icon = CATEGORY_ICON[r.category];
   return (
     <Link
       href={`/recipes/${r.id}`}
-      className="group flex h-full flex-col overflow-hidden rounded-3xl border border-black/5 bg-white card-soft transition hover:-translate-y-0.5 hover:shadow-lg"
+      className="group flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-surface transition hover:border-ink/20"
     >
-      {/* 썸네일 영역 */}
-      <div className={`relative flex h-28 items-center justify-center ${st.soft}`}>
-        <RecipeThumb id={r.id} emoji={CATEGORY_EMOJI[r.category] ?? "🍽️"} />
-        <span
-          className={`absolute left-3 top-3 rounded-full ${st.solid} px-2.5 py-0.5 text-xs font-bold text-white shadow-sm`}
-        >
-          {r.stage}
-        </span>
+      {/* 썸네일 */}
+      <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-[#f3f0ec]">
+        <RecipeThumb
+          id={r.id}
+          category={r.category}
+          iconClassName="h-9 w-9 text-ink/20"
+          imgClassName="absolute inset-0 h-full w-full object-cover transition duration-500 ease-out group-hover:scale-[1.04]"
+        />
         <button
           onClick={(e) => {
             e.preventDefault();
@@ -427,34 +453,40 @@ function RecipeCard({
           }}
           aria-pressed={isFav}
           aria-label={isFav ? "찜 해제" : "찜하기"}
-          className="absolute right-2.5 top-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-white/85 text-sm shadow-sm backdrop-blur transition hover:scale-110 hover:bg-white"
+          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full border border-line bg-surface/85 backdrop-blur transition hover:scale-105"
         >
-          <span aria-hidden="true" className={isFav ? "text-rose-500" : "text-ink/40"}>
-            {isFav ? "♥" : "♡"}
-          </span>
+          <Heart
+            className={`h-4 w-4 ${isFav ? "text-brand" : "text-ink/35"}`}
+            strokeWidth={2}
+            fill={isFav ? "currentColor" : "none"}
+            aria-hidden="true"
+          />
         </button>
       </div>
       {/* 본문 */}
-      <div className="flex flex-1 flex-col gap-1.5 p-4">
-        <h2 className="font-extrabold text-ink transition group-hover:text-brand-dark">
+      <div className="flex flex-1 flex-col gap-2 p-5">
+        <div className="flex items-center gap-1.5 text-[11px] font-semibold tracking-wide text-ink/45">
+          <span aria-hidden="true" className={`h-1.5 w-1.5 rounded-full ${st.dot}`} />
+          {r.stage}
+          <span className="text-ink/25">·</span>
+          {STAGE_MONTHS[r.stage]}
+        </div>
+        <h2 className="text-base font-bold leading-snug tracking-tight text-ink transition group-hover:text-brand-dark">
           {r.name}
         </h2>
-        <p className="line-clamp-2 text-sm text-ink/60">{r.summary}</p>
-        <div className="mt-auto flex flex-wrap items-center gap-1.5 pt-2.5">
-          <span className={CHIP}>
-            <span aria-hidden="true" className={`h-1.5 w-1.5 rounded-full ${st.dot}`} />
-            {STAGE_MONTHS[r.stage]}
+        <p className="line-clamp-2 text-sm leading-relaxed text-ink/55">{r.summary}</p>
+        <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 pt-2 text-xs font-medium text-ink/50">
+          <span className="inline-flex items-center gap-1">
+            <Clock className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
+            {r.timeMinutes}분
           </span>
-          <span className={CHIP}>
-            <span aria-hidden="true">⏱</span> {r.timeMinutes}분
-          </span>
-          <span className={CHIP}>
-            <span aria-hidden="true">{CATEGORY_EMOJI[r.category] ?? "🍽️"}</span>{" "}
+          <span className="inline-flex items-center gap-1">
+            <Icon className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
             {r.category}
           </span>
           {r.allergens.length > 0 && (
-            <span className="inline-flex items-center gap-1 rounded-full border border-rose-100 bg-rose-50 px-2 py-0.5 text-[11px] font-semibold text-rose-500">
-              <span aria-hidden="true">⚠</span>
+            <span className="inline-flex items-center gap-1 text-rose-500">
+              <AlertTriangle className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
               {r.allergens.slice(0, 2).join("·")}
               {r.allergens.length > 2 ? ` +${r.allergens.length - 2}` : ""}
             </span>
@@ -465,7 +497,7 @@ function RecipeCard({
   );
 }
 
-/** 작은 레시피 카드 (월령 맞춤 추천 캐러셀) */
+/** 작은 레시피 카드 (추천 캐러셀) */
 function MiniCard({
   r,
   isFav,
@@ -475,17 +507,17 @@ function MiniCard({
   isFav: boolean;
   onToggleFav: (id: string) => void;
 }) {
-  const st = STAGE_STYLE[r.stage];
   return (
     <Link
       href={`/recipes/${r.id}`}
-      className="group flex h-full flex-col overflow-hidden rounded-2xl border border-black/5 bg-white card-soft transition hover:-translate-y-0.5 hover:shadow-md"
+      className="group flex h-full flex-col overflow-hidden rounded-xl border border-line bg-surface transition hover:border-ink/20"
     >
-      <div className={`relative flex h-20 items-center justify-center ${st.soft}`}>
+      <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-[#f3f0ec]">
         <RecipeThumb
           id={r.id}
-          emoji={CATEGORY_EMOJI[r.category] ?? "🍽️"}
-          emojiClassName="text-3xl"
+          category={r.category}
+          iconClassName="h-6 w-6 text-ink/20"
+          imgClassName="absolute inset-0 h-full w-full object-cover transition duration-500 ease-out group-hover:scale-[1.04]"
         />
         <button
           onClick={(e) => {
@@ -494,46 +526,26 @@ function MiniCard({
           }}
           aria-pressed={isFav}
           aria-label={isFav ? "찜 해제" : "찜하기"}
-          className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-white/85 text-xs shadow-sm backdrop-blur transition hover:bg-white"
+          className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full border border-line bg-surface/90 backdrop-blur"
         >
-          <span aria-hidden="true" className={isFav ? "text-rose-500" : "text-ink/40"}>
-            {isFav ? "♥" : "♡"}
-          </span>
+          <Heart
+            className={`h-3 w-3 ${isFav ? "text-brand" : "text-ink/35"}`}
+            strokeWidth={2}
+            fill={isFav ? "currentColor" : "none"}
+            aria-hidden="true"
+          />
         </button>
       </div>
       <div className="flex flex-1 flex-col gap-1 p-2.5">
         <h3 className="line-clamp-2 text-xs font-bold leading-snug text-ink transition group-hover:text-brand-dark">
           {r.name}
         </h3>
-        <span className="mt-auto text-[10px] font-semibold text-ink/45">
-          ⏱ {r.timeMinutes}분
+        <span className="mt-auto inline-flex items-center gap-1 text-[10px] font-semibold text-ink/45">
+          <Clock className="h-3 w-3" strokeWidth={1.75} aria-hidden="true" />
+          {r.timeMinutes}분
         </span>
       </div>
     </Link>
-  );
-}
-
-function StageChip({
-  children,
-  active,
-  onClick,
-}: {
-  children: React.ReactNode;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      aria-pressed={active}
-      className={`rounded-2xl border px-4 py-2 text-sm font-bold transition ${
-        active
-          ? "border-transparent bg-ink text-white shadow-sm"
-          : "border-black/8 bg-white text-ink/70 hover:border-black/15"
-      }`}
-    >
-      {children}
-    </button>
   );
 }
 
@@ -550,10 +562,10 @@ function SmallChip({
     <button
       onClick={onClick}
       aria-pressed={active}
-      className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+      className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold transition ${
         active
-          ? "border-transparent bg-brand text-white shadow-sm"
-          : "border-black/8 bg-white text-ink/60 hover:border-black/15"
+          ? "border-ink bg-ink text-white"
+          : "border-line bg-surface text-ink/60 hover:border-ink/25"
       }`}
     >
       {children}

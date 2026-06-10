@@ -1,5 +1,6 @@
 "use client";
 
+import { Baby, X } from "lucide-react";
 import { STAGES, stageForMonth } from "@/lib/types";
 import { STAGE_STYLE } from "@/lib/theme";
 
@@ -14,15 +15,14 @@ export function AgeBar({
   months: number | null;
   onChange: (m: number | null) => void;
 }) {
-  // 4~60개월 옵션 (이유식 시작 ~ 만 5세)
   const options = Array.from({ length: 57 }, (_, i) => i + 4);
 
   if (months == null) {
     return (
-      <div className="flex flex-col gap-2 rounded-2xl border border-dashed border-brand/30 bg-brand-soft/60 p-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2 text-sm">
-          <span aria-hidden="true" className="text-lg">👶</span>
-          <span className="font-bold text-ink/80">
+      <div className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2.5 text-sm">
+          <Baby className="h-5 w-5 text-brand" strokeWidth={1.75} aria-hidden="true" />
+          <span className="font-semibold text-ink/80">
             우리 아이 개월 수를 알려주시면 맞는 레시피를 추천해요
           </span>
         </div>
@@ -33,7 +33,7 @@ export function AgeBar({
             onChange={(e) =>
               onChange(e.target.value ? Number(e.target.value) : null)
             }
-            className="rounded-full border border-brand/30 bg-white px-3 py-1.5 text-sm font-semibold text-brand-dark outline-none focus:ring-4 focus:ring-brand/15"
+            className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-semibold text-ink outline-none focus:border-brand"
           >
             <option value="" disabled>
               개월 수 선택
@@ -53,18 +53,16 @@ export function AgeBar({
   const st = STAGE_STYLE[stage];
 
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-black/5 bg-white p-4 card-soft">
-      <span
-        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${st.soft} text-xl`}
-        aria-hidden="true"
-      >
-        👶
-      </span>
+    <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-surface p-4">
+      <Baby className="h-5 w-5 shrink-0 text-brand" strokeWidth={1.75} aria-hidden="true" />
       <div className="flex-1">
-        <div className="text-xs font-semibold text-ink/45">우리 아이</div>
-        <div className="text-sm font-extrabold text-ink">
+        <div className="text-xs font-semibold uppercase tracking-wide text-ink/40">
+          우리 아이
+        </div>
+        <div className="mt-0.5 flex items-center gap-2 text-sm font-bold text-ink">
           만 {months}개월
-          <span className={`ml-2 rounded-full ${st.solid} px-2 py-0.5 text-xs text-white`}>
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink/55">
+            <span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} aria-hidden="true" />
             {stage}
           </span>
         </div>
@@ -74,7 +72,7 @@ export function AgeBar({
         <select
           value={months}
           onChange={(e) => onChange(Number(e.target.value))}
-          className="rounded-full border border-black/10 bg-white px-2.5 py-1 text-xs font-semibold text-ink/70 outline-none focus:ring-4 focus:ring-brand/15"
+          className="rounded-lg border border-line bg-surface px-2.5 py-1.5 text-xs font-semibold text-ink/70 outline-none focus:border-brand"
         >
           {options.map((m) => (
             <option key={m} value={m}>
@@ -85,9 +83,10 @@ export function AgeBar({
       </label>
       <button
         onClick={() => onChange(null)}
-        className="rounded-full border border-black/10 bg-white px-2.5 py-1 text-xs font-semibold text-ink/50 transition hover:text-ink"
+        aria-label="월령 해제"
+        className="flex h-7 w-7 items-center justify-center rounded-lg border border-line text-ink/40 transition hover:text-ink"
       >
-        해제
+        <X className="h-4 w-4" aria-hidden="true" />
       </button>
     </div>
   );
