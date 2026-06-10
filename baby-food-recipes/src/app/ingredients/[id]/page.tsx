@@ -4,6 +4,7 @@ import { ChevronLeft, Scissors, Lightbulb, Info, Clock } from "lucide-react";
 import { FOODS, getFood, recipesForFood } from "@/lib/foods";
 import { SAFETY_NOTE } from "@/lib/types";
 import { RecipeThumb } from "@/components/recipe-thumb";
+import { AllergyRecorder } from "@/components/allergy-recorder";
 
 export function generateStaticParams() {
   return FOODS.map((f) => ({ id: f.id }));
@@ -106,6 +107,8 @@ export default async function FoodPage({
         <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-ink/35" strokeWidth={1.75} aria-hidden="true" />
         <span>{SAFETY_NOTE}</span>
       </p>
+
+      <AllergyRecorder foodId={food.id} foodName={food.name} />
 
       {/* 연관 레시피 */}
       {related.length > 0 && (
