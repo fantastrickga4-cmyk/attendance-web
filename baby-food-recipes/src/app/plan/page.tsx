@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { RECIPES, getRecipe } from "@/lib/recipes";
 import { WEEKDAYS, MEAL_SLOTS, type WeeklyPlan, type Weekday } from "@/lib/types";
-import { STAGE_STYLE } from "@/lib/theme";
+import { STAGE_STYLE, CATEGORY_EMOJI } from "@/lib/theme";
+import { RecipeThumb } from "@/components/recipe-thumb";
 
 const STORAGE_KEY = "baby-food-weekly-plan";
 
@@ -48,6 +49,23 @@ export default function PlanPage() {
     (n, d) => n + MEAL_SLOTS.filter((s) => plan[d]?.[s]).length,
     0,
   );
+
+  // 장보기 리스트 — 채워진 레시피들의 재료를 합산(재료명별 등장 횟수)
+  const shopping = useMemo(() => {
+    const map = new Map<string, number>();
+    WEEKDAYS.forEach((d) =>
+      MEAL_SLOTS.forEach((s) => {
+        const id = plan[d]?.[s];
+        if (!id) return;
+        const r = getRecipe(id);
+        if (!r) return;
+        r.ingredients.forEach((ing) =>
+          map.set(ing.name, (map.get(ing.name) ?? 0) + 1),
+        );
+      }),
+    );
+    return [...map.entries()].sort((a, b) => b[1] - a[1]);
+  }, [plan]);
 
   return (
     <div className="flex flex-col gap-5">
@@ -101,17 +119,28 @@ export default function PlanPage() {
                   return (
                     <td key={slot} className="p-1.5 align-top">
                       <div
-                        className={`rounded-2xl border p-1.5 transition ${
+                        className={`flex flex-col items-center gap-1 rounded-2xl border p-1.5 transition ${
                           recipe
                             ? "border-transparent " + (st?.soft ?? "bg-black/5")
                             : "border-dashed border-black/10 bg-transparent"
                         }`}
                       >
+                        {recipe && (
+                          <span
+                            className={`relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-white/70`}
+                          >
+                            <RecipeThumb
+                              id={recipe.id}
+                              emoji={CATEGORY_EMOJI[recipe.category] ?? "🍽️"}
+                              emojiClassName="text-base"
+                            />
+                          </span>
+                        )}
                         <select
                           value={selected}
                           onChange={(e) => setSlot(day, slot, e.target.value)}
                           aria-label={`${day}요일 ${slot} 레시피 선택`}
-                          className={`w-full rounded-lg bg-transparent px-1.5 py-1 text-xs font-medium outline-none ${
+                          className={`w-full rounded-lg bg-transparent px-1.5 py-1 text-center text-xs font-medium outline-none ${
                             recipe ? st?.text : "text-ink/40"
                           }`}
                         >
@@ -125,7 +154,7 @@ export default function PlanPage() {
                         {recipe && (
                           <Link
                             href={`/recipes/${recipe.id}`}
-                            className="mt-0.5 block px-1.5 text-[10px] font-semibold text-ink/40 hover:text-ink/70"
+                            className="block px-1.5 text-[10px] font-semibold text-ink/40 hover:text-ink/70"
                           >
                             상세 →
                           </Link>
@@ -139,6 +168,36 @@ export default function PlanPage() {
           </tbody>
         </table>
       </div>
+
+      {/* 장보기 리스트 */}
+      {shopping.length > 0 && (
+        <section className="rounded-3xl border border-black/5 bg-white p-5 card-soft">
+          <h2 className="mb-1 flex items-center gap-1.5 text-base font-extrabold text-ink">
+            <span aria-hidden="true">🧺</span> 장보기 리스트
+            <span className="text-sm font-semibold text-ink/45">
+              재료 {shopping.length}종
+            </span>
+          </h2>
+          <p className="mb-3 text-xs text-ink/45">
+            이번 주 식단에 들어가는 재료예요. 숫자는 등장하는 레시피 수입니다.
+          </p>
+          <ul className="flex flex-wrap gap-2">
+            {shopping.map(([name, count]) => (
+              <li
+                key={name}
+                className="inline-flex items-center gap-1.5 rounded-full border border-black/8 bg-cream px-3 py-1.5 text-sm font-medium text-ink/75"
+              >
+                {name}
+                {count > 1 && (
+                  <span className="rounded-full bg-brand-soft px-1.5 text-xs font-bold text-brand-dark">
+                    ×{count}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }

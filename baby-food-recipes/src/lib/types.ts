@@ -10,16 +10,28 @@ export type Stage =
   | "유아 2~3세"
   | "유아 4~5세";
 
-/** 단계별 권장 개월수 메타 */
-export const STAGES: { key: Stage; label: string; months: string; range: [number, number]; emoji: string }[] = [
-  { key: "초기", label: "초기", months: "만 4~6개월", range: [4, 6], emoji: "🍼" },
-  { key: "중기", label: "중기", months: "만 7~9개월", range: [7, 9], emoji: "🥣" },
-  { key: "후기", label: "후기", months: "만 10~12개월", range: [10, 12], emoji: "🍚" },
-  { key: "완료기", label: "완료기", months: "만 12~15개월", range: [12, 15], emoji: "🍽️" },
-  { key: "유아 1세", label: "유아 1세", months: "만 12~24개월", range: [12, 24], emoji: "🧒" },
-  { key: "유아 2~3세", label: "유아 2~3세", months: "만 2~3세", range: [24, 48], emoji: "🍱" },
-  { key: "유아 4~5세", label: "유아 4~5세", months: "만 4~5세", range: [48, 72], emoji: "🥗" },
+/** 단계별 권장 개월수 메타 (guide: 농도·횟수 한 줄 일반 가이드) */
+export const STAGES: { key: Stage; label: string; months: string; range: [number, number]; emoji: string; guide: string }[] = [
+  { key: "초기", label: "초기", months: "만 4~6개월", range: [4, 6], emoji: "🍼", guide: "묽은 미음~고운 죽 · 하루 1~2회 · 1~2작은술부터 천천히" },
+  { key: "중기", label: "중기", months: "만 7~9개월", range: [7, 9], emoji: "🥣", guide: "으깬 죽 · 하루 2회 · 입자를 조금씩 키워요" },
+  { key: "후기", label: "후기", months: "만 10~12개월", range: [10, 12], emoji: "🍚", guide: "진밥·무른밥 · 하루 3회 · 잘게 썬 재료" },
+  { key: "완료기", label: "완료기", months: "만 12~15개월", range: [12, 15], emoji: "🍽️", guide: "진밥에서 밥으로 · 하루 3회+간식 · 부드러운 가족식" },
+  { key: "유아 1세", label: "유아 1세", months: "만 12~24개월", range: [12, 24], emoji: "🧒", guide: "유아식 시작 · 3끼+간식 · 아주 약한 간" },
+  { key: "유아 2~3세", label: "유아 2~3세", months: "만 2~3세", range: [24, 48], emoji: "🍱", guide: "다양한 식감 · 자기주도 식사 · 가족식 변형" },
+  { key: "유아 4~5세", label: "유아 4~5세", months: "만 4~5세", range: [48, 72], emoji: "🥗", guide: "거의 어른식 · 균형 잡힌 한 끼 · 편식 대응" },
 ];
+
+/** 개월 수로 해당 단계를 찾는다(범위 매칭, 경계 밖은 최근접). 월령 개인화에 사용 */
+export function stageForMonth(m: number): Stage {
+  const hit = STAGES.find((s) => m >= s.range[0] && m <= s.range[1]);
+  if (hit) return hit.key;
+  if (m < STAGES[0].range[0]) return STAGES[0].key;
+  return STAGES[STAGES.length - 1].key;
+}
+
+/** 새 재료 도입 공통 안전 안내 */
+export const SAFETY_NOTE =
+  "새로운 재료는 한 가지씩, 3일 간격으로 이상반응(발진·구토·설사)을 살펴요. 도입 시기는 아이 상태에 따라 다르니 소아과 상담을 우선하세요.";
 
 /** 레시피 분류 */
 export type Category = "죽/미음" | "밥/진밥" | "국/찌개" | "반찬" | "간식" | "핑거푸드";
