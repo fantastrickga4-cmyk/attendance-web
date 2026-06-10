@@ -42,6 +42,7 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 /* 모던 미니멀 — 그림자 대신 거의 안 보이는 미세 그림자(보더로 형태를 잡음) */
