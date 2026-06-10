@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { RECIPES, getRecipe } from "@/lib/recipes";
 import { STAGES } from "@/lib/types";
 import { STAGE_STYLE, CATEGORY_EMOJI } from "@/lib/theme";
+import { RecipeThumb } from "@/components/recipe-thumb";
 
 export function generateStaticParams() {
   return RECIPES.map((r) => ({ id: r.id }));
@@ -44,6 +45,17 @@ export default async function RecipePage({
       >
         ← 목록으로
       </Link>
+
+      {/* 사진 배너 (이미지 없으면 카테고리 이모지) */}
+      <div
+        className={`relative flex aspect-video items-center justify-center overflow-hidden rounded-3xl card-soft ${st.soft}`}
+      >
+        <RecipeThumb
+          id={recipe.id}
+          emoji={CATEGORY_EMOJI[recipe.category] ?? "🍽️"}
+          emojiClassName="text-7xl drop-shadow-sm"
+        />
+      </div>
 
       {/* 컬러 히어로 */}
       <header
@@ -161,10 +173,13 @@ export default async function RecipePage({
                   className="group flex h-full flex-col gap-2 rounded-2xl border border-black/5 bg-white p-3 transition hover:-translate-y-0.5 hover:shadow-md"
                 >
                   <span
-                    aria-hidden="true"
-                    className={`flex h-14 items-center justify-center rounded-xl text-3xl ${st.soft}`}
+                    className={`relative flex h-14 items-center justify-center overflow-hidden rounded-xl ${st.soft}`}
                   >
-                    {CATEGORY_EMOJI[r.category] ?? "🍽️"}
+                    <RecipeThumb
+                      id={r.id}
+                      emoji={CATEGORY_EMOJI[r.category] ?? "🍽️"}
+                      emojiClassName="text-3xl"
+                    />
                   </span>
                   <span className="line-clamp-2 text-xs font-bold leading-snug text-ink transition group-hover:text-brand-dark">
                     {r.name}

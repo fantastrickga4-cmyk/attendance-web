@@ -11,6 +11,7 @@ import {
   type Allergen,
 } from "@/lib/types";
 import { STAGE_STYLE, CATEGORY_EMOJI } from "@/lib/theme";
+import { RecipeThumb } from "@/components/recipe-thumb";
 
 export default function Home() {
   const [stage, setStage] = useState<Stage | "전체">("전체");
@@ -217,9 +218,10 @@ export default function Home() {
                 <div
                   className={`relative flex h-28 items-center justify-center ${st.soft}`}
                 >
-                  <span aria-hidden="true" className="text-5xl drop-shadow-sm">
-                    {CATEGORY_EMOJI[r.category] ?? "🍽️"}
-                  </span>
+                  <RecipeThumb
+                    id={r.id}
+                    emoji={CATEGORY_EMOJI[r.category] ?? "🍽️"}
+                  />
                   <span
                     className={`absolute left-3 top-3 rounded-full ${st.solid} px-2.5 py-0.5 text-xs font-bold text-white shadow-sm`}
                   >
