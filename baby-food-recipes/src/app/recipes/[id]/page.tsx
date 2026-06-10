@@ -16,6 +16,7 @@ import { STAGES } from "@/lib/types";
 import { STAGE_STYLE } from "@/lib/theme";
 import { RecipeThumb } from "@/components/recipe-thumb";
 import { RecipeActions } from "@/components/recipe-actions";
+import { CookTimer } from "@/components/cook-timer";
 
 export function generateStaticParams() {
   return RECIPES.map((r) => ({ id: r.id }));
@@ -59,7 +60,7 @@ export default async function RecipePage({
       </Link>
 
       {/* 사진 배너 */}
-      <div className="relative flex aspect-video items-center justify-center overflow-hidden rounded-2xl border border-line bg-[#f3f0ec]">
+      <div className="relative flex aspect-video items-center justify-center overflow-hidden rounded-2xl border border-line thumb-bg bg-[#f3f0ec]">
         <RecipeThumb
           id={recipe.id}
           category={recipe.category}
@@ -124,6 +125,8 @@ export default async function RecipePage({
         </ul>
       </section>
 
+      <CookTimer minutes={recipe.timeMinutes} />
+
       <section>
         <SectionTitle icon={ChefHat}>만드는 법</SectionTitle>
         <ol className="flex flex-col gap-2.5">
@@ -179,7 +182,7 @@ export default async function RecipePage({
                     href={`/recipes/${r.id}`}
                     className="group flex h-full flex-col overflow-hidden rounded-xl border border-line bg-surface transition hover:border-ink/20"
                   >
-                    <span className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-[#f3f0ec]">
+                    <span className="relative flex aspect-[4/3] items-center justify-center overflow-hidden thumb-bg bg-[#f3f0ec]">
                       <RecipeThumb
                         id={r.id}
                         category={r.category}

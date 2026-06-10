@@ -63,6 +63,7 @@ export default function Home() {
   const [babyMonths, setBabyMonths] = useState<number | null>(null);
   const [sort, setSort] = useState<SortKey>("추천");
   const [onlyFav, setOnlyFav] = useState(false);
+  const [fridge, setFridge] = useState<Set<string>>(new Set());
   const [loaded, setLoaded] = useState(false);
 
   const { favs, toggleFav } = useRecipeLog();
@@ -103,6 +104,12 @@ export default function Home() {
       if (stage !== "전체" && r.stage !== stage) return false;
       if (category !== "전체" && r.category !== category) return false;
       if (r.allergens.some((a) => excluded.has(a))) return false;
+      if (fridge.size > 0) {
+        const has = r.ingredients.some((i) =>
+          [...fridge].some((f) => i.name.includes(f)),
+        );
+        if (!has) return false;
+      }
       if (q) {
         const hay = `${r.name} ${r.summary} ${r.tags.join(" ")} ${r.ingredients
           .map((i) => i.name)
@@ -115,7 +122,7 @@ export default function Home() {
     if (sort === "빠른조리") sorted.sort((a, b) => a.timeMinutes - b.timeMinutes);
     else if (sort === "이름") sorted.sort((a, b) => a.name.localeCompare(b.name, "ko"));
     return sorted;
-  }, [stage, category, query, excluded, sort, onlyFav, favs]);
+  }, [stage, category, query, excluded, sort, onlyFav, favs, fridge]);
 
   const recommended = useMemo(() => {
     if (babyMonths == null) return [];
@@ -134,12 +141,22 @@ export default function Home() {
     });
   }
 
+  function toggleFridge(ing: string) {
+    setFridge((prev) => {
+      const n = new Set(prev);
+      if (n.has(ing)) n.delete(ing);
+      else n.add(ing);
+      return n;
+    });
+  }
+
   const hasActiveFilter =
     stage !== "전체" ||
     category !== "전체" ||
     query.trim() !== "" ||
     excluded.size > 0 ||
-    onlyFav;
+    onlyFav ||
+    fridge.size > 0;
 
   function resetFilters() {
     setStage("전체");
@@ -147,6 +164,7 @@ export default function Home() {
     setQuery("");
     setExcluded(new Set());
     setOnlyFav(false);
+    setFridge(new Set());
   }
 
   return (
@@ -232,13 +250,13 @@ export default function Home() {
           />
         </div>
         <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-          <span className="text-xs font-semibold text-ink/35">재료로 빠르게</span>
+          <span className="text-xs font-semibold text-ink/35">냉장고 재료</span>
           {QUICK_INGREDIENTS.map((ing) => {
-            const active = query.trim() === ing;
+            const active = fridge.has(ing);
             return (
               <button
                 key={ing}
-                onClick={() => setQuery(active ? "" : ing)}
+                onClick={() => toggleFridge(ing)}
                 aria-pressed={active}
                 className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold transition ${
                   active
@@ -250,6 +268,11 @@ export default function Home() {
               </button>
             );
           })}
+          {fridge.size > 0 && (
+            <span className="text-xs font-semibold text-brand">
+              {fridge.size}개 재료로 검색
+            </span>
+          )}
         </div>
       </div>
 
@@ -439,7 +462,7 @@ function RecipeCard({
       className="group flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-surface transition hover:border-ink/20"
     >
       {/* 썸네일 */}
-      <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-[#f3f0ec]">
+      <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden thumb-bg bg-[#f3f0ec]">
         <RecipeThumb
           id={r.id}
           category={r.category}
@@ -512,7 +535,7 @@ function MiniCard({
       href={`/recipes/${r.id}`}
       className="group flex h-full flex-col overflow-hidden rounded-xl border border-line bg-surface transition hover:border-ink/20"
     >
-      <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-[#f3f0ec]">
+      <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden thumb-bg bg-[#f3f0ec]">
         <RecipeThumb
           id={r.id}
           category={r.category}

@@ -2,9 +2,16 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, ShoppingBasket } from "lucide-react";
+import { Sparkles, ShoppingBasket } from "lucide-react";
 import { RECIPES, getRecipe } from "@/lib/recipes";
-import { WEEKDAYS, MEAL_SLOTS, type WeeklyPlan, type Weekday } from "@/lib/types";
+import {
+  WEEKDAYS,
+  MEAL_SLOTS,
+  stageForMonth,
+  type WeeklyPlan,
+  type Weekday,
+  type Allergen,
+} from "@/lib/types";
 import { STAGE_STYLE } from "@/lib/theme";
 import { RecipeThumb } from "@/components/recipe-thumb";
 
@@ -17,14 +24,19 @@ function emptyPlan(): WeeklyPlan {
   }, {} as WeeklyPlan);
 }
 
+const CHECKED_KEY = "ibanchan-shopping-checked";
+
 export default function PlanPage() {
   const [plan, setPlan] = useState<WeeklyPlan>(emptyPlan);
+  const [checked, setChecked] = useState<Set<string>>(new Set());
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) setPlan({ ...emptyPlan(), ...JSON.parse(raw) });
+      const c = localStorage.getItem(CHECKED_KEY);
+      if (c) setChecked(new Set(JSON.parse(c) as string[]));
     } catch {
       /* 무시 */
     }
@@ -35,6 +47,10 @@ export default function PlanPage() {
     if (loaded) localStorage.setItem(STORAGE_KEY, JSON.stringify(plan));
   }, [plan, loaded]);
 
+  useEffect(() => {
+    if (loaded) localStorage.setItem(CHECKED_KEY, JSON.stringify([...checked]));
+  }, [checked, loaded]);
+
   function setSlot(day: Weekday, slot: string, recipeId: string) {
     setPlan((prev) => ({
       ...prev,
@@ -44,6 +60,45 @@ export default function PlanPage() {
 
   function clearAll() {
     if (confirm("전체 식단을 비울까요?")) setPlan(emptyPlan());
+  }
+
+  // 월령(있으면)·알레르기 제외를 반영해 한 주를 자동으로 채운다
+  function autoFill() {
+    if (!confirm("월령에 맞는 레시피로 한 주를 자동으로 채울까요? 기존 식단은 덮어써요."))
+      return;
+    let months: number | null = null;
+    let excluded = new Set<Allergen>();
+    try {
+      const m = localStorage.getItem("ibanchan-baby-months");
+      if (m) months = Number(m);
+      const a = localStorage.getItem("ibanchan-excluded-allergens");
+      if (a) excluded = new Set(JSON.parse(a) as Allergen[]);
+    } catch {
+      /* 무시 */
+    }
+    const stage = months != null ? stageForMonth(months) : null;
+    let pool = RECIPES.filter(
+      (r) =>
+        (stage ? r.stage === stage : true) &&
+        !r.allergens.some((a) => excluded.has(a)),
+    );
+    if (pool.length === 0) pool = RECIPES;
+    const next = emptyPlan();
+    WEEKDAYS.forEach((d) =>
+      MEAL_SLOTS.forEach((s) => {
+        next[d][s] = pool[Math.floor(Math.random() * pool.length)].id;
+      }),
+    );
+    setPlan(next);
+  }
+
+  function toggleChecked(name: string) {
+    setChecked((prev) => {
+      const n = new Set(prev);
+      if (n.has(name)) n.delete(name);
+      else n.add(name);
+      return n;
+    });
   }
 
   const filledCount = WEEKDAYS.reduce(
@@ -83,7 +138,14 @@ export default function PlanPage() {
         </p>
       </section>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <button
+          onClick={autoFill}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-brand px-3.5 py-1.5 text-xs font-bold text-white transition hover:bg-brand-dark active:scale-95"
+        >
+          <Sparkles className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
+          자동 채우기
+        </button>
         <button
           onClick={clearAll}
           className="rounded-lg border border-line bg-surface px-3.5 py-1.5 text-xs font-semibold text-ink/55 transition hover:border-ink/25 hover:text-ink"
@@ -114,7 +176,7 @@ export default function PlanPage() {
             {WEEKDAYS.map((day) => (
               <tr key={day}>
                 <th className="p-2 text-center">
-                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#f3f0ec] text-sm font-bold text-ink/70">
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg thumb-bg bg-[#f3f0ec] text-sm font-bold text-ink/70">
                     {day}
                   </span>
                 </th>
@@ -180,22 +242,32 @@ export default function PlanPage() {
             <span className="text-sm font-semibold text-ink/40">재료 {shopping.length}종</span>
           </h2>
           <p className="mb-3 text-xs text-ink/45">
-            이번 주 식단에 들어가는 재료예요. 숫자는 등장하는 레시피 수입니다.
+            탭하면 체크돼요. 숫자는 등장하는 레시피 수입니다.
           </p>
           <ul className="flex flex-wrap gap-2">
-            {shopping.map(([name, count]) => (
-              <li
-                key={name}
-                className="inline-flex items-center gap-1.5 rounded-full border border-line bg-cream px-3 py-1.5 text-sm font-medium text-ink/75"
-              >
-                {name}
-                {count > 1 && (
-                  <span className="rounded-full bg-brand-soft px-1.5 text-xs font-bold text-brand-dark">
-                    ×{count}
-                  </span>
-                )}
-              </li>
-            ))}
+            {shopping.map(([name, count]) => {
+              const isChecked = checked.has(name);
+              return (
+                <li key={name}>
+                  <button
+                    onClick={() => toggleChecked(name)}
+                    aria-pressed={isChecked}
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition ${
+                      isChecked
+                        ? "border-line bg-cream text-ink/35 line-through"
+                        : "border-line bg-cream text-ink/75 hover:border-ink/25"
+                    }`}
+                  >
+                    {name}
+                    {count > 1 && (
+                      <span className="rounded-full bg-brand-soft px-1.5 text-xs font-bold text-brand-dark">
+                        ×{count}
+                      </span>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </section>
       )}

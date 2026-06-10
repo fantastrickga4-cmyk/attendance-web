@@ -48,7 +48,7 @@ export default async function FoodPage({
       <header className="flex items-center gap-4 rounded-2xl border border-line bg-surface p-5">
         <span
           aria-hidden="true"
-          className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-[#f3f0ec] text-2xl font-extrabold text-ink/40"
+          className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl thumb-bg bg-[#f3f0ec] text-2xl font-extrabold text-ink/40"
         >
           {food.name[0]}
         </span>
@@ -121,7 +121,7 @@ export default async function FoodPage({
                     href={`/recipes/${r.id}`}
                     className="group flex h-full flex-col overflow-hidden rounded-xl border border-line bg-surface transition hover:border-ink/20"
                   >
-                    <span className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-[#f3f0ec]">
+                    <span className="relative flex aspect-[4/3] items-center justify-center overflow-hidden thumb-bg bg-[#f3f0ec]">
                       <RecipeThumb
                         id={r.id}
                         category={r.category}

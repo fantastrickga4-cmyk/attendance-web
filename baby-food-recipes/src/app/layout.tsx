@@ -3,6 +3,7 @@ import { Geist } from "next/font/google";
 import Link from "next/link";
 import { Baby, ShieldCheck } from "lucide-react";
 import { BottomNav } from "@/components/bottom-nav";
+import { ThemeToggle } from "@/components/theme-toggle";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -28,6 +29,11 @@ export default function RootLayout({
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css"
         />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('ibanchan-theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`,
+          }}
+        />
       </head>
       <body className="min-h-full flex flex-col bg-cream">
         <header className="sticky top-0 z-20 border-b border-line bg-cream/85 backdrop-blur-md">
@@ -40,27 +46,30 @@ export default function RootLayout({
                 아이반찬
               </span>
             </Link>
-            {/* 데스크탑 nav — 모바일은 하단 탭바 사용 */}
-            <nav className="hidden items-center gap-1 text-sm font-semibold sm:flex">
-              <Link
-                href="/"
-                className="rounded-full px-3 py-1.5 text-ink/70 transition hover:bg-black/5 hover:text-ink"
-              >
-                레시피
-              </Link>
-              <Link
-                href="/ingredients"
-                className="rounded-full px-3 py-1.5 text-ink/70 transition hover:bg-black/5 hover:text-ink"
-              >
-                재료
-              </Link>
-              <Link
-                href="/plan"
-                className="rounded-full px-3 py-1.5 text-ink/70 transition hover:bg-black/5 hover:text-ink"
-              >
-                주간식단
-              </Link>
-            </nav>
+            <div className="flex items-center gap-2">
+              {/* 데스크탑 nav — 모바일은 하단 탭바 사용 */}
+              <nav className="hidden items-center gap-1 text-sm font-semibold sm:flex">
+                <Link
+                  href="/"
+                  className="rounded-full px-3 py-1.5 text-ink/70 transition hover:bg-black/5 hover:text-ink"
+                >
+                  레시피
+                </Link>
+                <Link
+                  href="/ingredients"
+                  className="rounded-full px-3 py-1.5 text-ink/70 transition hover:bg-black/5 hover:text-ink"
+                >
+                  재료
+                </Link>
+                <Link
+                  href="/plan"
+                  className="rounded-full px-3 py-1.5 text-ink/70 transition hover:bg-black/5 hover:text-ink"
+                >
+                  주간식단
+                </Link>
+              </nav>
+              <ThemeToggle />
+            </div>
           </div>
         </header>
         <main className="mx-auto w-full max-w-4xl flex-1 px-5 py-6">{children}</main>

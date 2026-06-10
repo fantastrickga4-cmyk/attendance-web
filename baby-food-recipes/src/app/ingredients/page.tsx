@@ -88,7 +88,7 @@ export default function IngredientsPage() {
               >
                 <span
                   aria-hidden="true"
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#f3f0ec] text-base font-extrabold text-ink/40"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl thumb-bg bg-[#f3f0ec] text-base font-extrabold text-ink/40"
                 >
                   {f.name[0]}
                 </span>
