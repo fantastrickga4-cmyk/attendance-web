@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { UtensilsCrossed, Carrot, CalendarDays, type LucideIcon } from "lucide-react";
+import {
+  UtensilsCrossed,
+  Carrot,
+  CalendarDays,
+  ClipboardList,
+  type LucideIcon,
+} from "lucide-react";
 
 type Item = {
   href: string;
@@ -29,6 +35,12 @@ const ITEMS: Item[] = [
     label: "식단",
     icon: CalendarDays,
     match: (p) => p.startsWith("/plan"),
+  },
+  {
+    href: "/log",
+    label: "기록",
+    icon: ClipboardList,
+    match: (p) => p.startsWith("/log"),
   },
 ];
 

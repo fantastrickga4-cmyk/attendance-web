@@ -74,6 +74,12 @@ export default function RootLayout({
                 >
                   주간식단
                 </Link>
+                <Link
+                  href="/log"
+                  className="rounded-full px-3 py-1.5 text-ink/70 transition hover:bg-black/5 hover:text-ink"
+                >
+                  기록
+                </Link>
               </nav>
               <ThemeToggle />
             </div>
