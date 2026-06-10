@@ -66,7 +66,7 @@ export function BottomNav() {
           const active = it.match(pathname);
           const Icon = it.icon;
           return (
-            <li key={it.href} className="flex-1">
+            <li key={it.href} className="min-w-0 flex-1">
               <Link
                 href={it.href}
                 aria-current={active ? "page" : undefined}

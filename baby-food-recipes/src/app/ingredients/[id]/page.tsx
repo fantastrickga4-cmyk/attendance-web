@@ -128,7 +128,7 @@ export default async function FoodPage({
                       <RecipeThumb
                         id={r.id}
                         category={r.category}
-                        iconClassName="h-6 w-6 text-ink/20"
+                        iconClassName="h-6 w-6 text-ink/30"
                         imgClassName="absolute inset-0 h-full w-full object-cover transition duration-500 ease-out group-hover:scale-[1.04]"
                       />
                     </span>

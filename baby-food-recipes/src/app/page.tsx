@@ -434,7 +434,7 @@ export default function Home() {
 
       {filtered.length === 0 && (
         <div className="rounded-2xl border border-dashed border-line py-12 text-center">
-          <Search className="mx-auto h-7 w-7 text-ink/20" strokeWidth={1.5} aria-hidden="true" />
+          <Search className="mx-auto h-7 w-7 text-ink/30" strokeWidth={1.5} aria-hidden="true" />
           <p className="mt-2 text-sm text-ink/50">
             조건에 맞는 레시피가 없어요. 필터를 줄여보세요.
           </p>
@@ -466,7 +466,7 @@ function RecipeCard({
         <RecipeThumb
           id={r.id}
           category={r.category}
-          iconClassName="h-9 w-9 text-ink/20"
+          iconClassName="h-9 w-9 text-ink/30"
           imgClassName="absolute inset-0 h-full w-full object-cover transition duration-500 ease-out group-hover:scale-[1.04]"
         />
         <button
@@ -539,7 +539,7 @@ function MiniCard({
         <RecipeThumb
           id={r.id}
           category={r.category}
-          iconClassName="h-6 w-6 text-ink/20"
+          iconClassName="h-6 w-6 text-ink/30"
           imgClassName="absolute inset-0 h-full w-full object-cover transition duration-500 ease-out group-hover:scale-[1.04]"
         />
         <button
