@@ -68,6 +68,9 @@ export default function PlanPage() {
         </button>
       </div>
 
+      <p className="-mb-2 text-center text-[11px] text-ink/40 sm:hidden">
+        좌우로 밀어 끼니를 채워보세요 →
+      </p>
       <div className="overflow-x-auto rounded-3xl border border-black/5 bg-white p-2 card-soft">
         <table className="w-full min-w-[680px] border-collapse text-sm">
           <thead>
@@ -107,6 +110,7 @@ export default function PlanPage() {
                         <select
                           value={selected}
                           onChange={(e) => setSlot(day, slot, e.target.value)}
+                          aria-label={`${day}요일 ${slot} 레시피 선택`}
                           className={`w-full rounded-lg bg-transparent px-1.5 py-1 text-xs font-medium outline-none ${
                             recipe ? st?.text : "text-ink/40"
                           }`}

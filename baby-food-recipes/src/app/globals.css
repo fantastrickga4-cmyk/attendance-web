@@ -30,3 +30,21 @@ body {
 .card-soft {
   box-shadow: 0 1px 2px rgb(67 53 43 / 0.04), 0 6px 20px -8px rgb(67 53 43 / 0.12);
 }
+
+/* 키보드(Tab) 이동에만 보이는 포커스 링 — 마우스 클릭엔 안 뜸 */
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+  border-radius: 0.75rem;
+}
+
+/* 모션 줄이기 설정 존중 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

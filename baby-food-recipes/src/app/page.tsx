@@ -49,11 +49,27 @@ export default function Home() {
     });
   }
 
+  const hasActiveFilter =
+    stage !== "전체" ||
+    category !== "전체" ||
+    query.trim() !== "" ||
+    excluded.size > 0;
+
+  function resetFilters() {
+    setStage("전체");
+    setCategory("전체");
+    setQuery("");
+    setExcluded(new Set());
+  }
+
   return (
     <div className="flex flex-col gap-6">
       {/* 히어로 */}
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand to-brand-dark px-6 py-7 text-white card-soft">
-        <div className="absolute -right-6 -top-8 text-[7rem] opacity-20 select-none">
+        <div
+          aria-hidden="true"
+          className="absolute -right-6 -top-8 text-[7rem] opacity-20 select-none"
+        >
           🥕
         </div>
         <p className="text-sm font-semibold text-white/80">
@@ -75,10 +91,18 @@ export default function Home() {
 
       {/* 검색 */}
       <div className="relative">
-        <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-ink/40">
+        <label htmlFor="recipe-search" className="sr-only">
+          레시피 검색
+        </label>
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-ink/40"
+        >
           🔍
         </span>
         <input
+          id="recipe-search"
+          type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="재료나 이름으로 검색 (예: 소고기, 단호박)"
@@ -91,7 +115,7 @@ export default function Home() {
         <div className="mb-2 text-xs font-bold uppercase tracking-wide text-ink/45">
           단계
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2" role="group" aria-label="단계 선택">
           <StageChip active={stage === "전체"} onClick={() => setStage("전체")}>
             전체
           </StageChip>
@@ -102,13 +126,14 @@ export default function Home() {
               <button
                 key={s.key}
                 onClick={() => setStage(s.key)}
+                aria-pressed={active}
                 className={`flex items-center gap-1.5 rounded-2xl border px-3.5 py-2 text-sm font-bold transition ${
                   active
                     ? `${st.solid} border-transparent text-white shadow-sm`
                     : "border-black/8 bg-white text-ink/70 hover:border-black/15"
                 }`}
               >
-                <span>{s.emoji}</span>
+                <span aria-hidden="true">{s.emoji}</span>
                 <span className="flex flex-col items-start leading-none">
                   {s.label}
                   <span
@@ -149,6 +174,8 @@ export default function Home() {
               <button
                 key={a}
                 onClick={() => toggleAllergen(a)}
+                aria-pressed={excluded.has(a)}
+                aria-label={`${a} 알레르기 ${excluded.has(a) ? "제외 해제" : "제외"}`}
                 className={`rounded-full border px-2.5 py-1 text-xs font-medium transition ${
                   excluded.has(a)
                     ? "border-rose-300 bg-rose-100 text-rose-700 line-through"
@@ -162,9 +189,19 @@ export default function Home() {
         )}
       </div>
 
-      <p className="text-sm font-semibold text-ink/50">
-        총 <span className="text-brand-dark">{filtered.length}</span>개의 레시피
-      </p>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm font-semibold text-ink/50" aria-live="polite">
+          총 <span className="text-brand-dark">{filtered.length}</span>개의 레시피
+        </p>
+        {hasActiveFilter && (
+          <button
+            onClick={resetFilters}
+            className="inline-flex items-center gap-1 rounded-full border border-black/10 bg-white px-3 py-1 text-xs font-semibold text-ink/60 transition hover:border-black/20 hover:text-ink"
+          >
+            <span aria-hidden="true">↺</span> 필터 초기화
+          </button>
+        )}
+      </div>
 
       {/* 카드 목록 */}
       <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -180,7 +217,7 @@ export default function Home() {
                 <div
                   className={`relative flex h-28 items-center justify-center ${st.soft}`}
                 >
-                  <span className="text-5xl drop-shadow-sm">
+                  <span aria-hidden="true" className="text-5xl drop-shadow-sm">
                     {CATEGORY_EMOJI[r.category] ?? "🍽️"}
                   </span>
                   <span
@@ -239,6 +276,7 @@ function StageChip({
   return (
     <button
       onClick={onClick}
+      aria-pressed={active}
       className={`rounded-2xl border px-4 py-2 text-sm font-bold transition ${
         active
           ? "border-transparent bg-ink text-white shadow-sm"
@@ -262,6 +300,7 @@ function SmallChip({
   return (
     <button
       onClick={onClick}
+      aria-pressed={active}
       className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
         active
           ? "border-transparent bg-brand text-white shadow-sm"

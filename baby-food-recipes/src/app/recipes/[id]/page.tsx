@@ -31,6 +31,11 @@ export default async function RecipePage({
   const stageMeta = STAGES.find((s) => s.key === recipe.stage);
   const st = STAGE_STYLE[recipe.stage];
 
+  // 같은 단계의 다른 레시피 (탐색 동선) — 최대 4개
+  const related = RECIPES.filter(
+    (r) => r.stage === recipe.stage && r.id !== recipe.id,
+  ).slice(0, 4);
+
   return (
     <article className="flex flex-col gap-6">
       <Link
@@ -44,7 +49,10 @@ export default async function RecipePage({
       <header
         className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${st.grad} p-6 card-soft`}
       >
-        <span className="absolute -right-3 -top-4 text-8xl opacity-25 select-none">
+        <span
+          aria-hidden="true"
+          className="absolute -right-3 -top-4 text-8xl opacity-25 select-none"
+        >
           {CATEGORY_EMOJI[recipe.category] ?? "🍽️"}
         </span>
         <div className="relative flex flex-wrap items-center gap-2">
@@ -137,6 +145,38 @@ export default async function RecipePage({
             </span>
           ))}
         </div>
+      )}
+
+      {related.length > 0 && (
+        <section className="mt-2 border-t border-black/5 pt-5">
+          <h2 className="mb-3 text-base font-extrabold text-ink">
+            <span aria-hidden="true">{stageMeta?.emoji} </span>
+            같은 단계 레시피
+          </h2>
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {related.map((r) => (
+              <li key={r.id}>
+                <Link
+                  href={`/recipes/${r.id}`}
+                  className="group flex h-full flex-col gap-2 rounded-2xl border border-black/5 bg-white p-3 transition hover:-translate-y-0.5 hover:shadow-md"
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`flex h-14 items-center justify-center rounded-xl text-3xl ${st.soft}`}
+                  >
+                    {CATEGORY_EMOJI[r.category] ?? "🍽️"}
+                  </span>
+                  <span className="line-clamp-2 text-xs font-bold leading-snug text-ink transition group-hover:text-brand-dark">
+                    {r.name}
+                  </span>
+                  <span className="mt-auto text-[11px] font-medium text-ink/45">
+                    🕒 {r.timeMinutes}분
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
     </article>
   );
