@@ -16,7 +16,7 @@ export function RecipeActions({ id }: { id: string }) {
       <button
         onClick={() => toggleFav(id)}
         aria-pressed={isFav}
-        className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border px-4 py-2.5 text-sm font-bold transition active:scale-[0.98] ${
+        className={`inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-sm font-bold transition active:scale-[0.98] ${
           isFav
             ? "border-brand bg-brand-soft text-brand-dark"
             : "border-line bg-surface text-ink/60 hover:border-ink/25"
@@ -33,7 +33,7 @@ export function RecipeActions({ id }: { id: string }) {
       <button
         onClick={() => addToday(id)}
         disabled={eatenToday}
-        className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border px-4 py-2.5 text-sm font-bold transition active:scale-[0.98] ${
+        className={`inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-sm font-bold transition active:scale-[0.98] ${
           eatenToday
             ? "border-[#6f8f6a] bg-[#eef2ed] text-[#4f6b4a]"
             : "border-line bg-surface text-ink/60 hover:border-ink/25"

@@ -17,6 +17,10 @@
     system-ui, sans-serif;
 }
 
+html {
+  overflow-x: hidden;
+}
+
 :root {
   --background: var(--color-cream);
   --foreground: var(--color-ink);
