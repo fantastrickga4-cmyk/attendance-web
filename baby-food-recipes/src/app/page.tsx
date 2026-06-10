@@ -24,9 +24,10 @@ import {
 } from "@/lib/types";
 import { STAGE_STYLE, CATEGORY_ICON } from "@/lib/theme";
 import { RecipeThumb } from "@/components/recipe-thumb";
-import { AgeBar } from "@/components/age-bar";
+import { ProfileBar } from "@/components/profile-bar";
 import { StageGuide } from "@/components/stage-guide";
 import { useRecipeLog } from "@/lib/use-recipe-log";
+import { useProfiles } from "@/lib/use-profiles";
 
 /** 단계 → 월령 표기 */
 const STAGE_MONTHS = Object.fromEntries(
@@ -44,7 +45,6 @@ const QUICK_INGREDIENTS = [
   "브로콜리",
 ];
 
-const MONTHS_KEY = "ibanchan-baby-months";
 const ALLERGEN_KEY = "ibanchan-excluded-allergens";
 
 type SortKey = "추천" | "빠른조리" | "이름";
@@ -60,18 +60,17 @@ export default function Home() {
   const [category, setCategory] = useState<Category | "전체">("전체");
   const [query, setQuery] = useState("");
   const [excluded, setExcluded] = useState<Set<Allergen>>(new Set());
-  const [babyMonths, setBabyMonths] = useState<number | null>(null);
   const [sort, setSort] = useState<SortKey>("추천");
   const [onlyFav, setOnlyFav] = useState(false);
   const [fridge, setFridge] = useState<Set<string>>(new Set());
   const [loaded, setLoaded] = useState(false);
 
   const { favs, toggleFav } = useRecipeLog();
+  const profileApi = useProfiles();
+  const babyMonths = profileApi.active?.months ?? null;
 
   useEffect(() => {
     try {
-      const m = localStorage.getItem(MONTHS_KEY);
-      if (m) setBabyMonths(Number(m));
       const a = localStorage.getItem(ALLERGEN_KEY);
       if (a) setExcluded(new Set(JSON.parse(a) as Allergen[]));
     } catch {
@@ -79,12 +78,6 @@ export default function Home() {
     }
     setLoaded(true);
   }, []);
-
-  useEffect(() => {
-    if (!loaded) return;
-    if (babyMonths == null) localStorage.removeItem(MONTHS_KEY);
-    else localStorage.setItem(MONTHS_KEY, String(babyMonths));
-  }, [babyMonths, loaded]);
 
   useEffect(() => {
     if (!loaded) return;
@@ -202,8 +195,15 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 월령 개인화 바 */}
-      <AgeBar months={babyMonths} onChange={setBabyMonths} />
+      {/* 아이 프로필 (월령 개인화) */}
+      <ProfileBar
+        profiles={profileApi.profiles}
+        active={profileApi.active}
+        addProfile={profileApi.addProfile}
+        removeProfile={profileApi.removeProfile}
+        setActive={profileApi.setActive}
+        setMonths={profileApi.setMonths}
+      />
 
       {/* 월령 맞춤 추천 */}
       {babyMonths != null && recommended.length > 0 && (
