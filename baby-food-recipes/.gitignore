@@ -41,3 +41,6 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+
+# 미사용 후보 이미지(레시피 미매칭/중복)
+/public/recipes/_unused
