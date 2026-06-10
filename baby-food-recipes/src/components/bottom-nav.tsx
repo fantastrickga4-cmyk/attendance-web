@@ -61,12 +61,12 @@ export function BottomNav() {
       className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-cream/90 backdrop-blur-md sm:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <ul className="mx-auto flex w-full max-w-md">
+      <ul className="mx-auto grid w-full max-w-md grid-cols-5">
         {ITEMS.map((it) => {
           const active = it.match(pathname);
           const Icon = it.icon;
           return (
-            <li key={it.href} className="min-w-0 flex-1">
+            <li key={it.href} className="min-w-0">
               <Link
                 href={it.href}
                 aria-current={active ? "page" : undefined}
