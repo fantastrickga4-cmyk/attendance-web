@@ -244,10 +244,10 @@ function Stat({
   value: string;
 }) {
   return (
-    <div className="rounded-xl border border-line bg-surface px-3 py-2.5">
+    <div className="min-w-0 rounded-xl border border-line bg-surface px-3 py-2.5">
       <Icon className="h-4 w-4 text-ink/35" strokeWidth={1.75} aria-hidden="true" />
       <div className="mt-1.5 text-[11px] font-medium text-ink/45">{label}</div>
-      <div className="text-sm font-bold text-ink">{value}</div>
+      <div className="truncate text-sm font-bold text-ink">{value}</div>
     </div>
   );
 }
