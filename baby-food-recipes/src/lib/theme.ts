@@ -53,13 +53,29 @@ export const STAGE_STYLE: Record<Stage, StageStyle> = {
     dot: "bg-pink-500",
     grad: "from-pink-100 to-pink-50",
   },
-  유아식: {
+  "유아 1세": {
     soft: "bg-amber-100",
     text: "text-amber-700",
     solid: "bg-amber-500",
     ring: "ring-amber-300",
     dot: "bg-amber-500",
     grad: "from-amber-100 to-amber-50",
+  },
+  "유아 2~3세": {
+    soft: "bg-lime-100",
+    text: "text-lime-700",
+    solid: "bg-lime-500",
+    ring: "ring-lime-300",
+    dot: "bg-lime-500",
+    grad: "from-lime-100 to-lime-50",
+  },
+  "유아 4~5세": {
+    soft: "bg-teal-100",
+    text: "text-teal-700",
+    solid: "bg-teal-500",
+    ring: "ring-teal-300",
+    dot: "bg-teal-500",
+    grad: "from-teal-100 to-teal-50",
   },
 };
 

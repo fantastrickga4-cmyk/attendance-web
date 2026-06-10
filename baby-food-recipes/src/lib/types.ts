@@ -1,7 +1,14 @@
 // 이유식·유아반찬 도메인 타입
 
 /** 이유식/유아식 단계 */
-export type Stage = "초기" | "중기" | "후기" | "완료기" | "유아식";
+export type Stage =
+  | "초기"
+  | "중기"
+  | "후기"
+  | "완료기"
+  | "유아 1세"
+  | "유아 2~3세"
+  | "유아 4~5세";
 
 /** 단계별 권장 개월수 메타 */
 export const STAGES: { key: Stage; label: string; months: string; range: [number, number]; emoji: string }[] = [
@@ -9,7 +16,9 @@ export const STAGES: { key: Stage; label: string; months: string; range: [number
   { key: "중기", label: "중기", months: "만 7~9개월", range: [7, 9], emoji: "🥣" },
   { key: "후기", label: "후기", months: "만 10~12개월", range: [10, 12], emoji: "🍚" },
   { key: "완료기", label: "완료기", months: "만 12~15개월", range: [12, 15], emoji: "🍽️" },
-  { key: "유아식", label: "유아식", months: "만 15개월+", range: [15, 48], emoji: "🧒" },
+  { key: "유아 1세", label: "유아 1세", months: "만 12~24개월", range: [12, 24], emoji: "🧒" },
+  { key: "유아 2~3세", label: "유아 2~3세", months: "만 2~3세", range: [24, 48], emoji: "🍱" },
+  { key: "유아 4~5세", label: "유아 4~5세", months: "만 4~5세", range: [48, 72], emoji: "🥗" },
 ];
 
 /** 레시피 분류 */
