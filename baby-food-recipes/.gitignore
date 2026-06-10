@@ -44,3 +44,6 @@ next-env.d.ts
 
 # 미사용 후보 이미지(레시피 미매칭/중복)
 /public/recipes/_unused
+
+# 벤치마킹 스크린샷 캐시(분석용 임시)
+/.benchmark

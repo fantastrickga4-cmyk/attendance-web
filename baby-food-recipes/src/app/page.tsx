@@ -13,6 +13,15 @@ import {
 import { STAGE_STYLE, CATEGORY_EMOJI } from "@/lib/theme";
 import { RecipeThumb } from "@/components/recipe-thumb";
 
+/** 단계 → 월령 표기 (예: "만 4~6개월"). 카드 월령 배지에 사용 */
+const STAGE_MONTHS = Object.fromEntries(
+  STAGES.map((s) => [s.key, s.months]),
+) as Record<Stage, string>;
+
+/** 카드 속성 칩 공통 스타일 */
+const CHIP =
+  "inline-flex items-center gap-1 rounded-full bg-ink/5 px-2 py-0.5 text-[11px] font-semibold text-ink/55";
+
 export default function Home() {
   const [stage, setStage] = useState<Stage | "전체">("전체");
   const [category, setCategory] = useState<Category | "전체">("전체");
@@ -227,11 +236,6 @@ export default function Home() {
                   >
                     {r.stage}
                   </span>
-                  {r.allergens.length > 0 && (
-                    <span className="absolute right-3 top-3 rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-semibold text-rose-500">
-                      ⚠ {r.allergens.length}
-                    </span>
-                  )}
                 </div>
                 {/* 본문 */}
                 <div className="flex flex-1 flex-col gap-1.5 p-4">
@@ -239,13 +243,36 @@ export default function Home() {
                     {r.name}
                   </h2>
                   <p className="line-clamp-2 text-sm text-ink/60">{r.summary}</p>
-                  <div className="mt-auto flex items-center gap-2 pt-2 text-xs font-medium text-ink/50">
-                    <span className="inline-flex items-center gap-1">
-                      <span className={`h-2 w-2 rounded-full ${st.dot}`} />
+                  <div className="mt-auto flex flex-wrap items-center gap-1.5 pt-2.5">
+                    {/* 월령 (단계 색 점) */}
+                    <span className={CHIP}>
+                      <span
+                        aria-hidden="true"
+                        className={`h-1.5 w-1.5 rounded-full ${st.dot}`}
+                      />
+                      {STAGE_MONTHS[r.stage]}
+                    </span>
+                    {/* 조리시간 */}
+                    <span className={CHIP}>
+                      <span aria-hidden="true">⏱</span> {r.timeMinutes}분
+                    </span>
+                    {/* 종류 */}
+                    <span className={CHIP}>
+                      <span aria-hidden="true">
+                        {CATEGORY_EMOJI[r.category] ?? "🍽️"}
+                      </span>{" "}
                       {r.category}
                     </span>
-                    <span>·</span>
-                    <span>🕒 {r.timeMinutes}분</span>
+                    {/* 알레르겐 (있을 때만) */}
+                    {r.allergens.length > 0 && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-rose-100 bg-rose-50 px-2 py-0.5 text-[11px] font-semibold text-rose-500">
+                        <span aria-hidden="true">⚠</span>
+                        {r.allergens.slice(0, 2).join("·")}
+                        {r.allergens.length > 2
+                          ? ` +${r.allergens.length - 2}`
+                          : ""}
+                      </span>
+                    )}
                   </div>
                 </div>
               </Link>
