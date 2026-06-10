@@ -16,6 +16,19 @@ import { STAGE_STYLE, CATEGORY_EMOJI } from "@/lib/theme";
 import { RecipeThumb } from "@/components/recipe-thumb";
 import { AgeBar } from "@/components/age-bar";
 import { StageGuide } from "@/components/stage-guide";
+import { useRecipeLog } from "@/lib/use-recipe-log";
+
+/** 검색창 아래 빠른 재료 칩 (클릭 → 검색) */
+const QUICK_INGREDIENTS = [
+  "소고기",
+  "닭고기",
+  "두부",
+  "달걀",
+  "단호박",
+  "감자",
+  "애호박",
+  "브로콜리",
+];
 
 /** 단계 → 월령 표기 (예: "만 4~6개월"). 카드 월령 배지에 사용 */
 const STAGE_MONTHS = Object.fromEntries(
@@ -44,7 +57,10 @@ export default function Home() {
   const [excluded, setExcluded] = useState<Set<Allergen>>(new Set());
   const [babyMonths, setBabyMonths] = useState<number | null>(null);
   const [sort, setSort] = useState<SortKey>("추천");
+  const [onlyFav, setOnlyFav] = useState(false);
   const [loaded, setLoaded] = useState(false);
+
+  const { favs, toggleFav } = useRecipeLog();
 
   // localStorage 로드
   useEffect(() => {
@@ -80,6 +96,7 @@ export default function Home() {
   const filtered = useMemo(() => {
     const q = query.trim();
     const list = RECIPES.filter((r) => {
+      if (onlyFav && !favs.has(r.id)) return false;
       if (stage !== "전체" && r.stage !== stage) return false;
       if (category !== "전체" && r.category !== category) return false;
       if (r.allergens.some((a) => excluded.has(a))) return false;
@@ -95,7 +112,7 @@ export default function Home() {
     if (sort === "빠른조리") sorted.sort((a, b) => a.timeMinutes - b.timeMinutes);
     else if (sort === "이름") sorted.sort((a, b) => a.name.localeCompare(b.name, "ko"));
     return sorted;
-  }, [stage, category, query, excluded, sort]);
+  }, [stage, category, query, excluded, sort, onlyFav, favs]);
 
   // 월령 맞춤 추천 (알레르기 제외 반영)
   const recommended = useMemo(() => {
@@ -119,13 +136,15 @@ export default function Home() {
     stage !== "전체" ||
     category !== "전체" ||
     query.trim() !== "" ||
-    excluded.size > 0;
+    excluded.size > 0 ||
+    onlyFav;
 
   function resetFilters() {
     setStage("전체");
     setCategory("전체");
     setQuery("");
     setExcluded(new Set());
+    setOnlyFav(false);
   }
 
   return (
@@ -176,7 +195,11 @@ export default function Home() {
           <ul className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
             {recommended.map((r) => (
               <li key={r.id} className="w-40 shrink-0">
-                <MiniCard r={r} />
+                <MiniCard
+                  r={r}
+                  isFav={favs.has(r.id)}
+                  onToggleFav={toggleFav}
+                />
               </li>
             ))}
           </ul>
@@ -202,6 +225,29 @@ export default function Home() {
           placeholder="재료나 이름으로 검색 (예: 소고기, 단호박)"
           className="w-full rounded-2xl border border-black/8 bg-white py-3 pl-11 pr-4 text-sm outline-none transition placeholder:text-ink/40 focus:border-brand focus:ring-4 focus:ring-brand/15"
         />
+        {/* 빠른 재료 칩 */}
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          <span className="self-center text-[11px] font-bold text-ink/35">
+            재료로 빠르게:
+          </span>
+          {QUICK_INGREDIENTS.map((ing) => {
+            const active = query.trim() === ing;
+            return (
+              <button
+                key={ing}
+                onClick={() => setQuery(active ? "" : ing)}
+                aria-pressed={active}
+                className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold transition ${
+                  active
+                    ? "border-transparent bg-brand text-white"
+                    : "border-black/8 bg-white text-ink/55 hover:border-black/15"
+                }`}
+              >
+                {ing}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* 단계 세그먼트 */}
@@ -292,6 +338,17 @@ export default function Home() {
           총 <span className="text-brand-dark">{filtered.length}</span>개의 레시피
         </p>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setOnlyFav((v) => !v)}
+            aria-pressed={onlyFav}
+            className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold transition ${
+              onlyFav
+                ? "border-rose-300 bg-rose-100 text-rose-600"
+                : "border-black/10 bg-white text-ink/60 hover:border-black/20"
+            }`}
+          >
+            <span aria-hidden="true">{onlyFav ? "♥" : "♡"}</span> 찜만
+          </button>
           <label htmlFor="sort" className="sr-only">
             정렬 기준
           </label>
@@ -322,7 +379,7 @@ export default function Home() {
       <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {filtered.map((r) => (
           <li key={r.id}>
-            <RecipeCard r={r} />
+            <RecipeCard r={r} isFav={favs.has(r.id)} onToggleFav={toggleFav} />
           </li>
         ))}
       </ul>
@@ -340,7 +397,15 @@ export default function Home() {
 }
 
 /** 레시피 카드 (목록) */
-function RecipeCard({ r }: { r: Recipe }) {
+function RecipeCard({
+  r,
+  isFav,
+  onToggleFav,
+}: {
+  r: Recipe;
+  isFav: boolean;
+  onToggleFav: (id: string) => void;
+}) {
   const st = STAGE_STYLE[r.stage];
   return (
     <Link
@@ -355,6 +420,19 @@ function RecipeCard({ r }: { r: Recipe }) {
         >
           {r.stage}
         </span>
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            onToggleFav(r.id);
+          }}
+          aria-pressed={isFav}
+          aria-label={isFav ? "찜 해제" : "찜하기"}
+          className="absolute right-2.5 top-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-white/85 text-sm shadow-sm backdrop-blur transition hover:scale-110 hover:bg-white"
+        >
+          <span aria-hidden="true" className={isFav ? "text-rose-500" : "text-ink/40"}>
+            {isFav ? "♥" : "♡"}
+          </span>
+        </button>
       </div>
       {/* 본문 */}
       <div className="flex flex-1 flex-col gap-1.5 p-4">
@@ -388,7 +466,15 @@ function RecipeCard({ r }: { r: Recipe }) {
 }
 
 /** 작은 레시피 카드 (월령 맞춤 추천 캐러셀) */
-function MiniCard({ r }: { r: Recipe }) {
+function MiniCard({
+  r,
+  isFav,
+  onToggleFav,
+}: {
+  r: Recipe;
+  isFav: boolean;
+  onToggleFav: (id: string) => void;
+}) {
   const st = STAGE_STYLE[r.stage];
   return (
     <Link
@@ -401,6 +487,19 @@ function MiniCard({ r }: { r: Recipe }) {
           emoji={CATEGORY_EMOJI[r.category] ?? "🍽️"}
           emojiClassName="text-3xl"
         />
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            onToggleFav(r.id);
+          }}
+          aria-pressed={isFav}
+          aria-label={isFav ? "찜 해제" : "찜하기"}
+          className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-white/85 text-xs shadow-sm backdrop-blur transition hover:bg-white"
+        >
+          <span aria-hidden="true" className={isFav ? "text-rose-500" : "text-ink/40"}>
+            {isFav ? "♥" : "♡"}
+          </span>
+        </button>
       </div>
       <div className="flex flex-1 flex-col gap-1 p-2.5">
         <h3 className="line-clamp-2 text-xs font-bold leading-snug text-ink transition group-hover:text-brand-dark">

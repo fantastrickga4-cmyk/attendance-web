@@ -4,6 +4,7 @@ import { RECIPES, getRecipe } from "@/lib/recipes";
 import { STAGES } from "@/lib/types";
 import { STAGE_STYLE, CATEGORY_EMOJI } from "@/lib/theme";
 import { RecipeThumb } from "@/components/recipe-thumb";
+import { RecipeActions } from "@/components/recipe-actions";
 
 export function generateStaticParams() {
   return RECIPES.map((r) => ({ id: r.id }));
@@ -92,6 +93,8 @@ export default async function RecipePage({
           />
         </div>
       </header>
+
+      <RecipeActions id={recipe.id} />
 
       {recipe.allergens.length > 0 && (
         <div className="flex items-start gap-2 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">

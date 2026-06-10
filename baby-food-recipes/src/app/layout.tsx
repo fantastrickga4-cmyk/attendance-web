@@ -46,6 +46,12 @@ export default function RootLayout({
                 레시피
               </Link>
               <Link
+                href="/ingredients"
+                className="rounded-full px-3 py-1.5 text-ink/70 transition hover:bg-black/5 hover:text-ink"
+              >
+                재료
+              </Link>
+              <Link
                 href="/plan"
                 className="rounded-full px-3 py-1.5 text-ink/70 transition hover:bg-black/5 hover:text-ink"
               >
@@ -55,9 +61,18 @@ export default function RootLayout({
           </div>
         </header>
         <main className="mx-auto w-full max-w-4xl flex-1 px-5 py-6">{children}</main>
-        <footer className="mt-8 border-t border-black/5 py-6 text-center text-xs text-ink/50">
-          단계·개월수는 일반 가이드입니다. 새 재료 도입은 소아과 상담을 우선하세요.
-          <div className="mt-1 font-semibold text-ink/40">© 아이반찬</div>
+        <footer className="mt-8 border-t border-black/5 py-7 text-center text-xs text-ink/50">
+          <div className="mx-auto flex max-w-md flex-col items-center gap-2 px-5">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-black/8 bg-white px-3 py-1 font-semibold text-ink/60">
+              <span aria-hidden="true">🛡️</span>
+              식약처 · 대한소아과학회 일반 권고 참고
+            </span>
+            <p className="leading-relaxed text-ink/45">
+              단계·개월수·자르는 법 등은 참고용 일반 정보입니다. 새 재료 도입·알레르기 반응은
+              아이마다 다르므로 <strong className="text-ink/55">소아과 상담을 우선</strong>하세요.
+            </p>
+            <div className="font-semibold text-ink/40">© 아이반찬</div>
+          </div>
         </footer>
       </body>
     </html>
