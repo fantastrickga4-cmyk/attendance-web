@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Sparkles, ShoppingBasket, Bookmark, X } from "lucide-react";
+import { Sparkles, ShoppingBasket, Bookmark, X, Share2 } from "lucide-react";
 import { RECIPES, getRecipe } from "@/lib/recipes";
 import {
   WEEKDAYS,
@@ -22,6 +22,33 @@ function emptyPlan(): WeeklyPlan {
     acc[d] = {};
     return acc;
   }, {} as WeeklyPlan);
+}
+
+/** canvas에 레시피명을 최대 2줄로 그린다 */
+function drawName(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  maxw: number,
+) {
+  if (ctx.measureText(text).width <= maxw) {
+    ctx.fillText(text, x, y);
+    return;
+  }
+  const chars = [...text];
+  let line = "";
+  const lines: string[] = [];
+  for (const c of chars) {
+    if (ctx.measureText(line + c).width > maxw && line) {
+      lines.push(line);
+      line = c;
+    } else line += c;
+  }
+  if (line) lines.push(line);
+  const top = lines.slice(0, 2);
+  if (lines.length > 2) top[1] = top[1].slice(0, -1) + "…";
+  top.forEach((l, i) => ctx.fillText(l, x, y - 6 + i * 14));
 }
 
 const CHECKED_KEY = "ibanchan-shopping-checked";
@@ -126,6 +153,83 @@ export default function PlanPage() {
     });
   }
 
+  // 주간 식단을 한 장 이미지로 그려 공유/저장
+  async function shareImage() {
+    const cols = MEAL_SLOTS.length;
+    const lead = 56;
+    const cw = 168;
+    const ch = 62;
+    const head = 84;
+    const W = lead + cols * cw + 16;
+    const H = head + WEEKDAYS.length * ch + 24;
+    const canvas = document.createElement("canvas");
+    canvas.width = W * 2;
+    canvas.height = H * 2;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.scale(2, 2);
+    const F = "Pretendard, sans-serif";
+
+    ctx.fillStyle = "#faf8f5";
+    ctx.fillRect(0, 0, W, H);
+    ctx.textBaseline = "alphabetic";
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#2b2520";
+    ctx.font = `800 22px ${F}`;
+    ctx.fillText("우리 아이 주간 식단", 16, 38);
+    ctx.fillStyle = "#c2603f";
+    ctx.font = `700 12px ${F}`;
+    ctx.fillText("아이반찬 · ibanchan", 16, 58);
+
+    ctx.textAlign = "center";
+    MEAL_SLOTS.forEach((s, i) => {
+      ctx.fillStyle = "#8a7f74";
+      ctx.font = `700 13px ${F}`;
+      ctx.fillText(s, lead + i * cw + cw / 2, head - 10);
+    });
+
+    WEEKDAYS.forEach((d, r) => {
+      const y = head + r * ch;
+      ctx.fillStyle = "#2b2520";
+      ctx.font = `800 14px ${F}`;
+      ctx.textAlign = "left";
+      ctx.fillText(d, 16, y + ch / 2 + 5);
+      ctx.textAlign = "center";
+      MEAL_SLOTS.forEach((s, i) => {
+        const x = lead + i * cw;
+        ctx.strokeStyle = "#e7e2db";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x + 4, y + 4, cw - 8, ch - 8);
+        const id = plan[d]?.[s];
+        const rec = id ? getRecipe(id) : null;
+        if (rec) {
+          ctx.fillStyle = "#2b2520";
+          ctx.font = `600 12px ${F}`;
+          drawName(ctx, rec.name, x + cw / 2, y + ch / 2 + 4, cw - 18);
+        }
+      });
+    });
+
+    const blob: Blob | null = await new Promise((res) =>
+      canvas.toBlob((b) => res(b), "image/png"),
+    );
+    if (!blob) return;
+    const file = new File([blob], "ibanchan-weekly-plan.png", { type: "image/png" });
+    try {
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: "우리 아이 주간 식단" });
+        return;
+      }
+    } catch {
+      /* 공유 취소 등 → 다운로드로 폴백 */
+    }
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "아이반찬-주간식단.png";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
   const filledCount = WEEKDAYS.reduce(
     (n, d) => n + MEAL_SLOTS.filter((s) => plan[d]?.[s]).length,
     0,
@@ -171,6 +275,15 @@ export default function PlanPage() {
           <Sparkles className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
           자동 채우기
         </button>
+        {filledCount > 0 && (
+          <button
+            onClick={shareImage}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-3.5 py-1.5 text-xs font-semibold text-ink/65 transition hover:border-ink/25 hover:text-ink"
+          >
+            <Share2 className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
+            이미지
+          </button>
+        )}
         {filledCount > 0 && (
           <button
             onClick={saveTemplate}
