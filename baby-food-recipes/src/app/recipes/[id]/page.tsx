@@ -9,10 +9,11 @@ import {
   ShoppingBasket,
   ChefHat,
   Lightbulb,
+  Repeat,
   type LucideIcon,
 } from "lucide-react";
 import { RECIPES, getRecipe } from "@/lib/recipes";
-import { STAGES } from "@/lib/types";
+import { STAGES, ALLERGEN_SUBSTITUTE } from "@/lib/types";
 import { STAGE_STYLE } from "@/lib/theme";
 import { RecipeThumb } from "@/components/recipe-thumb";
 import { RecipeActions } from "@/components/recipe-actions";
@@ -122,6 +123,25 @@ export default async function RecipePage({
             </p>
           </div>
         </div>
+      )}
+
+      {recipe.allergens.some((a) => ALLERGEN_SUBSTITUTE[a]) && (
+        <section>
+          <SectionTitle icon={Repeat}>알레르기가 있다면</SectionTitle>
+          <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-surface">
+            {recipe.allergens
+              .filter((a) => ALLERGEN_SUBSTITUTE[a])
+              .map((a) => (
+                <li key={a} className="px-4 py-3 text-sm">
+                  <strong className="text-ink">{a}</strong>
+                  <span className="text-ink/65"> — {ALLERGEN_SUBSTITUTE[a]}</span>
+                </li>
+              ))}
+          </ul>
+          <p className="mt-2 text-xs leading-relaxed text-ink/45">
+            대체 시 영양·식감이 달라질 수 있어요. 알레르기 진단·도입은 소아과 상담을 우선하세요.
+          </p>
+        </section>
       )}
 
       <section>

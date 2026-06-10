@@ -47,6 +47,18 @@ export const ALLERGENS = [
 
 export type Allergen = (typeof ALLERGENS)[number];
 
+/** 알레르겐별 대체 안내 (참고용 일반 가이드). 상세에서 레시피 알레르겐에 맞춰 자동 표시 */
+export const ALLERGEN_SUBSTITUTE: Partial<Record<Allergen, string>> = {
+  계란: "으깬 두부나 잘 익은 바나나로 부침·반죽의 농도를 대신할 수 있어요.",
+  우유: "분유나 두유(콩 알레르기가 없을 때)로 바꾸거나, 치즈를 빼고 만들어요.",
+  밀: "밀가루 대신 쌀가루·오트밀가루로 대체해요.",
+  대두: "두부 대신 닭안심·흰살생선으로 단백질을 채워요. 간장은 생략하세요.",
+  쇠고기: "소고기 대신 닭고기·돼지고기·두부로 대체해요.",
+  닭고기: "닭고기 대신 소고기·흰살생선·두부로 대체해요.",
+  생선: "생선 대신 소고기·닭고기·두부로 단백질을 채워요.",
+  돼지고기: "돼지고기 대신 소고기·닭고기로 대체해요.",
+};
+
 export interface Ingredient {
   name: string;
   amount: string;
