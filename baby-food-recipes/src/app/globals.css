@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+@theme {
+  /* 브랜드 코랄 — CTA·활성 상태·로고에 일관 사용 */
+  --color-brand: #ff7a59;
+  --color-brand-dark: #f2613f;
+  --color-brand-soft: #fff1ec;
+
+  /* 따뜻한 크림 배경 */
+  --color-cream: #fffaf5;
+  --color-ink: #43352b;
+
+  --font-sans: "Pretendard Variable", Pretendard, var(--font-geist-sans),
+    system-ui, sans-serif;
+}
+
+:root {
+  --background: var(--color-cream);
+  --foreground: var(--color-ink);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 둥근 도형 베이스 — 부드러운 그림자 */
+.card-soft {
+  box-shadow: 0 1px 2px rgb(67 53 43 / 0.04), 0 6px 20px -8px rgb(67 53 43 / 0.12);
+}
