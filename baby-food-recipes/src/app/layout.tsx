@@ -93,7 +93,7 @@ export default function RootLayout({
             </div>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-4xl flex-1 px-5 py-6">{children}</main>
+        <main className="mx-auto w-full max-w-4xl flex-1 overflow-x-clip px-5 py-6">{children}</main>
         <footer className="mt-8 border-t border-line pb-28 pt-7 text-center text-xs text-ink/50 sm:pb-7">
           <div className="mx-auto flex max-w-md flex-col items-center gap-2 px-5">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1 font-semibold text-ink/60">
