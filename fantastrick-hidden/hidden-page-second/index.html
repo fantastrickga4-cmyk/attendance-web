@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-NNM0PD41NF"></script>
+  <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      gtag('js', new Date());
+
+      gtag('config', 'G-NNM0PD41NF');
+  </script>
+  <!-- Google tag (gtag.js) End -->
+  
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+
+  <title>ANI DATABASE SYSTEM</title>
+  <meta name="description" content="판타스트릭 2호점 - 사자의 서 히든페이지">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="ANI DATABASE SYSTEM">
+  <meta property="og:description" content="판타스트릭 2호점 - 사자의 서 히든페이지">
+  <meta property="og:image" content="../assets/ogImage.png">
+  <link rel="icon" type="image/x-icon" href="../assets/favicon.png">
+  <link rel="shortcut icon" type="image/x-icon" href="../assets/favicon.png">
+
+  <link rel="stylesheet" type="text/css" href="../reset.css">
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <!-- <meta name="publisher" content="cailyent0407@gmail.com" /> -->
+</head>
+
+<body onload="init()">
+  <!-- BGM Assets -->
+  <audio loop id="main_bgm" src="../assets/mainBGM.mp3"></audio>
+  <audio loop id="story_bgm" src="../assets/storyBGM.mp3"></audio>
+  <audio id="wrong_sound" src="../assets/wrong.mp3"></audio>
+  <audio id="click_sound" src="../assets/click.mp3"></audio>
+  <!-- BGM Assets End -->
+
+  <!-- 모바일 세로화면 경고 -->
+  <div class="background" id="mobile_warning">
+    <img id="mobile_warning_image" src="../assets/rotate.png" alt="스마트폰 가로 회전" /><br />
+    <p>본 페이지는 가로 화면에 최적화 되어있습니다.</p>
+    <p>스마트폰을 가로로 돌려서 사용해 주세요.</p>
+  </div>
+  <!-- 모바일 세로화면 경고 End -->
+
+  <!-- BGM 경고 -->
+  <div class="background" id="sound_warning">
+    <i id="headset-icon">&#xf025;</i><br />
+    <p>시작 시 음악이 자동 재생됩니다.</p>
+    <p>스피커/이어폰을 준비해 주세요.</p><br />
+    <button type="button" class="custom_button" id="sound_warning_button">시작하기</button>
+  </div>
+  <!-- BGM 경고 End -->
+
+  <!-- 틀렸을 때 애니메이션 -->
+  <div id="wrong_effect"></div>
+  <!-- 틀렸을 때 애니메이션 End -->
+
+  <div class="display_none_background" id="authentication_check">
+    <img id="authentication_check_background" src="assets/entrance_bg.png" alt="사용 권한 확인 배경" />
+    <input type="text" class="input_box" id="authentication_check_input" />
+    <img id="authentication_check_confirm" src="assets/content_ok_button.png" alt="확인" />
+  </div>
+
+  <div class="display_none_background" id="main_menu">
+    <img id="main_menu_background" src="assets/1_bg.png" alt="메인 메뉴 배경" />
+    <img id="main_menu_button1" src="assets/1_duat_universe_button.png" alt="사자의 서 설정" />
+    <img id="main_menu_button2" src="assets/1_story_content_button.png" alt="스토리 모드" />
+    <img id="main_menu_button3" src="assets/1_story_book_button.png" alt="사자의 서 스토리북" />
+    <img id="main_menu_button4" src="assets/1_1+2_button.png" alt="1,2호점 통합페이지" />
+
+    <div id="main_menu_popup">
+      <img id="main_menu_popup_background" src="assets/1_content_popup_bg.png" alt="스토리 모드 팝업" />
+      <img id="main_menu_popup_close" src="assets/close_button.png" alt="X" />
+      <img id="main_menu_popup_confirm" src="assets/1_ok_popup_button.png" alt="확인" />
+    </div>
+
+    <div class="story_page" id="story_page_1">
+      <img class="story_page_background" src="assets/content1_bg.png" alt="스토리 페이지1" />
+      <img class="story_page_close" src="assets/close_button.png" alt="X" />
+      <img class="story_page_next" src="assets/content_next_button.png" alt="NEXT" />
+    </div>
+
+    <div class="story_page" id="story_page_2">
+      <img class="story_page_background" src="assets/content2_bg.png" alt="스토리 페이지2" />
+      <img class="story_page_close" src="assets/close_button.png" alt="X" />
+      <img class="story_page_back" src="assets/content_back_button.png" alt="BACK" />
+      <img class="story_page_next" src="assets/content_next_button.png" alt="NEXT" />
+    </div>
+
+    <div class="story_page" id="story_page_3">
+      <img class="story_page_background" src="assets/content3_bg.png" alt="스토리 페이지3" />
+      <img class="story_page_close" src="assets/close_button.png" alt="X" />
+      <img class="story_page_back" src="assets/content_back_button.png" alt="BACK" />
+      <input type="text" class="input_box" id="story_page_3_input" />
+      <img class="story_page_confirm" id="story_page_3_confirm" src="assets/content_ok_button.png" alt="확인" />
+      <img class="story_page_hint" id="story_page_3_hint" src="assets/content_hint_button.png" alt="HINT" />
+    </div>
+
+    <div class="story_page" id="story_page_3hint">
+      <img class="story_page_background" src="assets/content3_hint_bg.png" alt="스토리 페이지3" />
+      <img class="story_page_hint_close" src="assets/close_button.png" alt="X" />
+    </div>
+
+    <div class="story_page" id="story_page_4">
+      <img class="story_page_background" src="assets/content4_bg.png" alt="스토리 페이지4" />
+      <img class="story_page_close" src="assets/close_button.png" alt="X" />
+      <img class="story_page_back" src="assets/content_back_button.png" alt="BACK" />
+      <img class="story_page_next" src="assets/content_next_button.png" alt="NEXT" />
+    </div>
+
+    <div class="story_page" id="story_page_5">
+      <img class="story_page_background" src="assets/content5_bg.png" alt="스토리 페이지5" />
+      <img class="story_page_close" src="assets/close_button.png" alt="X" />
+      <img class="story_page_back" src="assets/content_back_button.png" alt="BACK" />
+      <img class="story_page_next" src="assets/content_next_button.png" alt="NEXT" />
+    </div>
+
+    <div class="story_page" id="story_page_6">
+      <img class="story_page_background" src="assets/content6_bg.png" alt="스토리 페이지6" />
+      <img class="story_page_close" id="story_page_6_close" src="assets/close_button.png" alt="X" />
+      <img class="story_page_back" id="story_page_6_back" src="assets/content_back_button.png" alt="BACK" />
+      <input type="text" class="input_box" id="story_page_6_input" />
+      <img class="story_page_confirm" id="story_page_6_confirm" src="assets/content_ok_button.png" alt="확인" />
+      <img class="story_page_hint" id="story_page_6_hint" src="assets/content_hint_button.png" alt="HINT" />
+
+      <div id="puzzle">
+        <div id="image_group1">
+          <img id="image1" class="draggable_image" src="assets/content6_let_black.png" alt="let_black">
+          <img id="image2" class="draggable_image" src="assets/content6_let_white.png" alt="let_white">
+        </div>
+        <div id="image_group2">
+          <img id="image3" class="draggable_image" src="assets/content6_us_black.png" alt="us_black">
+          <img id="image4" class="draggable_image" src="assets/content6_us_white.png" alt="us_white">
+        </div>
+        <div id="image_group3">
+          <img id="image5" class="draggable_image" src="assets/content6_red_black.png" alt="red_black">
+          <img id="image6" class="draggable_image" src="assets/content6_red_white.png" alt="red_white">
+        </div>
+        <div id="image_group4">
+          <img id="image7" class="draggable_image" src="assets/content6_crown_black.png" alt="crown_black">
+          <img id="image8" class="draggable_image" src="assets/content6_crown_white.png" alt="crown_white">
+        </div>
+        <div id="image_group5">
+          <img id="image9" class="draggable_image" src="assets/content6_campaign_black.png" alt="campaign_black">
+          <img id="image10" class="draggable_image" src="assets/content6_campaign_white.png" alt="campaign_white">
+        </div>
+        <div id="image_group6">
+          <img id="image11" class="draggable_image" src="assets/content6_project_black.png" alt="project_black">
+          <img id="image12" class="draggable_image" src="assets/content6_project_white.png" alt="project_white">
+        </div>
+        <div id="image_group7">
+          <img id="image13" class="draggable_image" src="assets/content6_get_black.png" alt="get_black">
+          <img id="image14" class="draggable_image" src="assets/content6_get_white.png" alt="get_white">
+        </div>
+      </div>
+    </div>
+
+    <div class="story_page" id="story_page_6hint">
+      <img class="story_page_background" src="assets/content6_hint_bg.png" alt="스토리 페이지6" />
+      <img class="story_page_hint_close" src="assets/close_button.png" alt="X" />
+    </div>
+
+    <div class="story_page" id="story_page_7">
+      <img class="story_page_background" src="assets/content7_bg.png" alt="스토리 페이지7" />
+      <img class="story_page_close" src="assets/close_button.png" alt="X" />
+      <img class="story_page_back" src="assets/content_back_button.png" alt="BACK" />
+      <img class="story_page_next" src="assets/content_next_button.png" alt="NEXT" />
+    </div>
+
+    <div class="story_page" id="story_page_8">
+      <img class="story_page_background" src="assets/content8_bg.png" alt="스토리 페이지8" />
+      <img class="story_page_close" src="assets/close_button.png" alt="X" />
+      <img class="story_page_back" src="assets/content_back_button.png" alt="BACK" />
+      <img class="story_page_next" src="assets/content_next_button.png" alt="NEXT" />
+    </div>
+
+    <div class="story_page" id="story_page_9">
+      <img class="story_page_background" src="assets/content9_bg.png" alt="스토리 페이지9" />
+      <img class="story_page_close" src="assets/close_button.png" alt="X" />
+      <img class="story_page_back" src="assets/content_back_button.png" alt="BACK" />
+      <input type="text" class="input_box" id="story_page_9_input" />
+      <img class="story_page_confirm" id="story_page_9_confirm" src="assets/content_ok_button.png" alt="확인" />
+      <img class="story_page_hint" id="story_page_9_hint" src="assets/content_hint_button.png" alt="HINT" />
+    </div>
+
+    <div class="story_page" id="story_page_9hint">
+      <img class="story_page_background" src="assets/content9_hint_bg.png" alt="스토리 페이지9" />
+      <img class="story_page_hint_close" src="assets/close_button.png" alt="X" />
+    </div>
+
+    <div class="story_page" id="story_page_10">
+      <img class="story_page_background" src="assets/content10_bg.png" alt="스토리 페이지10" />
+      <img class="story_page_close" src="assets/close_button.png" alt="X" />
+      <img class="story_page_back" src="assets/content_back_button.png" alt="BACK" />
+      <img class="story_page_next" src="assets/content_next_button.png" alt="NEXT" />
+    </div>
+
+    <div class="story_page" id="story_page_11">
+      <img class="story_page_background" src="assets/content11_bg.png" alt="스토리 페이지11" />
+      <img class="story_page_close" src="assets/close_button.png" alt="X" />
+      <img class="story_page_back" src="assets/content_back_button.png" alt="BACK" />
+      <input type="text" class="input_box" id="story_page_11_input" />
+      <img class="story_page_confirm" id="story_page_11_confirm" src="assets/content_ok_button.png" alt="확인" />
+      <img class="story_page_hint" id="story_page_11_hint" src="assets/content_hint_button.png" alt="HINT" />
+    </div>
+
+    <div class="story_page" id="story_page_11hint">
+      <img class="story_page_background" src="assets/content11_hint_bg.png" alt="스토리 페이지11" />
+      <img class="story_page_hint_close" src="assets/close_button.png" alt="X" />
+    </div>
+
+    <div class="story_page" id="story_page_12">
+      <img class="story_page_background" src="assets/content12_bg.png" alt="스토리 페이지12" />
+      <img class="story_page_close" src="assets/close_button.png" alt="X" />
+      <img class="story_page_back" src="assets/content_back_button.png" alt="BACK" />
+      <img class="story_page_next" src="assets/content_next_button.png" alt="NEXT" />
+    </div>
+
+    <div class="story_page" id="story_page_13">
+      <img class="story_page_background" src="assets/content13_bg.png" alt="스토리 페이지13" />
+      <img class="story_page_close" src="assets/close_button.png" alt="X" />
+      <img class="story_page_back" src="assets/content_back_button.png" alt="BACK" />
+      <input type="text" class="input_box" id="story_page_13_input" />
+      <img class="story_page_confirm" id="story_page_13_confirm" src="assets/content_ok_button.png" alt="확인" />
+      <img class="story_page_hint" id="story_page_13_hint" src="assets/content_hint_button.png" alt="HINT" />
+    </div>
+
+    <div class="story_page" id="story_page_13hint">
+      <img class="story_page_background" src="assets/content13_hint_bg.png" alt="스토리 페이지13" />
+      <img class="story_page_hint_close" src="assets/close_button.png" alt="X" />
+    </div>
+
+    <div class="story_page" id="story_page_14">
+      <img class="story_page_background" src="assets/content14_bg.png" alt="스토리 페이지14" />
+      <img class="story_page_close" src="assets/close_button.png" alt="X" />
+      <img class="story_page_back" src="assets/content_back_button.png" alt="BACK" />
+      <img class="story_page_next" src="assets/content_next_button.png" alt="NEXT" />
+    </div>
+
+    <div class="story_page" id="story_page_15">
+      <img class="story_page_background" src="assets/content15_bg.png" alt="스토리 페이지15" />
+      <img class="story_page_close" src="assets/close_button.png" alt="X" />
+      <img class="story_page_back" src="assets/content_back_button.png" alt="BACK" />
+      <input type="text" class="input_box" id="story_page_15_input" />
+      <img class="story_page_confirm" id="story_page_15_confirm" src="assets/content_ok_button.png" alt="확인" />
+      <img class="story_page_hint" id="story_page_15_hint" src="assets/content_hint_button.png" alt="HINT" />
+    </div>
+
+    <div class="story_page" id="story_page_15hint">
+      <img class="story_page_background" src="assets/content15_hint_bg.png" alt="스토리 페이지15" />
+      <img class="story_page_hint_close" src="assets/close_button.png" alt="X" />
+    </div>
+
+    <div class="story_page" id="story_page_16">
+      <img class="story_page_background" src="assets/content16_bg.png" alt="스토리 페이지16" />
+      <img class="story_page_close" src="assets/close_button.png" alt="X" />
+      <img class="story_page_back" src="assets/content_back_button.png" alt="BACK" />
+      <img class="story_page_next" src="assets/content_next_button.png" alt="NEXT" />
+    </div>
+
+    <div class="story_page" id="story_page_17">
+      <img class="story_page_background" src="assets/content17_bg.png" alt="스토리 페이지17" />
+      <img class="story_page_close" src="assets/close_button.png" alt="X" />
+      <img class="story_page_back" src="assets/content_back_button.png" alt="BACK" />
+      <img class="story_page_next" src="assets/content_next_button.png" alt="NEXT" />
+    </div>
+
+    <div class="story_page" id="story_page_18">
+      <img class="story_page_background" src="assets/content18_bg.png" alt="스토리 페이지18" />
+      <img class="story_page_close" src="assets/close_button.png" alt="X" />
+      <img class="story_page_back" src="assets/content_back_button.png" alt="BACK" />
+      <input type="text" class="input_box" id="story_page_18_input" />
+      <img class="story_page_confirm" id="story_page_18_confirm" src="assets/content_ok_button.png" alt="확인" />
+      <img class="story_page_hint" id="story_page_18_hint" src="assets/content_hint_button.png" alt="HINT" />
+    </div>
+
+    <div class="story_page" id="story_page_18hint">
+      <img class="story_page_background" src="assets/content18_hint_bg.png" alt="스토리 페이지18" />
+      <img class="story_page_hint_close" src="assets/close_button.png" alt="X" />
+    </div>
+
+    <div class="story_page" id="story_page_19">
+      <div class="glitch"></div>
+      <img class="story_page_close" src="assets/close_button.png" alt="X" />
+      <img class="story_page_back" src="assets/content_back_button.png" alt="BACK" />
+      <img id="story_page_19_delete" src="assets/content19_delete_button.png" alt="DELETE" />
+      <div class="gif-container"></div>
+    </div>
+
+    <div id="story_page_popup">
+      <img id="story_page_popup_background" src="assets/content21_popup_bg.png" alt="스토리 모드 팝업" />
+      <img id="story_page_popup_close" src="assets/close_button.png" alt="X" />
+      <img id="story_page_popup_confirm" src="assets/content21_popup_ok_button.png" alt="확인" />
+    </div>
+  </div>
+
+  <script type="text/javascript" src="script.js?v=2"></script>
+</body>
+
+</html>
