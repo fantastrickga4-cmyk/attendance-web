@@ -1,0 +1,830 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-NNM0PD41NF"></script>
+  <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      gtag('js', new Date());
+
+      gtag('config', 'G-NNM0PD41NF');
+  </script>
+  <!-- Google tag (gtag.js) End -->
+  
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>SNAKE DATABASE SYSTEM</title>
+  <meta name="description" content="판타스트릭 1호점 - 태초의 신부 이브프로젝트 히든페이지">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="SNAKE DATABASE SYSTEM">
+  <meta property="og:description" content="판타스트릭 1호점 - 태초의 신부 이브프로젝트 히든페이지">
+  <meta property="og:image" content="../assets/ogImage.png">
+  <link rel="icon" type="image/x-icon" href="../assets/favicon.png">
+  <link rel="shortcut icon" type="image/x-icon" href="../assets/favicon.png">
+
+  <link rel="stylesheet" type="text/css" href="style.css?v=10">
+  <script src="https://kit.fontawesome.com/c98d0d8afa.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+  <!-- BGM Assets -->
+  <audio loop id="bgm1" src="../assets/mainBGM.mp3"></audio>
+  <audio loop id="bgm2" src="../assets/storyBGM.mp3"></audio>
+  <audio id="errSe" src="../assets/wrong.mp3"></audio>
+  <!-- BGM Assets End -->
+  
+  <!-- 모바일 세로화면 경고 -->
+  <div id="mobile_warning">
+    <p>
+      <img src="../assets/rotate.png" alt="가로로 회전" style="max-width: 90%" /><br /><br />
+      본 페이지는 가로 화면에 최적화 되어있습니다<br /><br />
+      스마트폰을 가로로 돌려서 사용해 주세요
+    </p>
+  </div>
+  <!-- 모바일 세로화면 경고 End -->
+
+  <!-- BGM 경고 -->
+  <div id="before_load" style="z-index: 999">
+    <p id="before_chk" style="opacity: 0">
+      <i class="fas fa-headphones"></i><br /><br />
+      시작 시 음악이 자동 재생됩니다.<br />스피커/이어폰을
+      준비해 주세요.<br /><br />
+      <a href="javascript:void(0)" onclick="readyGo()" id="ready_btn" style="opacity: 0">시작하기</a>
+    </p>
+  </div>
+  <!-- BGM 경고 End -->
+
+  <section id="title" style="display: none">
+    <div id="bg-wrap" class="loading">
+      <img src="assets/snake.png" />
+    </div>
+    <div id="bg-wrap" class="loaded" style="display: none">
+      <img src="assets/snake.png" />
+    </div>
+
+    <div id="login">
+      <header>
+        <h1 class="strokeTxt">SNAKE DATABASE SYSTEM</h1>
+      </header>
+      <section id="login_area" style="display: none">
+        <p class="close_popup">
+          <a href="javascript:void(0)" onclick="closePop(0)">
+            <i class="far fa-window-close"></i>
+          </a>
+        </p>
+        <div id="login_card">
+          <p class="info_bar">
+            타겟의 진짜 이름으로 연속된<br />15자리 핀 번호를 입력하시기
+            바랍니다.
+          </p>
+          <div class="secondary_area">
+            <label for="login_pw" class="secondary_label">PASSWORD</label>
+            <br />
+            <input type="password" id="login_pw" name="login_pw" class="answer-input"
+              onkeyup="if( event.keyCode == 13 ){answerInput(0)}" /><br />
+            <p class="secondary_bottom">
+            <p style="display:flex; flex-wrap:nowrap; justify-content: space-between;">
+              <span class="secondary_txt">F</span>
+              <span class="secondary_txt">I</span>
+              <span class="secondary_txt">R</span>
+              <span class="secondary_txt">S</span>
+              <span class="secondary_txt"></span>
+              <span class="secondary_txt">T</span>
+              <span class="secondary_txt">F</span>
+              <span class="secondary_txt">O</span>
+              <span class="secondary_txt">U</span>
+              <span class="secondary_txt">N</span>
+              <span class="secondary_txt">D</span>
+              <span class="secondary_txt"></span>
+              <span class="secondary_txt">B</span>
+              <span class="secondary_txt">R</span>
+              <span class="secondary_txt">I</span>
+              <span class="secondary_txt">D</span>
+              <span class="secondary_txt">E</span>
+              <span class="secondary_txt"></span>
+              <span class="secondary_txt"></span>
+              <span class="secondary_txt"></span>
+            </p>
+            <p class="second" style="display:flex; flex-wrap:nowrap; justify-content: space-between;">
+              <span class="secondary_txt">①</span>
+              <span class="secondary_txt">①</span>
+              <span class="secondary_txt">①</span>
+              <span class="secondary_txt"></span>
+              <span class="secondary_txt"></span>
+              <span class="secondary_txt"></span>
+              <span class="secondary_txt">②</span>
+              <span class="secondary_txt"></span>
+              <span class="secondary_txt"></span>
+              <span class="secondary_txt"></span>
+              <span class="secondary_txt">①</span>
+              <span class="secondary_txt"></span>
+              <span class="secondary_txt"></span>
+              <span class="secondary_txt">②</span>
+              <span class="secondary_txt">②</span>
+              <span class="secondary_txt">②</span>
+              <span class="secondary_txt"></span>
+              <span class="secondary_txt"></span>
+              <span class="secondary_txt"></span>
+              <span class="secondary_txt"></span>
+            </p>
+            </p>
+          </div>
+          <div class="boxInCard"></div>
+        </div>
+        <a href="javascript:void(0)" class="hint-trigger login" data-hint-trigger="0" style="display:none">HINT</a>
+        <div class="hint_area login" data-hint="0" style="display: none">
+          <div class="hint_card">
+            <div class="hint-step step-hint">
+              <div class="hint-header"><span class="hint-tag">▼ HINT</span><span class="hint-id">#00 / LOGIN</span></div>
+              <div class="hint-body" data-hint-text="0">카드 뒷면의 숫자 15자리가 화면상의 문자 first found bride에 1대1로 대응이 됩니다. 각 알파벳이 숫자로 대응되고, 테마를 플레이하면서 알아내셨던 타겟의 진짜 이름으로 문자를 재배열한 뒤, 각 알파벳에 앞의 숫자를 대입해 15자리의 숫자를 입력해 주시면 됩니다. 타겟의 진짜 이름이 기억 안 나시면 포스터를 확인해 주세요!</div>
+              <div class="hint-actions"><a href="javascript:void(0)" class="btn-show-answer">▶ SHOW ANSWER</a><a href="javascript:void(0)" class="btn-close-hint">✕ CLOSE</a></div>
+            </div>
+            <div class="hint-step step-answer" style="display: none">
+              <div class="hint-header"><span class="hint-tag answer">▶ ANSWER</span><span class="hint-id">#00 / LOGIN</span></div>
+              <div class="hint-body answer-value">789603692065531</div>
+              <div class="hint-body answer-explain" data-answer-explain="0">숫자 15자리</div>
+              <div class="hint-actions"><a href="javascript:void(0)" class="btn-back-to-hint">◄ BACK TO HINT</a><a href="javascript:void(0)" class="btn-close-hint">✕ CLOSE</a></div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section id="loading_area" style="display: none">
+        <p class="strokeTxt loadTxt">NOW LOADING</p>
+        <div class="loadBar_wrap">
+          <div id="loadBar"></div>
+        </div>
+        <p class="strokeTxt percent"><span id="pNum">00</span>%</p>
+      </section>
+      <section id="start_area" style="display: none">
+        <a href="javascript:void(0);" id="start_btn" class="strokeTxt">
+          <span>SYSTEM LOGIN</span>
+        </a>
+      </section>
+    </div>
+  </section>
+
+  <section id="main_wrap" style="display: none">
+    <div id="main_area">
+      <h2 id="main_title" class="strokeTxt">SNAKE DATABASE SYSTEM</h2>
+      <h2 id="main_title2" class="strokeTxt">
+        ● F.E.U
+        <p style="float: right; font-size: 0.8em; padding-top: 5px">
+          &nbsp;(FANTASTRICK ESCAPE UNIVERSE)
+        </p>
+      </h2>
+      <div id="main_menu_list">
+        <ul id="menu_list">
+          <li>
+            <a href="javascript:void(0);" class="menu_btn" class="strokeTxt" onclick="openSubPage(1)">
+              <span> F.E.U 설정 </span>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="menu_btn" class="strokeTxt" onclick="openSubPage(2)">
+              <span> F.E.U EP1. 태초의 신부: 이브 프로젝트 스토리 </span>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="menu_btn" class="strokeTxt" onclick="soon()">
+              <span> 사이드 에피소드(야외방탈출) </span>
+            </a>
+          </li>
+        </ul>
+      </div>
+      <div id="subpage_area" style="display: none">
+        <div id="close_btn" onclick="closeIt()"></div>
+        <!-- 설정 시작 -->
+        <div class="subpage_content" data-content="1" style="display: none">
+          <div class="page">
+            <h3 class="subTitle strokeTxt">
+              F.E.U (FANTASTRICK ESCAPE UNIVERSE)
+            </h3>
+            <p>
+              [성물]이라고 불리는 신비한 힘을 갖고 있는 물건들이 존재하는<br />
+              현실에 기초한 판타지 세계입니다.
+            </p>
+            <p>
+              세계관 속 사람들도 [성물]과 그 힘에 대해서 알고 있고 당연시 하고
+              있습니다.
+            </p>
+            <p>
+              세계관 속 [성물]은 대중에 공개된 것들도 있지만 아직 발견되지
+              않은 채 <br />전설과 신화로 전해지고 있는 것들도 있습니다.
+            </p>
+            <p>
+              세계관 속에 고유한 초능력을 갖고 있는 인물이 등장하지는
+              않습니다.
+            </p>
+            <p>
+              다만 [성물]이라고 부르는 물건 혹은 현상을 이용하면 M.C.U의
+              히어로들처럼 <br />초능력을 사용하거나 초자연적 현상을 일으킬 수
+              있습니다.
+            </p>
+          </div>
+          <div class="page" style="display: none">
+            <h3 class="subTitle strokeTxt">[성물]이란</h3>
+            <p>
+              [성물]이라고 불리는 물질 혹은 현상들은 각국의 신화, 설화 뿐
+              아니라 여러 종교에서 말하는 신성한 물건 및 이적들을 세계관
+              속에서 통칭하여 부르는 개념입니다.
+            </p>
+            <p>
+              [성물]은 각각의 고유한 능력이 깃들어 있으며, 과거에 이
+              [성물]들이 보여준 능력이나 초자연적 현상들이 후대에 신화, 설화
+              등으로 전해지게 됐다고 생각하면 이해가 빠를것입니다.
+            </p>
+            <p>
+              [성물]은 발견되지 않거나 규명되지 않아 단지 신비한 현상으로만
+              치부되고 있는 것들도 있는 반면, 발견되어 형태를 띄고 시설에
+              보관되는 것과 개인에 의해 보관 혹은 사용되고 있는 것들도 있습니다.
+            </p>
+            <p>
+              [성물]은 고유한 능력에 따라 소유한 사람에게 [성물]의 힘을
+              사용하여 초능력이나 초자연적 현상을 일으키게 할 수도 있어
+              암흑가에서 고가에 거래된다고 알려져 있습니다.
+            </p>
+            <p>
+              본 테마에서 등장하는 [태초의 신부] 역시 창세기에 등장하는
+              [선악과의 씨앗]으로 [선악과]를 탐하면 죽음을 면하지 못 한다는
+              구절을 빌어 씨앗이 자라나 나무가 되는 과정에서 에덴동산이라는
+              공간적 배경과 더불어 ‘주변을 초토화 할 수 있을 정도의 대규모
+              자연화가 일어난다’라는 능력을 부여하게 되었습니다.
+            </p>
+          </div>
+          <div class="page" style="display: none">
+            <h3 class="subTitle strokeTxt">[ADAM Inc.]란?</h3>
+            <p>
+              [ADAM]은 [성물]을 관리하는 세계적 보안 기업으로 중립자적
+              입장에서 [성물]을 관리 함으로써 어느 한 국가가 [성물]의 힘을
+              이용해 세계적 힘의 균형을 깨는 것을 방지하고 있습니다.
+            </p>
+
+            <p>
+              [ADAM]은 강대국의 지원을 받아 운영되고 있으며, 세계 기구적인
+              역할을 수행하고 있습니다.
+            </p>
+
+            <p>
+              [성물]들은 아담이 직접 설계하고 관리하는 보호 관리 시설에서
+              관리되는데, 세계 각국의 이해관계를 고려하여 각 나라별로 그 보호
+              관리 시설을 비밀리에 설치하였으며, 보호 관리하는 [성물]의 정보는
+              기밀 사항으로 정해져 있습니다.
+            </p>
+
+            <p>
+              [ADAM]은 이와 같은 [성물]을 보호 관리하는 한 편, [성물]의 특성과
+              힘을 연구하여 활용 방안과 유사시를 대비하는 역할도 겸하고
+              있습니다.
+            </p>
+          </div>
+          <div class="page" style="display: none">
+            <h3 class="subTitle strokeTxt">태초의 신부(FIRST FOUND BRIDE)</h3>
+            <p>1) [태초의 신부]라는 단어의 탄생 배경</p>
+            <p class="small_txt">
+              [선악과(FORBIDDEN FRUITS)]의 [아나그램]으로 만들어낸 단어입니다.
+            </p>
+
+            <p class="small_txt">
+              [선악과]와 [아담과 이브]이야기를 모티프로 [선악과]의 영문단어를
+              이용하여 [아나그램]을 통해 이브를 상징할 수 있도록 하였습니다.
+            </p>
+
+            <p>2) 세계관 속 [태초의 신부]란?</p>
+            <p class="small_txt">
+              세계관 속에 등장하는 미공개 [성물] 중 하나로 [ADAM Inc.]에서
+              보관 중인 [성물]이며, [태초의 신부]는 [ADAM]에서 부르는 해당
+              [성물]의 명칭으로 진짜 정체는 [선악과의 씨앗]입니다.
+            </p>
+
+            <p class="small_txt">
+              물과 반응하여 엄청난 생명력으로 주변을 초목화(자연화)하는 능력을
+              가졌으며, 지속적으로 자라날 경우 모든 주변 문명을 자연 상태로
+              회귀시킬 수 있는 사용 여부에 따라 위험 할 수 있는 [성물]에
+              속합니다.
+            </p>
+
+            <p class="small_txt">
+              스토리 중 [스네이크]는 이 능력을 오인하여 [태초의 신부]가 강력한
+              파괴 무기라고 판단 하여 자신의 계획을 위해 탈취를 계획하였다는
+              설정을 가지고 있습니다.
+            </p>
+          </div>
+        </div>
+        <!-- 설정 끝 -->
+        <!-- 메인 시작 -->
+        <div class="subpage_content" data-content="2" style="display: none">
+          <div class="page" style="display: none">
+            <h3 class="subTitle strokeTxt" style="display: none">
+              메인 스토리 1
+            </h3>
+            <p>
+              허허 할아버지 이야기가 그렇게 재미 있니? 맨날 똑같은 이야기인데
+              말이다.
+            </p>
+
+            <p>뭐? 들을 때마다 조금씩 달라져서 듣는 맛이 있다고?</p>
+
+            <p>이 할애비가 늙어서 기억력이 가물가물해졌나 보구나.</p>
+
+            <p>
+              어디 보자… 그러니까 옛날에 말이다, 할애비가 한창 혈기왕성 할
+              때였지.
+            </p>
+
+            <p>
+              무서운 걸 모르고, 돈이 되는 일이면 뭐든 했을 때가 있었단다.
+              부끄러운 일이지만 범죄도 서슴지 않았었지.
+            </p>
+
+            <p>
+              그렇게 지내던 도중 어떤 보물에 관한 이야기를 듣게 됐단다.
+              [태초의 신부]라 알려진 값을 매길 수 없는 엄청나게 비싼 보석을
+              [아담]이라고하는 보안업체에서 보관하고 있다는 이야기였지.
+            </p>
+          </div>
+          <div class="page" style="display: none">
+            <h3 class="subTitle strokeTxt" style="display: none">
+              메인 스토리 2
+            </h3>
+            <p>
+              이 할애비와 그때의 동료들은 곧 바로 [태초의 신부]에 대한 정보를
+              수집했고, 그러던 중… 그 사람이 우리에게 먼저 연락을 해왔단다.
+            </p>
+
+            <p class="yellow-bold">
+              “반갑습니다. 여러분들이 [태초의 신부]를 쫓고 있다는 것을 알고
+              있습니다. [태초의 신부]를 훔칠 수만 있다면 여러분이 생각하는
+              금액을 보수로 드리도록 하겠습니다. 모든 작전이 준비되어 있으니
+              참여 의사가 있으시다면 첨부한 카드를 통해 암호를 해독하고
+              접선장소로 와주시기 바랍니다.” <br />–스네이크
+            </p>
+
+            <p>
+              굉장히 꺼림직 하긴 했지만 [스네이크]라면 그 당시 소문난 범죄
+              기획자였기때문에 우리는 속는 셈 치고 접선장소로 나가기로 했었지…
+            </p>
+
+            <p>
+              아… 그 암호 말이냐? 가물가물하긴 한데… 옳지!! 이 할애비가 한번
+              기억나는 대로 만들어 볼 테니 직접 풀어 보겠니?
+            </p>
+          </div>
+          <div class="page" style="display: none">
+            <h3 class="subTitle strokeTxt" style="display: none">
+              메인 스토리 3
+            </h3>
+            <p>
+              첫 줄은 <span class="red-bold">THE LUST</span>란다. 그럼 두번째
+              줄은 뭐가 될 것 같으니?
+            </p>
+            <div id="trumpArea">
+              <img src="assets/card.png" />
+            </div>
+            <a href="javascript:void(0)" class="hint-trigger" data-hint-trigger="1" style="display:none">HINT</a>
+            <div class="hint_area" data-hint="1" style="display: none">
+              <div class="hint_card">
+                <div class="hint-step step-hint">
+                  <div class="hint-header"><span class="hint-tag">▼ HINT</span><span class="hint-id">#01 / STORY 3</span></div>
+                  <div class="hint-body" data-hint-text="1">윗 줄의 각 카드가 THE LUST 라는 글자에 매칭이 되고 있습니다. 규칙을 찾아보시면 순서대로 다이아 A~K는 알파벳 A~M에, 스페이드 A~K는 알파벳 N~Z에 순서대로 매칭이 되고 있습니다. 아랫 줄에 해당하는 알파벳을 입력해주시면 됩니다.</div>
+                  <div class="hint-actions"><a href="javascript:void(0)" class="btn-show-answer">▶ SHOW ANSWER</a><a href="javascript:void(0)" class="btn-close-hint">✕ CLOSE</a></div>
+                </div>
+                <div class="hint-step step-answer" style="display: none">
+                  <div class="hint-header"><span class="hint-tag answer">▶ ANSWER</span><span class="hint-id">#01 / STORY 3</span></div>
+                  <div class="hint-body answer-value">VIP ROOM</div>
+                  <div class="hint-body answer-explain" data-answer-explain="1">영문 대문자, 공백 포함 (7자)</div>
+                  <div class="hint-actions"><a href="javascript:void(0)" class="btn-back-to-hint">◄ BACK TO HINT</a><a href="javascript:void(0)" class="btn-close-hint">✕ CLOSE</a></div>
+                </div>
+              </div>
+            </div>
+            <div class="answer_area" style="display: none" data-quiz="1">
+
+              <p class="close_popup">
+                <a href="javascript:void(0)" onclick="closePop(1)">
+                  <i class="far fa-window-close"></i>
+                </a>
+              </p>
+              <div class="answer_card">
+                <p>영문 대문자</p>
+                <input type="text" id="quiz1" name="quiz1" class="answer-input"
+                  onkeyup="if( event.keyCode == 13 ){answerInput(1)}" />
+                <a href="javascript:void(0)" onclick="answerInput(1)" class="answer-btn">입력</a>
+              </div>
+            </div>
+          </div>
+          <div class="page" style="display: none">
+            <h3 class="subTitle strokeTxt" style="display: none">
+              메인 스토리 4
+            </h3>
+            <p>
+              [더 러스트]바로 도착한 우리에게 [스네이크]는 엄청난 금액의
+              보수를 보여줬고, 우리는 고민할 것도 없이 작전에 참여하게 됐지.
+            </p>
+
+            <p>
+              그렇게 본격적인 작전회의가 시작되었는데, [태초의 신부]는 우리가
+              생각했던 그런 물건이 아니었단다.
+            </p>
+
+            <p>
+              값비싼 보석이나 희귀한 광석 같은 걸 줄 알았는데, 알고 보니
+              굉장한 힘을 지닌 [성물]이더구나.
+            </p>
+
+            <p>
+              왼쪽의 서류의 내용들을 알려주며 회의가 진행됐고, 제대로
+              이해했는지 확인을 해보겠다며 테스트를 했지.
+            </p>
+
+            <p>
+              서류를 읽고 아래의 표에서 어느 칸인지 확인을 한 뒤 대답을 했어야
+              했었지.
+            </p>
+          </div>
+          <div class="page" style="display: none">
+            <h3 class="subTitle strokeTxt" style="display: none">
+              메인 스토리 5
+            </h3>
+            <p>
+              이 서류와 표를 보고 한 번 답해 보겠니? 아마
+              <span class="red-bold">영어를 보고 한글로 대답을 했던 것 같구나.</span>
+            </p>
+            <div id="quiz2">
+              <img src="assets/quiz2.png" style="width: 100%" />
+            </div>
+            <a href="javascript:void(0)" class="hint-trigger" data-hint-trigger="2" style="display:none">HINT</a>
+            <div class="hint_area" data-hint="2" style="display: none">
+              <div class="hint_card">
+                <div class="hint-step step-hint">
+                  <div class="hint-header"><span class="hint-tag">▼ HINT</span><span class="hint-id">#02 / STORY 5</span></div>
+                  <div class="hint-body" data-hint-text="2">오른쪽의 표는 키보드와 대응이 되고 있습니다. 왼쪽 서류의 내용들을 위에서부터 순서대로 키보드에서 찾아 눌러보면 영어로 "right of red"라는 단어가 나옵니다. 그 내용대로 빨간색 숫자의 오른쪽에 있는 키를 한글로 순서대로 눌러보시면 한글 정답이 나오게 됩니다.</div>
+                  <div class="hint-actions"><a href="javascript:void(0)" class="btn-show-answer">▶ SHOW ANSWER</a><a href="javascript:void(0)" class="btn-close-hint">✕ CLOSE</a></div>
+                </div>
+                <div class="hint-step step-answer" style="display: none">
+                  <div class="hint-header"><span class="hint-tag answer">▶ ANSWER</span><span class="hint-id">#02 / STORY 5</span></div>
+                  <div class="hint-body answer-value">선악과</div>
+                  <div class="hint-body answer-explain" data-answer-explain="2">한글 (3자)</div>
+                  <div class="hint-actions"><a href="javascript:void(0)" class="btn-back-to-hint">◄ BACK TO HINT</a><a href="javascript:void(0)" class="btn-close-hint">✕ CLOSE</a></div>
+                </div>
+              </div>
+            </div>
+            <div class="answer_area" style="display: none" data-quiz="2">
+              <p class="close_popup">
+                <a href="javascript:void(0)" onclick="closePop(2)">
+                  <i class="far fa-window-close"></i>
+                </a>
+              </p>
+              <div class="answer_card">
+                <p>&nbsp;</p>
+                <input type="text" id="quiz2" name="quiz2" class="answer-input"
+                  onkeyup="if( event.keyCode == 13 ){answerInput(2)}" />
+                <a href="javascript:void(0)" onclick="answerInput(2)" class="answer-btn">입력</a>
+              </div>
+            </div>
+          </div>
+          <div class="page" style="display: none">
+            <h3 class="subTitle strokeTxt" style="display: none">
+              메인 스토리 6
+            </h3>
+            <p>
+              작전회의를 마친 뒤 우리는 [에덴거리]로 잠입할 수 있었지.
+              [에덴거리]는 마치 하나의 거대한 금고 같았단다.
+            </p>
+
+            <p>
+              7개의 가게에 보안을 걸어 놓고, 모든 보안을 해제해야 지하의
+              시설에 안전하게 보관되어 있던 [태초의 신부]가 지상으로 올라오게
+              되는 구조였지. 보안을 해제한 이야기는 저번에 자세히 해줬으니
+              오늘은 간단히 이야기 하고 넘어 가자꾸나.
+            </p>
+
+            <div id="quiz3_area">
+              <img src="assets/quiz3.png" />
+            </div>
+
+            <p>
+              거리가 어떤 구조였는지 이야기를 해줬었나…? <br />
+              오 그래, 대략 이런 구조였단다.
+            </p>
+
+            <p class="red-bold">
+              우리는 보안을 해제하기위해 먼저 명품점과 <br />
+              구두가게를 제외한 가게를 한바퀴 둘러봤단다.<br />
+              그 후엔 가판대를 제외한 나머지 가게를 <br />
+              둘러보면서 보안을 해제했지.<br />
+              마지막으로 명품점과 가판대 식료품점 구두가게를<br />
+              다시 확인했더니 거리의 보안이 해제가 됐었단다.
+            </p>
+            <a href="javascript:void(0)" class="hint-trigger" data-hint-trigger="3" style="display:none">HINT</a>
+            <div class="hint_area" data-hint="3" style="display: none">
+              <div class="hint_card">
+                <div class="hint-step step-hint">
+                  <div class="hint-header"><span class="hint-tag">▼ HINT</span><span class="hint-id">#03 / STORY 6</span></div>
+                  <div class="hint-body" data-hint-text="3">거리의 구조를 보시면 디지털 숫자 모양과 비슷하게 생겼습니다. 빨간색 글씨 부분을 보시면 총 세 번 거리를 둘러봤는데, 각각 따로 둘러본 거리의 가게들만 거리의 구조에서 남겨두시면 디지털 숫자를 발견하실 수 있습니다.</div>
+                  <div class="hint-actions"><a href="javascript:void(0)" class="btn-show-answer">▶ SHOW ANSWER</a><a href="javascript:void(0)" class="btn-close-hint">✕ CLOSE</a></div>
+                </div>
+                <div class="hint-step step-answer" style="display: none">
+                  <div class="hint-header"><span class="hint-tag answer">▶ ANSWER</span><span class="hint-id">#03 / STORY 6</span></div>
+                  <div class="hint-body answer-value">204</div>
+                  <div class="hint-body answer-explain" data-answer-explain="3">숫자 (3자)</div>
+                  <div class="hint-actions"><a href="javascript:void(0)" class="btn-back-to-hint">◄ BACK TO HINT</a><a href="javascript:void(0)" class="btn-close-hint">✕ CLOSE</a></div>
+                </div>
+              </div>
+            </div>
+            <div class="answer_area" style="display: none" data-quiz="3">
+              <p class="close_popup">
+                <a href="javascript:void(0)" onclick="closePop(3)">
+                  <i class="far fa-window-close"></i>
+                </a>
+              </p>
+              <div class="answer_card">
+                <p>&nbsp;</p>
+                <input type="text" id="quiz3" name="quiz3" class="answer-input"
+                  onkeyup="if( event.keyCode == 13 ){answerInput(3)}" />
+                <a href="javascript:void(0)" onclick="answerInput(3)" class="answer-btn">입력</a>
+              </div>
+            </div>
+          </div>
+          <div class="page" style="display: none">
+            <h3 class="subTitle strokeTxt" style="display: none">
+              메인 스토리 7
+            </h3>
+            <p>
+              우린 보안을 해제한 줄 알았지만 예기치 못한 일이 일어났지. 본사
+              쪽에서 이상을 감지하고 원격으로 시스템 락을 걸어버렸단다. 우리는
+              당황했지만 [스네이크]는 발빠르게 ‘플랜 B’를 가동시켰지…
+            </p>
+
+            <p>
+              아까 전에 설명해줬던 물에 반응한다는 [태초의 신부]의 특성
+              기억나니? 정확히는 모르지만 엄청난 힘이 발생된 다는 걸
+              알고있었기에 그 힘을 이용해서 챔버 내부로 들어갈 작전을
+              실행하기로 했지.
+            </p>
+
+            <p>
+              <span class="yellow-bold">‘[하수처리 시설]에는 두개의 하수 구역이 있었는데, S구역에
+                휘발성 물질을 가득 채운 뒤 폭파 시켜 [에덴거리] 전역에 균열을
+                만들고 B구역에 물을 흘려 보내서 균열을 통해 [태초의 신부]와
+                물을 접촉시키는 것’</span>이었어.
+            </p>
+
+            <p>
+              그 결과 물과 접촉하면 폭발적인 성장을 하는 [태초의 신부]의
+              특성으로 챔버 내부로부터 [선악과의 나무]가 된 [태초의 신부]가
+              균열을 만들며 밖으로 뻗어 나왔고, 우린 그 틈에 안쪽으로 들어갈
+              수 있었단다.
+            </p>
+          </div>
+          <div class="page" style="display: none">
+            <h3 class="subTitle strokeTxt" style="display: none">
+              메인 스토리 8
+            </h3>
+            <p>
+              물론 이건 우리가 챔버 안으로 들어가서야 알게 된 사실이고, 처음
+              B구역에 물을 흘려 보낼 땐 우리는 다른 예측을 하고 잔뜩 긴장을
+              하고 있었단다.
+            </p>
+
+            <p>무슨 상상을 하고 있었는지 맞춰 보겠니?</p>
+            <div id="quiz4_area" style="text-align: center">
+              <img src="assets/quiz4.png" />
+            </div>
+            <a href="javascript:void(0)" class="hint-trigger" data-hint-trigger="4" style="display:none">HINT</a>
+            <div class="hint_area" data-hint="4" style="display: none">
+              <div class="hint_card">
+                <div class="hint-step step-hint">
+                  <div class="hint-header"><span class="hint-tag">▼ HINT</span><span class="hint-id">#04 / STORY 8</span></div>
+                  <div class="hint-body" data-hint-text="4">왼쪽의 S라인의 경우 S를 숫자로 치환(몇 번째 알파벳인지)해주신 뒤 계산을 해보면 19 1 6 5 라는 숫자가 나오는데 SAFE라는 단어가 나옵니다. 똑같이 B라인에서 진행해주시고 나온 영단어를 입력해주시면 됩니다.</div>
+                  <div class="hint-actions"><a href="javascript:void(0)" class="btn-show-answer">▶ SHOW ANSWER</a><a href="javascript:void(0)" class="btn-close-hint">✕ CLOSE</a></div>
+                </div>
+                <div class="hint-step step-answer" style="display: none">
+                  <div class="hint-header"><span class="hint-tag answer">▶ ANSWER</span><span class="hint-id">#04 / STORY 8</span></div>
+                  <div class="hint-body answer-value">BOOM</div>
+                  <div class="hint-body answer-explain" data-answer-explain="4">영문 대문자 (4자)</div>
+                  <div class="hint-actions"><a href="javascript:void(0)" class="btn-back-to-hint">◄ BACK TO HINT</a><a href="javascript:void(0)" class="btn-close-hint">✕ CLOSE</a></div>
+                </div>
+              </div>
+            </div>
+            <div class="answer_area" style="display: none" data-quiz="4">
+              <p class="close_popup">
+                <a href="javascript:void(0)" onclick="closePop(4)">
+                  <i class="far fa-window-close"></i>
+                </a>
+              </p>
+              <div class="answer_card">
+                <p>영문 대문자</p>
+                <input type="text" id="quiz4" name="quiz4" class="answer-input"
+                  onkeyup="if( event.keyCode == 13 ){answerInput(4)}" />
+                <a href="javascript:void(0)" onclick="answerInput(4)" class="answer-btn">입력</a>
+              </div>
+            </div>
+          </div>
+          <div class="page" style="display: none">
+            <h3 class="subTitle strokeTxt" style="display: none">
+              메인 스토리 9
+            </h3>
+            <p>
+              그렇게 우리는 무사히 챔버 내부로 진입했지만 앞에서 말했듯이
+              [태초의 신부]는 물과 접촉하여 이미 발아한 상태였단다.
+            </p>
+
+            <p>나무가 되어 있었지.</p>
+
+            <p>
+              우리의 목표는 나무가 아닌 [선악과의 씨앗]이였기때문에 우리는
+              [선악과의 나무]를 더 성장시켜서 열매가 열리도록 하기로 했지.
+            </p>
+
+            <p>
+              [선악과]를 자라게 하려면 온도, 조도, 습도를 조절해야 했는데,
+              <span class="red-bold">각각의 요소들을 공급 하면 왼쪽부터 온도 조도 습도 중 공급된
+                부분의 나무만 자라났단다.</span>
+            </p>
+
+            <p>
+              그래서 우리는 [스네이크]에게 받은 매뉴얼 대로 각 요소를 공급을
+              했단다.
+            </p>
+          </div>
+          <div class="page" style="display: none">
+            <h3 class="subTitle strokeTxt" style="display: none">
+              메인 스토리 10
+            </h3>
+            <p class="red-bold">
+              각 요소를 공급 하면 공급된 부분의 나무만 자라났단다.
+            </p>
+
+            <p>
+              그래서 우리는 [스네이크]에게 받은 오른쪽의 매뉴얼 대로 각 요소를
+              공급을 했단다. 그리고는 어떻게 됐다고 했었지?
+            </p>
+
+            <div id="quiz5_area">
+              <img src="assets/quiz5.png" class="image-zoomable" title="클릭하면 확대됩니다"
+                style="position:absolute; bottom:0; left:50%; transform:translateX(-50%); max-width:856px" />
+            </div>
+            <a href="javascript:void(0)" class="hint-trigger" data-hint-trigger="5" style="display:none">HINT</a>
+            <div class="hint_area" data-hint="5" style="display: none">
+              <div class="hint_card">
+                <div class="hint-step step-hint">
+                  <div class="hint-header"><span class="hint-tag">▼ HINT</span><span class="hint-id">#05 / STORY 10</span></div>
+                  <div class="hint-body" data-hint-text="5">성장 매뉴얼에 따라서 각 요소를 공급했을 때 해당 부분의 나무만 자라난다고 생각해주시면 됩니다. 입력을 한 부분이 이미 입력된 부분의 아래에 추가적으로 들어간다고 생각해주시면 되고, 첫 번째, 두 번째, 마지막에서 각각 알파벳 한 자리씩 나온 것을 입력해주시면 됩니다.</div>
+                  <div class="hint-actions"><a href="javascript:void(0)" class="btn-show-answer">▶ SHOW ANSWER</a><a href="javascript:void(0)" class="btn-close-hint">✕ CLOSE</a></div>
+                </div>
+                <div class="hint-step step-answer" style="display: none">
+                  <div class="hint-header"><span class="hint-tag answer">▶ ANSWER</span><span class="hint-id">#05 / STORY 10</span></div>
+                  <div class="hint-body answer-value">ESC</div>
+                  <div class="hint-body answer-explain" data-answer-explain="5">영문 대문자 (3자)</div>
+                  <div class="hint-actions"><a href="javascript:void(0)" class="btn-back-to-hint">◄ BACK TO HINT</a><a href="javascript:void(0)" class="btn-close-hint">✕ CLOSE</a></div>
+                </div>
+              </div>
+            </div>
+            <div class="answer_area" style="display: none" data-quiz="5">
+              <p class="close_popup">
+                <a href="javascript:void(0)" onclick="closePop(5)">
+                  <i class="far fa-window-close"></i>
+                </a>
+              </p>
+              <div class="answer_card">
+                <p>영문 대문자</p>
+                <input type="text" id="quiz5" name="quiz5" class="answer-input"
+                  onkeyup="if( event.keyCode == 13 ){answerInput(5)}" />
+                <a href="javascript:void(0)" onclick="answerInput(5)" class="answer-btn">입력</a>
+              </div>
+            </div>
+          </div>
+          <div class="page" style="display: none">
+            <h3 class="subTitle strokeTxt" style="display: none">
+              메인 스토리 11
+            </h3>
+            <p>
+              우리는 그렇게 [선악과]를 얻은 뒤 하수도를 통해 무사히 도주 할 수
+              있었단다. 이후에 선악과를 [스네이크]에게 무사히 전달한 후 우리는
+              [아담]의 추적을 피해 해외로 도주를 했지.
+            </p>
+            <p class="red-bold">
+              한 군데에 오래 머무르면 추적을 당할 위험이 있어서 도주 기간동안
+              여러 나라로 계속 이동을 했단다. 아주 비밀스러운 이동이었기
+              때문에 우리도 일정이 어떻게 될지는 알 수 없었어. 매번 비행기표에
+              찍힌 도장을 통해 도착하는 곳에서의 일정을 전달 받을 뿐이었지.
+            </p>
+
+            <p>
+              그렇게 이 나라 저 나라를 왔다갔다하다 약속한 시간이 되었고, [더
+              러스트]바로 돌아갔을 때 우리는 약속한 보수와 또다른 선물을
+              받았지만 아쉽게도 [스네이크]를 만날 수는 없었단다.
+            </p>
+
+            <p>대신에 편지 한 통만 있었는데… 이걸 어디에 놔뒀더라…?</p>
+          </div>
+          <div class="page" style="display: none">
+            <h3 class="subTitle strokeTxt" style="display: none">
+              메인 스토리 12
+            </h3>
+            <p>
+              이 할애비가 편지를 찾는 동안 당시
+              <span class="red-bold">비행기표를 순서대로 보면서 우리가 얼마나 그곳에 숨어있었는지
+                좀 알아보고 있거라.</span>
+            </p>
+            <div id="quiz6_area" class="ticket-grid">
+              <img src="assets/ticket1.png" class="image-zoomable ticket" title="클릭하면 확대됩니다" alt="비행기표 1" />
+              <img src="assets/ticket2.png" class="image-zoomable ticket" title="클릭하면 확대됩니다" alt="비행기표 2" />
+              <img src="assets/ticket3.png" class="image-zoomable ticket" title="클릭하면 확대됩니다" alt="비행기표 3" />
+              <img src="assets/ticket4.png" class="image-zoomable ticket" title="클릭하면 확대됩니다" alt="비행기표 4" />
+              <img src="assets/ticket5.png" class="image-zoomable ticket" title="클릭하면 확대됩니다" alt="비행기표 5" />
+              <img src="assets/ticket6.png" class="image-zoomable ticket" title="클릭하면 확대됩니다" alt="비행기표 6" />
+              <img src="assets/ticket7.png" class="image-zoomable ticket ticket-center" title="클릭하면 확대됩니다" alt="비행기표 7" />
+            </div>
+            <a href="javascript:void(0)" class="hint-trigger" data-hint-trigger="6" style="display:none">HINT</a>
+            <div class="hint_area" data-hint="6" style="display: none">
+              <div class="hint_card">
+                <div class="hint-step step-hint">
+                  <div class="hint-header"><span class="hint-tag">▼ HINT</span><span class="hint-id">#06 / STORY 12</span></div>
+                  <div class="hint-body" data-hint-text="6">각 도착지의 3자리 알파벳 나라코드를 검색하여 어느 나라인지 먼저 확인하신 뒤 해당 나라의 국기들을 확인해주세요. 국기를 보시면 가로 혹은 세로로 세 줄로 이루어진 국기들이 나올 텐데, 비행기표의 알파벳 나라코드와 각 색깔이 대응됩니다. 비행기표에 있는 색깔에 해당하는 글자들만 나열해서 적어주시면 됩니다.</div>
+                  <div class="hint-actions"><a href="javascript:void(0)" class="btn-show-answer">▶ SHOW ANSWER</a><a href="javascript:void(0)" class="btn-close-hint">✕ CLOSE</a></div>
+                </div>
+                <div class="hint-step step-answer" style="display: none">
+                  <div class="hint-header"><span class="hint-tag answer">▶ ANSWER</span><span class="hint-id">#06 / STORY 12</span></div>
+                  <div class="hint-body answer-value">ONE MONTH LATER</div>
+                  <div class="hint-body answer-explain" data-answer-explain="6">영문 대문자, 공백 포함 (15자)</div>
+                  <div class="hint-actions"><a href="javascript:void(0)" class="btn-back-to-hint">◄ BACK TO HINT</a><a href="javascript:void(0)" class="btn-close-hint">✕ CLOSE</a></div>
+                </div>
+              </div>
+            </div>
+            <div class="answer_area" style="display: none" data-quiz="6">
+              <p class="close_popup">
+                <a href="javascript:void(0)" onclick="closePop(6)">
+                  <i class="far fa-window-close"></i>
+                </a>
+              </p>
+              <div class="answer_card">
+                <p>영문 대문자</p>
+                <input type="text" id="quiz6" name="quiz6" class="answer-input"
+                  onkeyup="if( event.keyCode == 13 ){answerInput(6)}" />
+                <a href="javascript:void(0)" onclick="answerInput(6)" class="answer-btn">입력</a>
+              </div>
+            </div>
+          </div>
+          <div class="page" style="display: none">
+            <h3 class="subTitle strokeTxt" style="display: none">
+              메인 스토리 13
+            </h3>
+            <p>이 편지를 [스네이크]에게 받고 다음 계획에 합류하겠냐는 제의가 왔었지만 나는 그 제안을 거절했지. </p>
+
+            <p>그 사이에 딱 너네 할머니를 만났지 뭐냐.
+              이 할애비는 그후로 평범하게 살기를 원했고 그 이후로는 그들이 어떻게 됐는지는 알지 못 한단다.</p>
+
+            <p>하지만 그때 보수로 받았던 이 [선악과]를 정제한 음료(알약)와 카드, 그리고 이 편지를 아직 간직하고 있을 뿐이지…
+              언제든 도움이 필요하면 연락하라고도 했었단다.</p>
+
+            <p>[카인]아 혹시나 나중에라도 무슨 일이 생기거든 이것들을 챙겨 [스네이크]를 찾아가거라~!
+              물론 그런 일이 생기기야 하겠느냐만 말이다.</p>
+          </div>
+          <div class="page" style="display: none; height: 470px; text-align: center">
+            <h3 class="subTitle strokeTxt" style="display: none">
+              메인 스토리 14
+            </h3>
+            <img src="assets/letter.png" style="height: 100%; width: auto; display:inline-block;"
+              class="letterImg" />
+          </div>
+        </div>
+        <!-- 메인 끝 -->
+        <!-- 사이드 시작 -->
+        <div class="subpage_content" data-content="3" style="display: none">
+          <div class="page" style="display: none">
+            <h3 class="subTitle strokeTxt">사이드 스토리 준비중입니다</h3>
+          </div>
+        </div>
+        <!-- 사이드 끝 -->
+        <div id="page_count">
+          <span class="count">0</span> / <span class="count-max">0</span>
+        </div>
+        <div class="page_move">
+          <a href="javascript:void(0);" class="btn_prev" onclick="pagePrev()">
+            PREV
+          </a>
+          <a href="javascript:void(0);" class="btn_next" onclick="pageNext()">
+            NEXT
+          </a>
+        </div>
+      </div>
+      <div id="object_play"></div>
+    </div>
+  </section>
+  
+  <!-- 이미지 확대 라이트박스 -->
+  <div id="image-lightbox" class="image-lightbox" style="display:none">
+    <span class="image-lightbox-close">✕</span>
+    <img src="" alt="확대 이미지" />
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.7.1/gsap.min.js"></script>
+  <script type="text/javascript" src="script.js?v=13"></script>
+  <script type="text/javascript" src="debug-hint.js?v=2"></script>
+</body>
+
+</html>
