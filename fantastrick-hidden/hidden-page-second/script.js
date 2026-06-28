@@ -71,6 +71,7 @@ authentication_check_confirm.addEventListener('click', function () {
         zStatOnce('reach:login_ok', 'reach', 'login_ok');        // 인증 성공
     } else {
         wrong();
+        zStat('fail', 'login_ok');
     }
 })
 
@@ -142,6 +143,7 @@ hintElements.forEach(function (e) {
     e.addEventListener('click', function () {
         click_sound.play();
         const elementIdIndex = Number(e.parentElement.id.split('_')[2]);
+        zStatOnce('hint:' + elementIdIndex, 'hint', ({3:'puzzle1',6:'puzzle2',9:'puzzle3',11:'puzzle4',13:'puzzle5',15:'puzzle6',18:'puzzle7'})[elementIdIndex] || ('page' + elementIdIndex));   // 힌트 사용(세션·퍼즐당 1회)
         const hintPageElement = document.getElementById(`story_page_${elementIdIndex}hint`);
         hintPageElement.style.animation = "popup-animation 0.2s ease-in-out";
         hintPageElement.style.zIndex = "5";
@@ -167,6 +169,7 @@ story_page_3_confirm.addEventListener('click', function () {
         zStatOnce('reach:puzzle1', 'reach', 'puzzle1');     // 퍼즐1 (12512)
     } else {
         wrong();
+        zStat('fail', 'puzzle1');
     }
 })
 
@@ -197,6 +200,7 @@ story_page_6_confirm.addEventListener('click', function () {
         puzzleRefresh();
     } else {
         wrong();
+        zStat('fail', 'puzzle2');
     }
 })
 story_page_6_close.addEventListener('click', function () {
@@ -273,6 +277,7 @@ story_page_9_confirm.addEventListener('click', function () {
         zStatOnce('reach:puzzle3', 'reach', 'puzzle3');     // 퍼즐3 (MASTERMIND)
     } else {
         wrong();
+        zStat('fail', 'puzzle3');
     }
 })
 
@@ -285,6 +290,7 @@ story_page_11_confirm.addEventListener('click', function () {
         zStatOnce('reach:puzzle4', 'reach', 'puzzle4');     // 퍼즐4 (TRUTH)
     } else {
         wrong();
+        zStat('fail', 'puzzle4');
     }
 })
 
@@ -297,6 +303,7 @@ story_page_13_confirm.addEventListener('click', function () {
         zStatOnce('reach:puzzle5', 'reach', 'puzzle5');     // 퍼즐5 (원액)
     } else {
         wrong();
+        zStat('fail', 'puzzle5');
     }
 })
 
@@ -309,6 +316,7 @@ story_page_15_confirm.addEventListener('click', function () {
         zStatOnce('reach:puzzle6', 'reach', 'puzzle6');     // 퍼즐6 (성물제어실)
     } else {
         wrong();
+        zStat('fail', 'puzzle6');
     }
 })
 
@@ -321,6 +329,7 @@ story_page_18_confirm.addEventListener('click', function () {
         zStatOnce('reach:puzzle7', 'reach', 'puzzle7');     // 퍼즐7 (ECHO)
     } else {
         wrong();
+        zStat('fail', 'puzzle7');
     }
 })
 

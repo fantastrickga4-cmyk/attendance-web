@@ -188,6 +188,7 @@ function answerInput(a) {
         }
     } else {
         errSe.play();
+        zStat('fail', a == 0 ? 'login_ok' : 'quiz' + a);            // 오답 1회 (난이도 측정)
     }
 }
 
