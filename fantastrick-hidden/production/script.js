@@ -81,7 +81,7 @@ function move() {
 var ZSTAT_SITE = 'firstfoundbride';
 function _zsid() { try { var k = 'hstat:sid', v = sessionStorage.getItem(k); if (!v) { v = Date.now().toString(36) + Math.random().toString(36).slice(2, 10); sessionStorage.setItem(k, v); } return v; } catch (_) { return null; } }
 function _zon() { try { var h = location.hostname || ''; if (h === 'localhost' || h === '127.0.0.1' || /^192\.168\./.test(h) || /^10\./.test(h)) return false; return true; } catch (_) { return false; } }
-function zStat(event, step) { if (!_zon()) return; try { var pl = JSON.stringify({ site: ZSTAT_SITE, event: event, step: step || null, sid: _zsid() }); if (navigator.sendBeacon) { navigator.sendBeacon('https://hidden-stats.vercel.app/api/track', new Blob([pl], { type: 'application/json' })); } else { fetch('https://hidden-stats.vercel.app/api/track', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: pl, keepalive: true }).catch(function () {}); } } catch (_) {} }
+function zStat(event, step) { if (!_zon()) return; try { var pl = JSON.stringify({ site: ZSTAT_SITE, event: event, step: step || null, sid: _zsid() }); if (navigator.sendBeacon) { navigator.sendBeacon('https://hidden-stats.vercel.app/api/track', new Blob([pl], { type: 'text/plain' })); } else { fetch('https://hidden-stats.vercel.app/api/track', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: pl, keepalive: true }).catch(function () {}); } } catch (_) {} }
 function zStatOnce(flag, event, step) { if (!_zon()) return; try { var fk = 'hstat:f:' + flag; if (sessionStorage.getItem(fk)) return; sessionStorage.setItem(fk, '1'); } catch (_) {} zStat(event, step); }
 
 function readyGo() {
